@@ -12,7 +12,7 @@ Dokumentasi tahapan kerja detail untuk monitoring dan catatan progres proyek.
 - [x] Inisialisasi project NestJS baru
 - [x] Setup repository Git & struktur folder
   > Repo Git diinisialisasi di root siap-bps-pringsewu, backend sebagai subfolder
-- [ ] Konfigurasi environment (.env) & koneksi database PostgreSQL
+- [x] Konfigurasi environment (.env) & koneksi database PostgreSQL
 - [ ] Instalasi dependensi utama (TypeORM, JWT, pdfmake/node-pdfkit, dsb)
 - [ ] Inisialisasi migrasi database (users, barang, permintaan, detail_permintaan)
 - [ ] Seeder data awal (admin, pegawai, barang contoh)
