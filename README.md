@@ -63,6 +63,6 @@ Lihat [SDLC_SIAP.md](./SDLC_SIAP.md) untuk dokumen analisis kebutuhan, desain, d
 
 ---
 
-**Developer:** Arya Setia Pratama  
+**Developer:** Arya Setia Pratama & Divany Pangestika
 **Klien:** Pengelola Barang Persediaan BPS Kabupaten Pringsewu  
 **Versi:** 1.0
