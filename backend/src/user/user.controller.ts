@@ -9,6 +9,8 @@ import {
   UseGuards,
   ParseIntPipe,
   Req,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../auth/roles.guard';
@@ -17,6 +19,9 @@ import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Request } from 'express';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import * as path from 'path';
 
 @Controller('user')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -91,5 +96,38 @@ export class UserController {
     const user = await this.userService.findByUsername(body.username);
     if (!user) return { message: 'User tidak ditemukan' };
     return this.userService.softDelete(user.id);
+  }
+
+  @Patch('profile/foto')
+  @UseInterceptors(
+    FileInterceptor('foto', {
+      storage: diskStorage({
+        destination: (req, file, cb) => {
+          cb(null, path.join(__dirname, '..', 'uploads', 'profile'));
+        },
+        filename: (req, file, cb) => {
+          // Simpan file dengan nama unik: userId-timestamp.ext
+          const userId = (req.user as any)?.userId;
+          const ext = path.extname(file.originalname);
+          cb(null, `${userId}-${Date.now()}${ext}`);
+        },
+      }),
+      fileFilter: (req, file, cb) => {
+        if (!file.mimetype.match(/^image\/(jpeg|png|jpg|webp)$/)) {
+          return cb(new Error('Only image files are allowed!'), false);
+        }
+        cb(null, true);
+      },
+      limits: { fileSize: 2 * 1024 * 1024 }, // 2MB
+    }),
+  )
+  async uploadFotoProfile(
+    @Req() req: Request,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    const userId = (req.user as any)?.userId;
+    // Simpan path relatif ke database
+    const fotoPath = `/uploads/profile/${file.filename}`;
+    return this.userService.update(userId, { foto: fotoPath });
   }
 }
