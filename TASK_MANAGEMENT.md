@@ -21,7 +21,7 @@ Dokumentasi tahapan kerja detail untuk monitoring dan catatan progres proyek.
 
 ### 2. Modul User & Autentikasi
 
-- [ ] CRUD User (Admin): tambah, edit, nonaktifkan user
+- [x] CRUD User (Admin): tambah, edit, nonaktifkan user
 - [ ] Endpoint login & logout (JWT)
 - [ ] Endpoint profil user (lihat & edit data diri, ubah password)
 - [ ] Validasi & proteksi endpoint sesuai role
