@@ -38,17 +38,22 @@ Sistem Aplikasi Pengelolaan Aset & Persediaan (SIAP) adalah aplikasi berbasis we
 
 1. **Clone repo:**  
    `git clone <repo-url>`
-2. **Setup Backend:**
+2. **Inisialisasi Backend (NestJS):**
+   - Install NestJS CLI: `npm install -g @nestjs/cli`
+   - Inisialisasi project: `nest new backend`
+   - Masuk ke folder backend: `cd backend`
+   - Jalankan development server: `npm run start:dev`
+3. **Setup Backend:**
    - `cd backend`
    - `npm install`
    - Copy `.env.example` ke `.env`, atur koneksi database PostgreSQL
    - `npm run typeorm migration:run`
    - `npm run start:dev`
-3. **Setup Frontend:**
+4. **Setup Frontend:**
    - `cd frontend`
    - `npm install`
    - `npm start`
-4. **Akses aplikasi:**
+5. **Akses aplikasi:**
    - Backend API: `http://localhost:3001/api`
    - Frontend: `http://localhost:3000`
 
