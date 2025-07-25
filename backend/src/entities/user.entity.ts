@@ -34,4 +34,7 @@ export class User {
 
   @UpdateDateColumn()
   updated_at: Date;
+
+  @Column({ nullable: true })
+  foto: string; // URL/path foto profil user
 }

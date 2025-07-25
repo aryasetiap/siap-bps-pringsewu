@@ -32,6 +32,9 @@ export class Barang {
   @Column({ default: true })
   status_aktif: boolean;
 
+  @Column({ nullable: true })
+  foto: string; // URL/path file foto barang
+
   @CreateDateColumn()
   created_at: Date;
 

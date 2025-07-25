@@ -21,4 +21,8 @@ export class CreateUserDto {
   @IsString()
   @IsOptional()
   unit_kerja?: string;
+
+  @IsString()
+  @IsOptional()
+  foto?: string; // tambahkan ini
 }

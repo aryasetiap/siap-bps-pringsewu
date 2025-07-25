@@ -21,4 +21,8 @@ export class UpdateUserDto {
   @IsBoolean()
   @IsOptional()
   status_aktif?: boolean;
+
+  @IsString()
+  @IsOptional()
+  foto?: string;
 }
