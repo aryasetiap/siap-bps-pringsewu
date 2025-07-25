@@ -1,6 +1,6 @@
 # SIAP BPS Pringsewu
 
-Sistem Aplikasi Pengelolaan Aset & Persediaan (SIAP) adalah aplikasi berbasis web untuk mendukung digitalisasi proses pengelolaan barang persediaan di BPS Kabupaten Pringsewu. Sistem ini dibangun dengan arsitektur **API-first** menggunakan **Laravel** (backend) dan **React.js** (frontend).
+Sistem Aplikasi Pengelolaan Aset & Persediaan (SIAP) adalah aplikasi berbasis web untuk mendukung digitalisasi proses pengelolaan barang persediaan di BPS Kabupaten Pringsewu. Sistem ini dibangun dengan arsitektur **API-first** menggunakan **NestJS** (backend) dan **React.js** (frontend).
 
 ## Fitur Utama (MVP)
 
@@ -15,9 +15,9 @@ Sistem Aplikasi Pengelolaan Aset & Persediaan (SIAP) adalah aplikasi berbasis we
 
 ## Teknologi
 
-- **Backend:** Laravel (PHP), Sanctum (API Auth), Eloquent ORM, PostgreSQL
+- **Backend:** NestJS (Node.js), JWT Auth, TypeORM, PostgreSQL
 - **Frontend:** React.js, Tailwind CSS
-- **PDF Generator:** barryvdh/laravel-dompdf
+- **PDF Generator:** pdfmake / node-pdfkit (atau library PDF untuk Node.js)
 
 ## Struktur Database (Entitas Utama)
 
@@ -40,16 +40,16 @@ Sistem Aplikasi Pengelolaan Aset & Persediaan (SIAP) adalah aplikasi berbasis we
    `git clone <repo-url>`
 2. **Setup Backend:**
    - `cd backend`
-   - `composer install`
-   - Copy `.env.example` ke `.env`, atur koneksi database
-   - `php artisan migrate --seed`
-   - `php artisan serve`
+   - `npm install`
+   - Copy `.env.example` ke `.env`, atur koneksi database PostgreSQL
+   - `npm run typeorm migration:run`
+   - `npm run start:dev`
 3. **Setup Frontend:**
    - `cd frontend`
    - `npm install`
    - `npm start`
 4. **Akses aplikasi:**
-   - Backend API: `http://localhost:8000/api`
+   - Backend API: `http://localhost:3001/api`
    - Frontend: `http://localhost:3000`
 
 ## Dokumentasi Lengkap

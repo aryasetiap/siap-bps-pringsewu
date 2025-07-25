@@ -5,24 +5,24 @@ Dokumentasi tahapan kerja detail untuk monitoring dan catatan progres proyek.
 
 ---
 
-## BACKEND (BE) - Laravel API
+## BACKEND (BE) - NestJS API
 
 ### 1. Setup & Fondasi Proyek
 
-- ✅ Inisialisasi project Laravel baru
-- ✅ Setup repository Git & struktur folder
+- [ ] Inisialisasi project NestJS baru
+- [ ] Setup repository Git & struktur folder
   > Repo Git diinisialisasi di root siap-bps-pringsewu, backend sebagai subfolder
-- ✅ Konfigurasi environment (.env) & koneksi database PostgreSQL
-- ✅ Instalasi dependensi utama (Sanctum, dompdf, dsb)
-- ✅ Inisialisasi migrasi database (users, barang, permintaan, detail_permintaan)
-- ✅ Seeder data awal (admin, pegawai, barang contoh)
+- [ ] Konfigurasi environment (.env) & koneksi database PostgreSQL
+- [ ] Instalasi dependensi utama (TypeORM, JWT, pdfmake/node-pdfkit, dsb)
+- [ ] Inisialisasi migrasi database (users, barang, permintaan, detail_permintaan)
+- [ ] Seeder data awal (admin, pegawai, barang contoh)
 - [ ] Setup autentikasi (login/logout, hashing password, role-based)
 - [ ] Middleware otorisasi (admin/pegawai)
 
 ### 2. Modul User & Autentikasi
 
 - [ ] CRUD User (Admin): tambah, edit, nonaktifkan user
-- [ ] Endpoint login & logout (Sanctum)
+- [ ] Endpoint login & logout (JWT)
 - [ ] Endpoint profil user (lihat & edit data diri, ubah password)
 - [ ] Validasi & proteksi endpoint sesuai role
 
@@ -58,7 +58,7 @@ Dokumentasi tahapan kerja detail untuk monitoring dan catatan progres proyek.
 
 ### 7. Pelaporan & Ekspor PDF
 
-- [ ] Endpoint generate PDF bukti permintaan (dompdf)
+- [ ] Endpoint generate PDF bukti permintaan (pdfmake/node-pdfkit)
 - [ ] Endpoint laporan periodik penggunaan barang (filter tanggal, ekspor PDF)
 
 ### 8. Testing & Dokumentasi
@@ -71,7 +71,7 @@ Dokumentasi tahapan kerja detail untuk monitoring dan catatan progres proyek.
 ### 9. Deployment & Maintenance
 
 - [ ] Setup server staging/production
-- [ ] Deployment aplikasi (git pull, composer install, migrate, dsb)
+- [ ] Deployment aplikasi (git pull, npm install, migration, dsb)
 - [ ] Migrasi data awal ke produksi
 - [ ] Backup otomatis & monitoring
 - [ ] Support bugfix & update pasca go-live

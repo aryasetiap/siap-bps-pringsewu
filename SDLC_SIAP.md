@@ -22,7 +22,7 @@ Sistem ini bertujuan untuk:
   - Mengurangi waktu rata-rata proses permintaan (dari pengajuan hingga keputusan) dari ±1 hari kerja menjadi **maksimal 15 menit**.
   - Menurunkan potensi kesalahan pencatatan stok hingga **mendekati 0%**.
   - Menyediakan data stok yang dapat diakses dalam **kurang dari 5 detik**.
-- **Achievable**: Dibangun menggunakan tumpukan teknologi modern (Laravel & React) yang memungkinkan pengembangan cepat dan iteratif untuk mencapai target MVP.
+- **Achievable**: Dibangun menggunakan tumpukan teknologi modern (**NestJS & React**) yang memungkinkan pengembangan cepat dan iteratif untuk mencapai target MVP.
 - **Relevant**: Mendukung **efisiensi operasional, transparansi, akuntabilitas**, dan **pengambilan keputusan berbasis data** dalam pengelolaan aset BPS Kabupaten Pringsewu.
 - **Time-bound**: Minimum Viable Product (MVP) dengan fitur inti ditargetkan siap untuk UAT dalam **satu sprint pengembangan intensif selama 5 hari kerja** (24 Juli - 28 Juli 2025).
 
@@ -174,11 +174,11 @@ Sistem ini bertujuan untuk:
 
 ### 3.1. Desain Arsitektur Sistem
 
-Menggunakan arsitektur **Model-View-Controller (MVC)** Laravel, dengan pendekatan API-first (backend dan frontend terpisah).
+Menggunakan arsitektur **API-first** dengan backend **NestJS (Node.js)** dan frontend **React.js**.
 
 - **Presentation Layer (Frontend)**: React.js, Tailwind CSS, komunikasi via REST API.
-- **Business Logic Layer (Backend)**: Laravel (PHP), autentikasi Sanctum, otorisasi, validasi, API provider.
-- **Data Layer (Database)**: PostgreSQL, Eloquent ORM.
+- **Business Logic Layer (Backend)**: NestJS (Node.js), JWT Auth, TypeORM, validasi, API provider.
+- **Data Layer (Database)**: PostgreSQL, TypeORM.
 
 ### 3.2. Desain Database (ERD)
 
@@ -260,15 +260,15 @@ Menggunakan arsitektur **Model-View-Controller (MVC)** Laravel, dengan pendekata
 
 ### **Hari ke-1: Fondasi & Core Backend**
 
-- **Setup Proyek Laravel**
-  - Inisialisasi project baru dengan `laravel new siap` atau `composer create-project`.
-  - Konfigurasi environment `.env` (database, mail, dsb).
+- **Setup Proyek NestJS**
+  - Inisialisasi project baru dengan `nest new siap-backend`.
+  - Konfigurasi environment `.env` (database, dsb).
   - Inisialisasi git repository.
 - **Konfigurasi Database**
   - Pilih PostgreSQL, buat database baru.
   - Update koneksi di `.env`.
 - **Instalasi Dependensi**
-  - Install package utama: Laravel Sanctum (autentikasi), Eloquent, dan package pendukung (barryvdh/laravel-dompdf, dsb).
+  - Install package utama: TypeORM, JWT Auth, dan package pendukung (pdfmake/node-pdfkit, dsb).
 - **Implementasi Autentikasi**
   - Setup login/logout untuk Admin & Pegawai (menggunakan role).
   - Buat migrasi dan seeder untuk tabel `users` dengan field: nama, username, password (bcrypt), role, unit_kerja.
@@ -277,7 +277,7 @@ Menggunakan arsitektur **Model-View-Controller (MVC)** Laravel, dengan pendekata
   - Buat migrasi untuk tabel: `users`, `barang`, `permintaan`, `detail_permintaan`.
   - Definisikan relasi foreign key.
 - **Model, Controller, Route untuk CRUD Barang**
-  - Buat model `Barang`, controller `BarangController` (API Resource).
+  - Buat entity `Barang`, controller dan service untuk CRUD barang (API Resource).
   - Implementasi endpoint CRUD: `GET`, `POST`, `PUT`, `DELETE`.
   - Proteksi endpoint dengan middleware (hanya Admin).
 
@@ -334,7 +334,7 @@ Menggunakan arsitektur **Model-View-Controller (MVC)** Laravel, dengan pendekata
 ### **Hari ke-5: Fitur Pelengkap, Polish, & Staging**
 
 - **Fitur "Cetak ke PDF" Lembar Permintaan**
-  - Implementasi backend (barryvdh/laravel-dompdf) untuk generate PDF permintaan.
+  - Implementasi backend (pdfmake/node-pdfkit) untuk generate PDF permintaan.
   - Tombol cetak di frontend.
 - **Fitur Laporan Periodik Sederhana**
   - Endpoint dan UI untuk generate laporan penggunaan barang (filter tanggal).
@@ -399,13 +399,13 @@ Menggunakan arsitektur **Model-View-Controller (MVC)** Laravel, dengan pendekata
 
 ## Timeline Pengembangan Proyek SIAP (Solo Fullstack Developer)
 
-| Hari/Tanggal     | Fokus Utama            | Backend (BE)                                                                                                                                     | Frontend (FE)                                                                | Catatan Penting                                |
-| ---------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------- | ---------------------------------------------- |
-| Hari 1 (24 Juli) | Fondasi & Setup        | - Inisialisasi proyek Laravel<br>- Setup database & environment<br>- Migrasi tabel utama<br>- Seeder user & barang<br>- Setup autentikasi & role | - Setup project React<br>- Struktur folder & routing dasar               | Pastikan API login & CRUD barang siap          |
-| Hari 2 (25 Juli) | CRUD & Stok            | - CRUD Barang (API)<br>- Endpoint penambahan stok<br>- Validasi input                                                                            | - Halaman daftar barang (tabel, search, filter)<br>- Form tambah/edit barang | Dummy data FE, integrasi API barang            |
-| Hari 3 (26 Juli) | Permintaan Barang      | - Endpoint permintaan barang (multi-item)<br>- Validasi stok<br>- Riwayat permintaan                                                             | - Form pengajuan permintaan<br>- Halaman riwayat permintaan pegawai          | FE gunakan dummy, integrasi setelah API stabil |
-| Hari 4 (27 Juli) | Verifikasi & Dashboard | - Endpoint verifikasi permintaan<br>- Logika pengurangan stok<br>- Statistik dashboard                                                           | - Halaman verifikasi permintaan admin<br>- Dashboard admin (widget, grafik)  | Integrasi FE dengan API dashboard              |
-| Hari 5 (28 Juli) | Pelengkap & Uji Coba   | - Endpoint & logic cetak PDF<br>- Endpoint laporan periodik<br>- Refactor & unit test                                                            | - Tombol cetak PDF<br>- Halaman laporan penggunaan barang<br>- Finalisasi UI | Uji end-to-end, push ke staging/UAT            |
+| Hari/Tanggal     | Fokus Utama            | Backend (BE)                                                                                                                                    | Frontend (FE)                                                                | Catatan Penting                                |
+| ---------------- | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | ---------------------------------------------- |
+| Hari 1 (24 Juli) | Fondasi & Setup        | - Inisialisasi proyek NestJS<br>- Setup database & environment<br>- Migrasi tabel utama<br>- Seeder user & barang<br>- Setup autentikasi & role | - Setup project React<br>- Struktur folder & routing dasar                   | Pastikan API login & CRUD barang siap          |
+| Hari 2 (25 Juli) | CRUD & Stok            | - CRUD Barang (API)<br>- Endpoint penambahan stok<br>- Validasi input                                                                           | - Halaman daftar barang (tabel, search, filter)<br>- Form tambah/edit barang | Dummy data FE, integrasi API barang            |
+| Hari 3 (26 Juli) | Permintaan Barang      | - Endpoint permintaan barang (multi-item)<br>- Validasi stok<br>- Riwayat permintaan                                                            | - Form pengajuan permintaan<br>- Halaman riwayat permintaan pegawai          | FE gunakan dummy, integrasi setelah API stabil |
+| Hari 4 (27 Juli) | Verifikasi & Dashboard | - Endpoint verifikasi permintaan<br>- Logika pengurangan stok<br>- Statistik dashboard                                                          | - Halaman verifikasi permintaan admin<br>- Dashboard admin (widget, grafik)  | Integrasi FE dengan API dashboard              |
+| Hari 5 (28 Juli) | Pelengkap & Uji Coba   | - Endpoint & logic cetak PDF<br>- Endpoint laporan periodik<br>- Refactor & unit test                                                           | - Tombol cetak PDF<br>- Halaman laporan penggunaan barang<br>- Finalisasi UI | Uji end-to-end, push ke staging/UAT            |
 
 **Tips:**
 
