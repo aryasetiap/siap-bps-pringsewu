@@ -9,9 +9,10 @@ Dokumentasi tahapan kerja detail untuk monitoring dan catatan progres proyek.
 
 ### 1. Setup & Fondasi Proyek
 
-- [ ] Inisialisasi project Laravel baru
-- [ ] Setup repository Git & struktur folder
-- [ ] Konfigurasi environment (.env) & koneksi database PostgreSQL
+- ✅ Inisialisasi project Laravel baru
+- ✅ Setup repository Git & struktur folder
+  > Repo Git diinisialisasi di root siap-bps-pringsewu, backend sebagai subfolder
+- ✅ Konfigurasi environment (.env) & koneksi database PostgreSQL
 - [ ] Instalasi dependensi utama (Sanctum, dompdf, dsb)
 - [ ] Inisialisasi migrasi database (users, barang, permintaan, detail_permintaan)
 - [ ] Seeder data awal (admin, pegawai, barang contoh)
