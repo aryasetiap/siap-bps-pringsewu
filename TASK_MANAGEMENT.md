@@ -15,7 +15,7 @@ Dokumentasi tahapan kerja detail untuk monitoring dan catatan progres proyek.
 - [x] Konfigurasi environment (.env) & koneksi database PostgreSQL
 - [x] Instalasi dependensi utama (TypeORM, JWT, pdfmake/node-pdfkit, dsb)
 - [x] Inisialisasi migrasi database (users, barang, permintaan, detail_permintaan)
-- [ ] Seeder data awal (admin, pegawai, barang contoh)
+- [x] Seeder data awal (admin, pegawai, barang contoh)
 - [ ] Setup autentikasi (login/logout, hashing password, role-based)
 - [ ] Middleware otorisasi (admin/pegawai)
 
