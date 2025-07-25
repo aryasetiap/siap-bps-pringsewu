@@ -17,7 +17,7 @@ Dokumentasi tahapan kerja detail untuk monitoring dan catatan progres proyek.
 - [x] Inisialisasi migrasi database (users, barang, permintaan, detail_permintaan)
 - [x] Seeder data awal (admin, pegawai, barang contoh)
 - [x] Setup autentikasi (login/logout, hashing password, role-based)
-- [ ] Middleware otorisasi (admin/pegawai)
+- [x] Middleware otorisasi (admin/pegawai)
 
 ### 2. Modul User & Autentikasi
 
