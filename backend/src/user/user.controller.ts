@@ -20,11 +20,11 @@ import { Request } from 'express';
 
 @Controller('user')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
-@Roles('admin')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   // Endpoint khusus admin
+  @Roles('admin')
   @Get('admin-only')
   getAdminData() {
     return { message: 'Data khusus admin' };
@@ -40,7 +40,6 @@ export class UserController {
   // Endpoint bisa diakses semua user yang sudah login (tanpa role spesifik)
   @Get('profile')
   async getProfile(@Req() req: Request) {
-    // req.user di-set oleh JWT AuthGuard
     const userId = (req.user as any)?.userId;
     return this.userService.findOne(userId);
   }
@@ -51,21 +50,26 @@ export class UserController {
     return this.userService.update(userId, dto);
   }
 
+  // CRUD user hanya untuk admin
+  @Roles('admin')
   @Post()
   async create(@Body() dto: CreateUserDto) {
     return this.userService.create(dto);
   }
 
+  @Roles('admin')
   @Get()
   async findAll() {
     return this.userService.findAll();
   }
 
+  @Roles('admin')
   @Get(':id')
   async findOne(@Param('id', ParseIntPipe) id: number) {
     return this.userService.findOne(id);
   }
 
+  @Roles('admin')
   @Patch(':id')
   async update(
     @Param('id', ParseIntPipe) id: number,
@@ -74,8 +78,18 @@ export class UserController {
     return this.userService.update(id, dto);
   }
 
+  @Roles('admin')
   @Delete(':id')
   async softDelete(@Param('id', ParseIntPipe) id: number) {
     return this.userService.softDelete(id);
+  }
+
+  // Endpoint untuk hapus user by username (khusus testing/dev)
+  @Roles('admin')
+  @Delete()
+  async deleteByUsername(@Body() body: { username: string }) {
+    const user = await this.userService.findByUsername(body.username);
+    if (!user) return { message: 'User tidak ditemukan' };
+    return this.userService.softDelete(user.id);
   }
 }

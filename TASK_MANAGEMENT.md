@@ -24,7 +24,7 @@ Dokumentasi tahapan kerja detail untuk monitoring dan catatan progres proyek.
 - [x] CRUD User (Admin): tambah, edit, nonaktifkan user
 - [x] Endpoint login & logout (JWT)
 - [x] Endpoint profil user (lihat & edit data diri, ubah password)
-- [ ] Validasi & proteksi endpoint sesuai role
+- [x] Validasi & proteksi endpoint sesuai role
 
 ### 3. Modul Barang & Stok
 

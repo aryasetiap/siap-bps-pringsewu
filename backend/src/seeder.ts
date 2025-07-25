@@ -24,7 +24,11 @@ async function seed() {
     await userRepo.save(admin);
     console.log('Admin user created');
   } else {
-    console.log('Admin user already exists');
+    // Update password admin ke 'admin123' agar selalu sinkron dengan test
+    adminExist.password = await bcrypt.hash('admin123', 10);
+    adminExist.status_aktif = true;
+    await userRepo.save(adminExist);
+    console.log('Admin user already exists, password reset to admin123');
   }
 
   // Cek dan insert user pegawai
