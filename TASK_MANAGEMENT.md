@@ -16,14 +16,14 @@ Dokumentasi tahapan kerja detail untuk monitoring dan catatan progres proyek.
 - [x] Instalasi dependensi utama (TypeORM, JWT, pdfmake/node-pdfkit, dsb)
 - [x] Inisialisasi migrasi database (users, barang, permintaan, detail_permintaan)
 - [x] Seeder data awal (admin, pegawai, barang contoh)
-- [ ] Setup autentikasi (login/logout, hashing password, role-based)
-- [ ] Middleware otorisasi (admin/pegawai)
+- [x] Setup autentikasi (login/logout, hashing password, role-based)
+- [x] Middleware otorisasi (admin/pegawai)
 
 ### 2. Modul User & Autentikasi
 
-- [ ] CRUD User (Admin): tambah, edit, nonaktifkan user
-- [ ] Endpoint login & logout (JWT)
-- [ ] Endpoint profil user (lihat & edit data diri, ubah password)
+- [x] CRUD User (Admin): tambah, edit, nonaktifkan user
+- [x] Endpoint login & logout (JWT)
+- [x] Endpoint profil user (lihat & edit data diri, ubah password)
 - [ ] Validasi & proteksi endpoint sesuai role
 
 ### 3. Modul Barang & Stok
