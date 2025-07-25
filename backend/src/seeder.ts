@@ -20,6 +20,7 @@ async function seed() {
       password: await bcrypt.hash('admin123', 10),
       role: 'admin',
       status_aktif: true,
+      foto: 'https://ui-avatars.com/api/?name=Admin+SIAP', // contoh foto profil
     });
     await userRepo.save(admin);
     console.log('Admin user created');
@@ -27,6 +28,8 @@ async function seed() {
     // Update password admin ke 'admin123' agar selalu sinkron dengan test
     adminExist.password = await bcrypt.hash('admin123', 10);
     adminExist.status_aktif = true;
+    adminExist.foto =
+      adminExist.foto || 'https://ui-avatars.com/api/?name=Admin+SIAP';
     await userRepo.save(adminExist);
     console.log('Admin user already exists, password reset to admin123');
   }
@@ -40,10 +43,14 @@ async function seed() {
       password: await bcrypt.hash('pegawai123', 10),
       role: 'pegawai',
       status_aktif: true,
+      foto: 'https://ui-avatars.com/api/?name=Pegawai+Contoh', // contoh foto profil
     });
     await userRepo.save(pegawai);
     console.log('Pegawai user created');
   } else {
+    pegawaiExist.foto =
+      pegawaiExist.foto || 'https://ui-avatars.com/api/?name=Pegawai+Contoh';
+    await userRepo.save(pegawaiExist);
     console.log('Pegawai user already exists');
   }
 
