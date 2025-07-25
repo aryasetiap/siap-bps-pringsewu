@@ -13,8 +13,8 @@ Dokumentasi tahapan kerja detail untuk monitoring dan catatan progres proyek.
 - ✅ Setup repository Git & struktur folder
   > Repo Git diinisialisasi di root siap-bps-pringsewu, backend sebagai subfolder
 - ✅ Konfigurasi environment (.env) & koneksi database PostgreSQL
-- [ ] Instalasi dependensi utama (Sanctum, dompdf, dsb)
-- [ ] Inisialisasi migrasi database (users, barang, permintaan, detail_permintaan)
+- ✅ Instalasi dependensi utama (Sanctum, dompdf, dsb)
+- ✅ Inisialisasi migrasi database (users, barang, permintaan, detail_permintaan)
 - [ ] Seeder data awal (admin, pegawai, barang contoh)
 - [ ] Setup autentikasi (login/logout, hashing password, role-based)
 - [ ] Middleware otorisasi (admin/pegawai)
