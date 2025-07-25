@@ -74,4 +74,17 @@ describe('UserController', () => {
     });
     expect(service.softDelete).toHaveBeenCalledWith(1);
   });
+
+  it('should get profile', async () => {
+    const req = { user: { userId: 1 } } as any;
+    await controller.getProfile(req);
+    expect(service.findOne).toHaveBeenCalledWith(1);
+  });
+
+  it('should update profile', async () => {
+    const req = { user: { userId: 1 } } as any;
+    const dto = { nama: 'Updated Profile' };
+    await controller.updateProfile(req, dto as any);
+    expect(service.update).toHaveBeenCalledWith(1, dto);
+  });
 });

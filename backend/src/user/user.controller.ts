@@ -8,6 +8,7 @@ import {
   Delete,
   UseGuards,
   ParseIntPipe,
+  Req,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../auth/roles.guard';
@@ -15,6 +16,7 @@ import { Roles } from '../auth/roles.decorator';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { Request } from 'express';
 
 @Controller('user')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -37,8 +39,16 @@ export class UserController {
 
   // Endpoint bisa diakses semua user yang sudah login (tanpa role spesifik)
   @Get('profile')
-  getProfile() {
-    return { message: 'Profil user (login saja)' };
+  async getProfile(@Req() req: Request) {
+    // req.user di-set oleh JWT AuthGuard
+    const userId = (req.user as any)?.userId;
+    return this.userService.findOne(userId);
+  }
+
+  @Patch('profile')
+  async updateProfile(@Req() req: Request, @Body() dto: UpdateUserDto) {
+    const userId = (req.user as any)?.userId;
+    return this.userService.update(userId, dto);
   }
 
   @Post()

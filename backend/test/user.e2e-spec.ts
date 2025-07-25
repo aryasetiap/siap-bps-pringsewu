@@ -27,7 +27,7 @@ describe('User CRUD (e2e)', () => {
       .delete('/user')
       .set('Authorization', `Bearer ${token}`)
       .send({ username: 'usertest' }); // Pastikan ada endpoint untuk bulk delete atau gunakan query langsung ke DB jika perlu
-  });
+  }, 30000); // timeout 30 detik
 
   it('POST /user (create)', async () => {
     const uniqueUsername = 'usertest_' + Date.now();
@@ -101,6 +101,32 @@ describe('User CRUD (e2e)', () => {
       .set('Authorization', `Bearer ${token}`);
     expect(res.status).toBe(404);
     expect(res.body.message).toMatch(/User tidak ditemukan/i);
+  });
+
+  it('GET /user/profile (lihat profil)', async () => {
+    const res = await request(app.getHttpServer())
+      .get('/user/profile')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    expect(res.body.username).toBe('admin');
+  });
+
+  it('PATCH /user/profile (edit profil)', async () => {
+    const res = await request(app.getHttpServer())
+      .patch('/user/profile')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ nama: 'Admin Updated' });
+    expect(res.status).toBe(200);
+    expect(res.body.nama).toBe('Admin Updated');
+  });
+
+  it('PATCH /user/profile (ubah password)', async () => {
+    const res = await request(app.getHttpServer())
+      .patch('/user/profile')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ password: 'newadmin123' });
+    expect(res.status).toBe(200);
+    expect(res.body.password).not.toBe('newadmin123');
   });
 
   afterAll(async () => {
