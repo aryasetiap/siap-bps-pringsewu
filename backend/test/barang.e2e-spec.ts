@@ -33,6 +33,9 @@ describe('Barang CRUD (e2e)', () => {
         nama_barang: 'Barang Test',
         satuan: 'pcs',
       });
+    if (res.status !== 201) {
+      console.error('POST /barang failed:', res.body);
+    }
     expect(res.status).toBe(201);
     expect(res.body.kode_barang).toBe(uniqueKode);
     createdId = res.body.id;

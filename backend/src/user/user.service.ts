@@ -45,12 +45,23 @@ export class UserService {
   }
 
   async update(id: number, dto: UpdateUserDto): Promise<User> {
-    const user = await this.findOne(id);
+    const user = await this.userRepo.findOne({ where: { id } });
+    if (!user) throw new NotFoundException('User tidak ditemukan');
     if (dto.password) {
-      dto.password = await bcrypt.hash(dto.password, 10);
+      user.password = await bcrypt.hash(dto.password, 10);
+    }
+    if (dto.status_aktif !== undefined) {
+      if (typeof dto.status_aktif === 'string') {
+        user.status_aktif = dto.status_aktif === 'aktif';
+      } else {
+        user.status_aktif = !!dto.status_aktif;
+      }
     }
     Object.assign(user, dto);
-    return this.userRepo.save(user);
+    const saved = await this.userRepo.save(user);
+    // Jangan return password ke client
+    const { password, ...result } = saved;
+    return result as User;
   }
 
   async softDelete(id: number): Promise<User> {

@@ -54,6 +54,28 @@ async function seed() {
     console.log('Pegawai user already exists');
   }
 
+  // Cek dan insert user pegawai1 (untuk keperluan e2e test)
+  const pegawai1Exist = await userRepo.findOneBy({ username: 'pegawai1' });
+  if (!pegawai1Exist) {
+    const pegawai1 = userRepo.create({
+      nama: 'Pegawai Satu',
+      username: 'pegawai1',
+      password: await bcrypt.hash('pegawai123', 10),
+      role: 'pegawai',
+      status_aktif: true,
+      foto: 'https://ui-avatars.com/api/?name=Pegawai+Satu',
+    });
+    await userRepo.save(pegawai1);
+    console.log('Pegawai1 user created');
+  } else {
+    pegawai1Exist.password = await bcrypt.hash('pegawai123', 10);
+    pegawai1Exist.status_aktif = true;
+    pegawai1Exist.foto =
+      pegawai1Exist.foto || 'https://ui-avatars.com/api/?name=Pegawai+Satu';
+    await userRepo.save(pegawai1Exist);
+    console.log('Pegawai1 user already exists, password reset to pegawai123');
+  }
+
   // Cek dan insert barang contoh
   const barangRepo = dataSource.getRepository(Barang);
   const barangExist = await barangRepo.findOneBy({ kode_barang: 'BRG001' });
