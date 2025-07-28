@@ -10,140 +10,110 @@ dotenv.config();
 async function seed() {
   const dataSource = await ormconfig.initialize();
 
-  // Cek dan insert user admin
+  // User Seeder
   const userRepo = dataSource.getRepository(User);
-  const adminExist = await userRepo.findOneBy({ username: 'admin' });
-  if (!adminExist) {
-    const admin = userRepo.create({
+
+  // Admin
+  await userRepo.save(
+    userRepo.create({
       nama: 'Admin SIAP',
       username: 'admin',
       password: await bcrypt.hash('admin123', 10),
       role: 'admin',
+      unit_kerja: 'Kepala Kantor',
       status_aktif: true,
-      foto: 'https://ui-avatars.com/api/?name=Admin+SIAP', // contoh foto profil
-    });
-    await userRepo.save(admin);
-    console.log('Admin user created');
-  } else {
-    // Update password admin ke 'admin123' agar selalu sinkron dengan test
-    adminExist.password = await bcrypt.hash('admin123', 10);
-    adminExist.status_aktif = true;
-    adminExist.foto =
-      adminExist.foto || 'https://ui-avatars.com/api/?name=Admin+SIAP';
-    await userRepo.save(adminExist);
-    console.log('Admin user already exists, password reset to admin123');
-  }
+      foto: 'https://ui-avatars.com/api/?name=Admin+SIAP',
+    }),
+  );
 
-  // Cek dan insert user pegawai
-  const pegawaiExist = await userRepo.findOneBy({ username: 'pegawai' });
-  if (!pegawaiExist) {
-    const pegawai = userRepo.create({
-      nama: 'Pegawai Contoh',
-      username: 'pegawai',
-      password: await bcrypt.hash('pegawai123', 10),
-      role: 'pegawai',
+  // Pegawai
+  const pegawaiList = [
+    {
+      nama: 'Budi Santoso',
+      username: 'budi',
+      password: await bcrypt.hash('budi123', 10),
+      role: 'pegawai' as const,
+      unit_kerja: 'Statistik Produksi',
       status_aktif: true,
-      foto: 'https://ui-avatars.com/api/?name=Pegawai+Contoh', // contoh foto profil
-    });
-    await userRepo.save(pegawai);
-    console.log('Pegawai user created');
-  } else {
-    pegawaiExist.foto =
-      pegawaiExist.foto || 'https://ui-avatars.com/api/?name=Pegawai+Contoh';
-    await userRepo.save(pegawaiExist);
-    console.log('Pegawai user already exists');
-  }
-
-  // Cek dan insert user pegawai1 (untuk keperluan e2e test)
-  const pegawai1Exist = await userRepo.findOneBy({ username: 'pegawai1' });
-  if (!pegawai1Exist) {
-    const pegawai1 = userRepo.create({
-      nama: 'Pegawai Satu',
-      username: 'pegawai1',
-      password: await bcrypt.hash('pegawai123', 10),
-      role: 'pegawai',
+      foto: 'https://ui-avatars.com/api/?name=Budi+Santoso',
+    },
+    {
+      nama: 'Siti Aminah',
+      username: 'siti',
+      password: await bcrypt.hash('siti123', 10),
+      role: 'pegawai' as const,
+      unit_kerja: 'Statistik Sosial',
       status_aktif: true,
-      foto: 'https://ui-avatars.com/api/?name=Pegawai+Satu',
-    });
-    await userRepo.save(pegawai1);
-    console.log('Pegawai1 user created');
-  } else {
-    pegawai1Exist.password = await bcrypt.hash('pegawai123', 10);
-    pegawai1Exist.status_aktif = true;
-    pegawai1Exist.foto =
-      pegawai1Exist.foto || 'https://ui-avatars.com/api/?name=Pegawai+Satu';
-    await userRepo.save(pegawai1Exist);
-    console.log('Pegawai1 user already exists, password reset to pegawai123');
-  }
+      foto: 'https://ui-avatars.com/api/?name=Siti+Aminah',
+    },
+    {
+      nama: 'Rudi Hartono',
+      username: 'rudi',
+      password: await bcrypt.hash('rudi123', 10),
+      role: 'pegawai' as const,
+      unit_kerja: 'Bagian Umum',
+      status_aktif: true,
+      foto: 'https://ui-avatars.com/api/?name=Rudi+Hartono',
+    },
+  ];
+  await userRepo.save(userRepo.create(pegawaiList));
 
-  // Cek dan insert barang contoh
+  // Barang Seeder
   const barangRepo = dataSource.getRepository(Barang);
-  const barangExist = await barangRepo.findOneBy({ kode_barang: 'BRG001' });
-  if (!barangExist) {
-    const barang = barangRepo.create({
+  const barangList = [
+    {
       kode_barang: 'BRG001',
-      nama_barang: 'Kertas A4',
-      deskripsi: 'Kertas HVS ukuran A4 80gsm',
+      nama_barang: 'Kertas A4 80gsm',
+      deskripsi: 'Kertas HVS ukuran A4, 80gsm, putih',
       satuan: 'rim',
-      stok: 100, // pastikan stok cukup besar
+      stok: 50,
       ambang_batas_kritis: 10,
       status_aktif: true,
-    });
-    await barangRepo.save(barang);
-    console.log('Barang contoh created');
-  } else {
-    barangExist.stok = 100; // reset stok jika sudah ada
-    await barangRepo.save(barangExist);
-    console.log('Barang contoh already exists, stok reset');
-  }
-
-  // Tambahkan barang kedua dengan stok besar juga
-  const barangExist2 = await barangRepo.findOneBy({ kode_barang: 'BRG002' });
-  if (!barangExist2) {
-    const barang2 = barangRepo.create({
+    },
+    {
       kode_barang: 'BRG002',
-      nama_barang: 'Kertas A3',
-      deskripsi: 'Kertas HVS ukuran A3 80gsm',
-      satuan: 'rim',
-      stok: 100, // pastikan stok cukup besar
-      ambang_batas_kritis: 10,
-      status_aktif: true,
-    });
-    await barangRepo.save(barang2);
-    console.log('Barang kedua created');
-  } else {
-    barangExist2.stok = 100; // reset stok jika sudah ada
-    await barangRepo.save(barangExist2);
-    console.log('Barang kedua already exists, stok reset');
-  }
-
-  // Tambahkan barang kritis untuk keperluan test
-  const kritisExist = await barangRepo.findOneBy({ kode_barang: 'KRITIS01' });
-  if (!kritisExist) {
-    const barangKritis = barangRepo.create({
-      kode_barang: 'KRITIS01',
-      nama_barang: 'Spidol Kritis',
-      deskripsi: 'Spidol dengan stok kritis',
+      nama_barang: 'Spidol Whiteboard',
+      deskripsi: 'Spidol untuk papan tulis putih',
       satuan: 'pcs',
-      stok: 2,
+      stok: 20,
       ambang_batas_kritis: 5,
       status_aktif: true,
-    });
-    await barangRepo.save(barangKritis);
-    console.log('Barang kritis created');
-  } else {
-    console.log('Barang kritis already exists');
-  }
+    },
+    {
+      kode_barang: 'BRG003',
+      nama_barang: 'Toner Printer HP',
+      deskripsi: 'Toner printer HP LaserJet',
+      satuan: 'pcs',
+      stok: 5,
+      ambang_batas_kritis: 2,
+      status_aktif: true,
+    },
+    {
+      kode_barang: 'BRG004',
+      nama_barang: 'Map Folder Plastik',
+      deskripsi: 'Map plastik untuk dokumen',
+      satuan: 'box',
+      stok: 15,
+      ambang_batas_kritis: 3,
+      status_aktif: true,
+    },
+    {
+      kode_barang: 'KRITIS01',
+      nama_barang: 'Pulpen Biru',
+      deskripsi: 'Pulpen tinta biru',
+      satuan: 'box',
+      stok: 1,
+      ambang_batas_kritis: 5,
+      status_aktif: true,
+    },
+  ];
+  await barangRepo.save(barangRepo.create(barangList));
 
   await dataSource.destroy();
+  console.log('Seeding selesai');
 }
 
-seed()
-  .then(() => {
-    console.log('Seeding selesai');
-    process.exit(0);
-  })
-  .catch((err) => {
-    console.error('Seeding gagal:', err);
-    process.exit(1);
-  });
+seed().catch((err) => {
+  console.error('Seeding gagal:', err);
+  process.exit(1);
+});
