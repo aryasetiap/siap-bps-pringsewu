@@ -10,6 +10,12 @@ dotenv.config();
 async function seed() {
   const dataSource = await ormconfig.initialize();
 
+  // Hapus data lama (urutan: detail_permintaan → permintaan → barang → users)
+  // Reset all tables and identity (auto increment)
+  await dataSource.query(`
+    TRUNCATE TABLE "detail_permintaan", "permintaan", "barang", "users" RESTART IDENTITY CASCADE
+  `);
+
   // User Seeder
   const userRepo = dataSource.getRepository(User);
 

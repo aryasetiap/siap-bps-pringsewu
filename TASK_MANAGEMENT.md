@@ -43,7 +43,7 @@ Dokumentasi tahapan kerja detail untuk monitoring dan catatan progres proyek.
 
 ### 5. Modul Verifikasi Permintaan (Admin)
 
-- [ ] Endpoint daftar permintaan masuk (status: Menunggu)
+- [x] Endpoint daftar permintaan masuk (status: Menunggu)
 - [ ] Endpoint detail permintaan (lihat item, jumlah, stok)
 - [ ] Endpoint verifikasi permintaan (setuju, setuju sebagian, tolak)
 - [ ] Logika pengurangan stok otomatis setelah verifikasi

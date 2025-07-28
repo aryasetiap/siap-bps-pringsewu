@@ -79,11 +79,16 @@ export class PermintaanService {
   }
 
   async getRiwayatByUser(userId: number) {
-    return this.permintaanRepo.find({
+    const riwayat = await this.permintaanRepo.find({
       where: { id_user_pemohon: userId },
       order: { tanggal_permintaan: 'DESC' },
       relations: ['details', 'details.barang'],
     });
+    // Tambahkan field items agar konsisten dengan response detail
+    return riwayat.map((permintaan) => ({
+      ...permintaan,
+      items: permintaan.details,
+    }));
   }
 
   async findOneById(id: number) {
@@ -97,5 +102,13 @@ export class PermintaanService {
       ...permintaan,
       items: permintaan.details,
     };
+  }
+
+  async getPermintaanMenunggu() {
+    return this.permintaanRepo.find({
+      where: { status: 'Menunggu' },
+      order: { tanggal_permintaan: 'ASC' },
+      relations: ['details', 'details.barang', 'pemohon'],
+    });
   }
 }

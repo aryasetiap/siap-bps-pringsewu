@@ -34,6 +34,15 @@ export class PermintaanController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Get('masuk')
+  async getPermintaanMasuk(@Req() req) {
+    if (req.user.role !== 'admin') {
+      throw new ForbiddenException('Hanya admin yang dapat mengakses');
+    }
+    return this.permintaanService.getPermintaanMenunggu();
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Get(':id')
   async findOne(@Req() req, @Param('id') id: number) {
     // Hanya boleh akses permintaan milik sendiri (pegawai) atau admin
