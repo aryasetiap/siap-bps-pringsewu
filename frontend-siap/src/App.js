@@ -7,8 +7,11 @@ import {
 } from "react-router-dom";
 import LoginPage from "./pages/LoginPage";
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import ManajemenBarang from "./pages/admin/ManajemenBarang";
 import EmployeeRequestPage from "./pages/employee/EmployeeRequest";
 import DashboardLayout from "./components/DashboardLayout";
+import UserManagement from "./pages/admin/UserManagement";
+import RequestVerification from "./pages/admin/RequestVerification";
 
 function App() {
   const isAuthenticated = () => {
@@ -46,23 +49,39 @@ function App() {
           }
         />
 
-        {/* <Route
         <Route
           path="/admin/barang"
           element={
             <PrivateRoute roles={['admin']}>
-              <div>Halaman Manajemen Barang (Admin)</div>
+              <DashboardLayout>
+                <ManajemenBarang />
+              </DashboardLayout>
             </PrivateRoute>
           }
         />
-         <Route
-          path="/admin/pengguna"
-          element={
-            <PrivateRoute roles={['admin']}>
-              <div>Halaman Manajemen Pengguna (Admin)</div>
-            </PrivateRoute>
-          }
-        />  */}
+
+          <Route
+            path="/admin/pengguna"
+            element={
+              <PrivateRoute roles={['admin']}>
+                <DashboardLayout>
+                  <UserManagement />
+                </DashboardLayout>
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/admin/verifikasi"
+            element={
+              <PrivateRoute roles={['admin']}>
+                <DashboardLayout>
+                  <RequestVerification />
+                </DashboardLayout>
+              </PrivateRoute>
+            }
+          />
+        
 
         {/* Rute untuk Pegawai */}
         <Route
@@ -75,6 +94,7 @@ function App() {
             </PrivateRoute>
           }
         />
+        
         {/* <Route
         <Route
           path="/pegawai/riwayat"
