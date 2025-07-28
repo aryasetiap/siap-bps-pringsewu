@@ -28,7 +28,7 @@ Dokumentasi tahapan kerja detail untuk monitoring dan catatan progres proyek.
 
 ### 3. Modul Barang & Stok
 
-- [ ] CRUD Barang (Admin): tambah, edit, hapus, nonaktifkan
+- [x] CRUD Barang (Admin): tambah, edit, hapus, nonaktifkan
 - [ ] Endpoint penambahan stok barang
 - [ ] Validasi input barang & stok
 - [ ] Fitur pencarian & filter barang (API)
