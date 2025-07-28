@@ -6,8 +6,10 @@ import {
   UpdateDateColumn,
   ManyToOne,
   JoinColumn,
+  OneToMany,
 } from 'typeorm';
 import { User } from './user.entity';
+import { DetailPermintaan } from './detail_permintaan.entity';
 
 @Entity('permintaan')
 export class Permintaan {
@@ -41,4 +43,7 @@ export class Permintaan {
 
   @UpdateDateColumn()
   updated_at: Date;
+
+  @OneToMany(() => DetailPermintaan, (detail) => detail.permintaan)
+  details: DetailPermintaan[];
 }

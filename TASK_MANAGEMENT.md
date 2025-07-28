@@ -38,7 +38,7 @@ Dokumentasi tahapan kerja detail untuk monitoring dan catatan progres proyek.
 
 - [x] Endpoint pengajuan permintaan barang (multi-item)
 - [x] Validasi stok tersedia sebelum permintaan
-- [ ] Simpan permintaan & detail_permintaan
+- [x] Simpan permintaan & detail_permintaan
 - [ ] Endpoint riwayat permintaan pegawai
 
 ### 5. Modul Verifikasi Permintaan (Admin)

@@ -52,6 +52,14 @@ describe('Permintaan (e2e)', () => {
       });
     expect(res.status).toBe(201);
     expect(res.body.items.length).toBe(2);
+
+    // Tambahan: GET permintaan by id, pastikan data tersimpan
+    const getRes = await request(app.getHttpServer())
+      .get(`/permintaan/${res.body.id}`)
+      .set('Authorization', `Bearer ${pegawaiToken}`);
+    expect(getRes.status).toBe(200);
+    expect(getRes.body.items.length).toBe(2);
+    expect(getRes.body.catatan).toBe('Untuk kebutuhan survei');
   });
 
   it('POST /permintaan (should fail if stock is insufficient)', async () => {
@@ -70,6 +78,27 @@ describe('Permintaan (e2e)', () => {
       });
     expect(res.status).toBe(400);
     expect(res.body.message).toMatch(/tidak mencukupi/i);
+  });
+
+  it('should save permintaan and detail_permintaan atomically', async () => {
+    const dto = {
+      items: [
+        { id_barang: 1, jumlah: 2 },
+        { id_barang: 2, jumlah: 3 },
+      ],
+      catatan: 'Test simpan',
+    };
+    // Mock barangRepo.findByIds agar tidak undefined
+    const barangList = [
+      { id: 1, nama_barang: 'Barang A', stok: 10 },
+      { id: 2, nama_barang: 'Barang B', stok: 10 },
+    ];
+    barangRepo.findByIds.mockResolvedValue(barangList);
+
+    const result = await service.create(dto, 1);
+    expect(result).toHaveProperty('id');
+    expect(result.items.length).toBe(2);
+    expect(result.items[0]).toHaveProperty('id_barang');
   });
 
   afterAll(async () => {

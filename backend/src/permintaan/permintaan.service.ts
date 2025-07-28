@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Permintaan } from '../entities/permintaan.entity';
 import { DetailPermintaan } from '../entities/detail_permintaan.entity';
 import { Barang } from '../entities/barang.entity';
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { CreatePermintaanDto } from './dto/create-permintaan.dto';
 
 @Injectable()
@@ -15,6 +15,7 @@ export class PermintaanService {
     private detailRepo: Repository<DetailPermintaan>,
     @InjectRepository(Barang)
     private barangRepo: Repository<Barang>,
+    private dataSource: DataSource, // inject DataSource
   ) {}
 
   async create(dto: CreatePermintaanDto, id_user_pemohon: number) {
@@ -45,29 +46,31 @@ export class PermintaanService {
     }
     // === End validasi stok ===
 
-    // PERBAIKAN: Simpan ke kolom 'catatan' (bukan 'catatan_admin')
-    const permintaan = this.permintaanRepo.create({
-      id_user_pemohon,
-      catatan: dto.catatan, // pastikan nama kolom di entity adalah 'catatan'
-      status: 'Menunggu',
-      tanggal_permintaan: new Date(),
+    return await this.dataSource.transaction(async (manager) => {
+      // Simpan permintaan
+      const permintaan = this.permintaanRepo.create({
+        id_user_pemohon,
+        catatan: dto.catatan,
+        status: 'Menunggu',
+        tanggal_permintaan: new Date(),
+      });
+      const savedPermintaan = await manager.save(permintaan);
+
+      // Simpan detail_permintaan
+      const details = dto.items.map((item) =>
+        this.detailRepo.create({
+          id_permintaan: savedPermintaan.id,
+          id_barang: item.id_barang,
+          jumlah_diminta: item.jumlah,
+          jumlah_disetujui: 0,
+        }),
+      );
+      const savedDetails = await manager.save(details);
+
+      return {
+        ...savedPermintaan,
+        items: savedDetails,
+      };
     });
-    const savedPermintaan = await this.permintaanRepo.save(permintaan);
-
-    // Simpan detail_permintaan
-    const details = dto.items.map((item) =>
-      this.detailRepo.create({
-        id_permintaan: savedPermintaan.id,
-        id_barang: item.id_barang,
-        jumlah_diminta: item.jumlah,
-        jumlah_disetujui: 0,
-      }),
-    );
-    await this.detailRepo.save(details);
-
-    return {
-      ...savedPermintaan,
-      items: details,
-    };
   }
 }
