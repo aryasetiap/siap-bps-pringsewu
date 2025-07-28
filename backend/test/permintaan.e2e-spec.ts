@@ -54,6 +54,24 @@ describe('Permintaan (e2e)', () => {
     expect(res.body.items.length).toBe(2);
   });
 
+  it('POST /permintaan (should fail if stock is insufficient)', async () => {
+    // Ambil barang aktif
+    const barangRes = await request(app.getHttpServer())
+      .get('/barang?status_aktif=true')
+      .set('Authorization', `Bearer ${adminToken}`);
+    const barang = barangRes.body[0];
+    // Set jumlah lebih dari stok
+    const res = await request(app.getHttpServer())
+      .post('/permintaan')
+      .set('Authorization', `Bearer ${pegawaiToken}`)
+      .send({
+        items: [{ id_barang: barang.id, jumlah: barang.stok + 100 }],
+        catatan: 'Test stok tidak cukup',
+      });
+    expect(res.status).toBe(400);
+    expect(res.body.message).toMatch(/tidak mencukupi/i);
+  });
+
   afterAll(async () => {
     await app.close();
   });

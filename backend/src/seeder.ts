@@ -85,14 +85,36 @@ async function seed() {
       nama_barang: 'Kertas A4',
       deskripsi: 'Kertas HVS ukuran A4 80gsm',
       satuan: 'rim',
-      stok: 100,
+      stok: 100, // pastikan stok cukup besar
       ambang_batas_kritis: 10,
       status_aktif: true,
     });
     await barangRepo.save(barang);
     console.log('Barang contoh created');
   } else {
-    console.log('Barang contoh already exists');
+    barangExist.stok = 100; // reset stok jika sudah ada
+    await barangRepo.save(barangExist);
+    console.log('Barang contoh already exists, stok reset');
+  }
+
+  // Tambahkan barang kedua dengan stok besar juga
+  const barangExist2 = await barangRepo.findOneBy({ kode_barang: 'BRG002' });
+  if (!barangExist2) {
+    const barang2 = barangRepo.create({
+      kode_barang: 'BRG002',
+      nama_barang: 'Kertas A3',
+      deskripsi: 'Kertas HVS ukuran A3 80gsm',
+      satuan: 'rim',
+      stok: 100, // pastikan stok cukup besar
+      ambang_batas_kritis: 10,
+      status_aktif: true,
+    });
+    await barangRepo.save(barang2);
+    console.log('Barang kedua created');
+  } else {
+    barangExist2.stok = 100; // reset stok jika sudah ada
+    await barangRepo.save(barangExist2);
+    console.log('Barang kedua already exists, stok reset');
   }
 
   // Tambahkan barang kritis untuk keperluan test

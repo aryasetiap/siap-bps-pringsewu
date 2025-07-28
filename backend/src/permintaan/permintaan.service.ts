@@ -29,6 +29,22 @@ export class PermintaanService {
       );
     }
 
+    // === Tambahan: Validasi stok tersedia ===
+    for (const item of dto.items) {
+      const barang = barangList.find((b) => b.id === item.id_barang);
+      if (!barang) {
+        throw new BadRequestException(
+          `Barang dengan ID ${item.id_barang} tidak ditemukan`,
+        );
+      }
+      if (barang.stok < item.jumlah) {
+        throw new BadRequestException(
+          `Stok barang "${barang.nama_barang}" tidak mencukupi. Stok tersedia: ${barang.stok}, diminta: ${item.jumlah}`,
+        );
+      }
+    }
+    // === End validasi stok ===
+
     // PERBAIKAN: Simpan ke kolom 'catatan' (bukan 'catatan_admin')
     const permintaan = this.permintaanRepo.create({
       id_user_pemohon,
