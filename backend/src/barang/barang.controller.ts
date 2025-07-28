@@ -9,6 +9,7 @@ import {
   UseGuards,
   ParseIntPipe,
   ValidationPipe,
+  Query,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../auth/roles.guard';
@@ -40,8 +41,17 @@ export class BarangController {
 
   @Roles('admin')
   @Get()
-  findAll() {
-    return this.barangService.findAll();
+  findAll(
+    @Query('q') q?: string,
+    @Query('status_aktif') status_aktif?: string,
+    @Query('stok_kritis') stok_kritis?: string,
+  ) {
+    return this.barangService.findAll({
+      q,
+      status_aktif:
+        status_aktif === undefined ? undefined : status_aktif === 'true',
+      stok_kritis: stok_kritis === 'true',
+    });
   }
 
   @Roles('admin')

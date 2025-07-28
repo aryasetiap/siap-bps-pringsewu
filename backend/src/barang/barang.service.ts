@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Barang } from '../entities/barang.entity';
-import { Repository } from 'typeorm';
+import { Repository, FindOptionsWhere, ILike, LessThanOrEqual } from 'typeorm';
 import { CreateBarangDto } from './dto/create-barang.dto';
 import { UpdateBarangDto } from './dto/update-barang.dto';
 import { AddStokDto } from './dto/add-stok.dto';
@@ -26,8 +26,35 @@ export class BarangService {
     return this.barangRepo.save(barang);
   }
 
-  async findAll(): Promise<Barang[]> {
-    return this.barangRepo.find();
+  async findAll(query?: {
+    q?: string;
+    status_aktif?: boolean;
+    stok_kritis?: boolean;
+  }): Promise<Barang[]> {
+    const repo = this.barangRepo;
+    const qb = repo.createQueryBuilder('barang');
+
+    // Pencarian nama/kode
+    if (query?.q) {
+      qb.andWhere(
+        '(barang.nama_barang ILIKE :q OR barang.kode_barang ILIKE :q)',
+        { q: `%${query.q}%` },
+      );
+    }
+
+    // Filter status aktif
+    if (typeof query?.status_aktif === 'boolean') {
+      qb.andWhere('barang.status_aktif = :status', {
+        status: query.status_aktif,
+      });
+    }
+
+    // Filter stok kritis
+    if (query?.stok_kritis) {
+      qb.andWhere('barang.stok <= barang.ambang_batas_kritis');
+    }
+
+    return qb.getMany();
   }
 
   async findOne(id: number): Promise<Barang> {

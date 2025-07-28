@@ -116,6 +116,22 @@ describe('Barang CRUD (e2e)', () => {
     expect(msg).toContain('must not be less than 0');
   });
 
+  it('GET /barang?q=Kertas', async () => {
+    const res = await request(app.getHttpServer())
+      .get('/barang?q=Kertas')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    expect(res.body.some((b) => b.nama_barang.includes('Kertas'))).toBe(true);
+  });
+
+  it('GET /barang?status_aktif=true', async () => {
+    const res = await request(app.getHttpServer())
+      .get('/barang?status_aktif=true')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    expect(res.body.every((b) => b.status_aktif === true)).toBe(true);
+  });
+
   afterAll(async () => {
     await app.close();
   });

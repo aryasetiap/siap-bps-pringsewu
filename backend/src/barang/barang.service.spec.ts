@@ -33,6 +33,10 @@ describe('BarangService', () => {
             create: jest.fn(),
             save: jest.fn(),
             remove: jest.fn(),
+            createQueryBuilder: jest.fn(() => ({
+              andWhere: jest.fn().mockReturnThis(),
+              getMany: jest.fn().mockResolvedValue([mockBarang]),
+            })),
           },
         },
       ],
@@ -91,9 +95,14 @@ describe('BarangService', () => {
   });
 
   it('should find all barang', async () => {
-    (repo.find as jest.Mock).mockResolvedValue([mockBarang]);
+    const qb = {
+      andWhere: jest.fn().mockReturnThis(),
+      getMany: jest.fn().mockResolvedValue([mockBarang]),
+    };
+    (repo.createQueryBuilder as jest.Mock).mockReturnValue(qb);
+
     const result = await service.findAll();
-    expect(repo.find).toHaveBeenCalled();
+    expect(qb.getMany).toHaveBeenCalled();
     expect(result).toEqual([mockBarang]);
   });
 
@@ -128,6 +137,38 @@ describe('BarangService', () => {
     await expect(service.addStok(1, { jumlah: 5 })).rejects.toThrow(
       'Barang tidak aktif',
     );
+  });
+
+  it('should filter barang by q', async () => {
+    const qb = {
+      andWhere: jest.fn().mockReturnThis(),
+      getMany: jest.fn().mockResolvedValue([mockBarang]),
+    };
+    (repo.createQueryBuilder as jest.Mock).mockReturnValue(qb);
+
+    const result = await service.findAll({ q: 'Kertas' });
+    expect(qb.andWhere).toHaveBeenCalledWith(
+      '(barang.nama_barang ILIKE :q OR barang.kode_barang ILIKE :q)',
+      { q: '%Kertas%' },
+    );
+    expect(qb.getMany).toHaveBeenCalled();
+    expect(result).toEqual([mockBarang]);
+  });
+
+  it('should filter barang by status_aktif', async () => {
+    const qb = {
+      andWhere: jest.fn().mockReturnThis(),
+      getMany: jest.fn().mockResolvedValue([mockBarang]),
+    };
+    (repo.createQueryBuilder as jest.Mock).mockReturnValue(qb);
+
+    const result = await service.findAll({ status_aktif: true });
+    expect(qb.andWhere).toHaveBeenCalledWith(
+      'barang.status_aktif = :status',
+      { status: true },
+    );
+    expect(qb.getMany).toHaveBeenCalled();
+    expect(result).toEqual([mockBarang]);
   });
 });
 
