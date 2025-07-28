@@ -1,4 +1,8 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Permintaan } from '../entities/permintaan.entity';
 import { DetailPermintaan } from '../entities/detail_permintaan.entity';
@@ -72,5 +76,26 @@ export class PermintaanService {
         items: savedDetails,
       };
     });
+  }
+
+  async getRiwayatByUser(userId: number) {
+    return this.permintaanRepo.find({
+      where: { id_user_pemohon: userId },
+      order: { tanggal_permintaan: 'DESC' },
+      relations: ['details', 'details.barang'],
+    });
+  }
+
+  async findOneById(id: number) {
+    const permintaan = await this.permintaanRepo.findOne({
+      where: { id },
+      relations: ['details', 'details.barang', 'pemohon'],
+    });
+    if (!permintaan) throw new NotFoundException('Permintaan tidak ditemukan');
+    // Map details ke items agar response konsisten
+    return {
+      ...permintaan,
+      items: permintaan.details,
+    };
   }
 }

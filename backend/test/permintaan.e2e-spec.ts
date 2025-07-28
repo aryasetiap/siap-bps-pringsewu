@@ -7,6 +7,7 @@ describe('Permintaan (e2e)', () => {
   let app: INestApplication;
   let pegawaiToken: string;
   let adminToken: string;
+  let reqUserId: number;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -16,92 +17,98 @@ describe('Permintaan (e2e)', () => {
     app = moduleFixture.createNestApplication();
     await app.init();
 
-    // Login admin
+    // Login sebagai admin untuk mendapatkan token
     const adminRes = await request(app.getHttpServer())
       .post('/auth/login')
       .send({ username: 'admin', password: 'admin123' });
     adminToken = adminRes.body.access_token;
 
-    // Login sebagai pegawai (pastikan user pegawai ada di seeder)
-    const loginRes = await request(app.getHttpServer())
+    // Login sebagai pegawai untuk mendapatkan token dan user ID
+    const pegawaiRes = await request(app.getHttpServer())
       .post('/auth/login')
       .send({ username: 'pegawai1', password: 'pegawai123' });
-    pegawaiToken = loginRes.body.access_token;
-  });
-
-  it('POST /permintaan (multi-item)', async () => {
-    // Ambil barang aktif pakai token admin
-    const barangRes = await request(app.getHttpServer())
-      .get('/barang?status_aktif=true')
-      .set('Authorization', `Bearer ${adminToken}`);
-    expect(barangRes.status).toBe(200);
-    expect(Array.isArray(barangRes.body)).toBe(true);
-    expect(barangRes.body.length).toBeGreaterThanOrEqual(2);
-
-    const barang = barangRes.body;
-
-    const res = await request(app.getHttpServer())
-      .post('/permintaan')
-      .set('Authorization', `Bearer ${pegawaiToken}`)
-      .send({
-        items: [
-          { id_barang: barang[0].id, jumlah: 2 },
-          { id_barang: barang[1].id, jumlah: 5 },
-        ],
-        catatan: 'Untuk kebutuhan survei',
-      });
-    expect(res.status).toBe(201);
-    expect(res.body.items.length).toBe(2);
-
-    // Tambahan: GET permintaan by id, pastikan data tersimpan
-    const getRes = await request(app.getHttpServer())
-      .get(`/permintaan/${res.body.id}`)
-      .set('Authorization', `Bearer ${pegawaiToken}`);
-    expect(getRes.status).toBe(200);
-    expect(getRes.body.items.length).toBe(2);
-    expect(getRes.body.catatan).toBe('Untuk kebutuhan survei');
-  });
-
-  it('POST /permintaan (should fail if stock is insufficient)', async () => {
-    // Ambil barang aktif
-    const barangRes = await request(app.getHttpServer())
-      .get('/barang?status_aktif=true')
-      .set('Authorization', `Bearer ${adminToken}`);
-    const barang = barangRes.body[0];
-    // Set jumlah lebih dari stok
-    const res = await request(app.getHttpServer())
-      .post('/permintaan')
-      .set('Authorization', `Bearer ${pegawaiToken}`)
-      .send({
-        items: [{ id_barang: barang.id, jumlah: barang.stok + 100 }],
-        catatan: 'Test stok tidak cukup',
-      });
-    expect(res.status).toBe(400);
-    expect(res.body.message).toMatch(/tidak mencukupi/i);
-  });
-
-  it('should save permintaan and detail_permintaan atomically', async () => {
-    const dto = {
-      items: [
-        { id_barang: 1, jumlah: 2 },
-        { id_barang: 2, jumlah: 3 },
-      ],
-      catatan: 'Test simpan',
-    };
-    // Mock barangRepo.findByIds agar tidak undefined
-    const barangList = [
-      { id: 1, nama_barang: 'Barang A', stok: 10 },
-      { id: 2, nama_barang: 'Barang B', stok: 10 },
-    ];
-    barangRepo.findByIds.mockResolvedValue(barangList);
-
-    const result = await service.create(dto, 1);
-    expect(result).toHaveProperty('id');
-    expect(result.items.length).toBe(2);
-    expect(result.items[0]).toHaveProperty('id_barang');
+    pegawaiToken = pegawaiRes.body.access_token;
+    reqUserId = pegawaiRes.body.user.id;
   });
 
   afterAll(async () => {
     await app.close();
+  });
+
+  it('POST /permintaan -> harus berhasil membuat permintaan dengan multi-item', async () => {
+    // Langkah 1: Ambil data barang yang aktif untuk digunakan dalam permintaan
+    const barangRes = await request(app.getHttpServer())
+      .get('/barang?status_aktif=true')
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(barangRes.status).toBe(200);
+    const barangList = barangRes.body;
+    expect(barangList.length).toBeGreaterThanOrEqual(2); // Pastikan ada minimal 2 barang untuk dites
+
+    // Langkah 2: Buat permintaan baru menggunakan token pegawai
+    const createPermintaanRes = await request(app.getHttpServer())
+      .post('/permintaan')
+      .set('Authorization', `Bearer ${pegawaiToken}`)
+      .send({
+        items: [
+          { id_barang: barangList[0].id, jumlah: 2 },
+          { id_barang: barangList[1].id, jumlah: 5 },
+        ],
+        catatan: 'Untuk kebutuhan survei lapangan',
+      });
+
+    expect(createPermintaanRes.status).toBe(201); // 201 Created
+    expect(createPermintaanRes.body.items.length).toBe(2);
+    expect(createPermintaanRes.body.catatan).toBe(
+      'Untuk kebutuhan survei lapangan',
+    );
+
+    // Langkah 3: Verifikasi bahwa data permintaan tersimpan dengan benar
+    const getPermintaanRes = await request(app.getHttpServer())
+      .get(`/permintaan/${createPermintaanRes.body.id}`)
+      .set('Authorization', `Bearer ${pegawaiToken}`);
+
+    expect(getPermintaanRes.status).toBe(200);
+    expect(getPermintaanRes.body.items.length).toBe(2);
+    expect(getPermintaanRes.body.items[0].barang.id).toBe(barangList[0].id);
+    expect(getPermintaanRes.body.items[1].barang.id).toBe(barangList[1].id);
+  });
+
+  it('POST /permintaan -> harus gagal jika stok barang tidak mencukupi', async () => {
+    // Langkah 1: Ambil data barang yang aktif
+    const barangRes = await request(app.getHttpServer())
+      .get('/barang?status_aktif=true')
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    const barang = barangRes.body[0];
+    const jumlahMinta = barang.stok + 100; // Meminta lebih dari stok yang ada
+
+    // Langkah 2: Coba buat permintaan dengan jumlah melebihi stok
+    const res = await request(app.getHttpServer())
+      .post('/permintaan')
+      .set('Authorization', `Bearer ${pegawaiToken}`)
+      .send({
+        items: [{ id_barang: barang.id, jumlah: jumlahMinta }],
+        catatan: 'Test stok tidak cukup',
+      });
+
+    expect(res.status).toBe(400); // 400 Bad Request
+    expect(res.body.message.toLowerCase()).toContain('stok barang');
+    expect(res.body.message.toLowerCase()).toContain('tidak mencukupi');
+  });
+
+  it('GET /permintaan/riwayat -> harus mengembalikan riwayat permintaan milik pegawai yang login', async () => {
+    const res = await request(app.getHttpServer())
+      .get('/permintaan/riwayat')
+      .set('Authorization', `Bearer ${pegawaiToken}`);
+
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body)).toBe(true);
+
+    // Pastikan semua permintaan yang dikembalikan adalah milik user yang sedang login
+    const semuaMilikPegawai = res.body.every(
+      (p) => p.pemohon?.id === reqUserId || p.id_user_pemohon === reqUserId,
+    );
+    expect(semuaMilikPegawai).toBe(true);
   });
 });

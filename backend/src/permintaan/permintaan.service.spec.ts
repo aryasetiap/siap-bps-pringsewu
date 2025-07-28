@@ -1,94 +1,113 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { PermintaanService } from './permintaan.service';
-import { getRepositoryToken } from '@nestjs/typeorm';
-import { Permintaan } from '../entities/permintaan.entity';
-import { DetailPermintaan } from '../entities/detail_permintaan.entity';
-import { Barang } from '../entities/barang.entity';
-import { DataSource } from 'typeorm';
+import { INestApplication } from '@nestjs/common';
+import * as request from 'supertest';
+import { AppModule } from './../src/app.module';
 
-describe('PermintaanService', () => {
-  let service: PermintaanService;
-  let barangRepo: any;
+describe('Permintaan (e2e)', () => {
+  let app: INestApplication;
+  let pegawaiToken: string;
+  let adminToken: string;
+  let reqUserId: number;
 
-  beforeEach(async () => {
-    const mockDataSource = {
-      transaction: jest.fn().mockImplementation(async (transactionalWork) => {
-        const mockManager = {
-          save: jest.fn().mockImplementation(async (entity) => ({
-            ...entity,
-            id: entity.id || Date.now(),
-            tanggal_permintaan: new Date(),
-          })),
-        };
-        return transactionalWork(mockManager);
-      }),
-    };
-
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        PermintaanService,
-        {
-          provide: getRepositoryToken(Permintaan),
-          useValue: { create: jest.fn((data) => data), save: jest.fn() },
-        },
-        {
-          provide: getRepositoryToken(DetailPermintaan),
-          useValue: { create: jest.fn((data) => data), save: jest.fn() },
-        },
-        {
-          provide: getRepositoryToken(Barang),
-          // ================== PERBAIKAN 1 ==================
-          // Samakan nama fungsi di mock dengan yang dipanggil di service
-          useValue: { findByIds: jest.fn() },
-        },
-        { provide: DataSource, useValue: mockDataSource },
-      ],
+  beforeAll(async () => {
+    const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports: [AppModule],
     }).compile();
 
-    service = module.get<PermintaanService>(PermintaanService);
-    barangRepo = module.get(getRepositoryToken(Barang));
+    app = moduleFixture.createNestApplication();
+    await app.init();
+
+    // Login sebagai admin untuk mendapatkan token
+    const adminRes = await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({ username: 'admin', password: 'admin123' });
+    adminToken = adminRes.body.access_token;
+
+    // Login sebagai pegawai untuk mendapatkan token dan user ID
+    const pegawaiRes = await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({ username: 'pegawai1', password: 'pegawai123' });
+    pegawaiToken = pegawaiRes.body.access_token;
+    reqUserId = pegawaiRes.body.user.id;
   });
 
-  it('should throw error if any item stock is insufficient', async () => {
-    const dto = {
-      items: [
-        { id_barang: 1, jumlah: 10 },
-        { id_barang: 2, jumlah: 20 },
-      ],
-      catatan: 'Test',
-    };
-    const barangList = [
-      { id: 1, nama_barang: 'Barang A', stok: 15 },
-      { id: 2, nama_barang: 'Barang B', stok: 5 }, // stok kurang
-    ];
-    // ================== PERBAIKAN 2 ==================
-    // Gunakan mock 'findByIds' yang sudah benar
-    barangRepo.findByIds.mockResolvedValue(barangList);
+  afterAll(async () => {
+    await app.close();
+  });
 
-    await expect(service.create(dto, 1)).rejects.toThrow(
-      /Stok barang "Barang B" tidak mencukupi/,
+  it('POST /permintaan -> harus berhasil membuat permintaan dengan multi-item', async () => {
+    // Langkah 1: Ambil data barang yang aktif untuk digunakan dalam permintaan
+    const barangRes = await request(app.getHttpServer())
+      .get('/barang?status_aktif=true')
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(barangRes.status).toBe(200);
+    const barangList = barangRes.body;
+    expect(barangList.length).toBeGreaterThanOrEqual(2); // Pastikan ada minimal 2 barang untuk dites
+
+    // Langkah 2: Buat permintaan baru menggunakan token pegawai
+    const createPermintaanRes = await request(app.getHttpServer())
+      .post('/permintaan')
+      .set('Authorization', `Bearer ${pegawaiToken}`)
+      .send({
+        items: [
+          { id_barang: barangList[0].id, jumlah: 2 },
+          { id_barang: barangList[1].id, jumlah: 5 },
+        ],
+        catatan: 'Untuk kebutuhan survei lapangan',
+      });
+
+    expect(createPermintaanRes.status).toBe(201); // 201 Created
+    expect(createPermintaanRes.body.items.length).toBe(2);
+    expect(createPermintaanRes.body.catatan).toBe(
+      'Untuk kebutuhan survei lapangan',
     );
+
+    // Langkah 3: Verifikasi bahwa data permintaan tersimpan dengan benar
+    const getPermintaanRes = await request(app.getHttpServer())
+      .get(`/permintaan/${createPermintaanRes.body.id}`)
+      .set('Authorization', `Bearer ${pegawaiToken}`);
+
+    expect(getPermintaanRes.status).toBe(200);
+    expect(getPermintaanRes.body.items.length).toBe(2);
+    expect(getPermintaanRes.body.items[0].barang.id).toBe(barangList[0].id);
+    expect(getPermintaanRes.body.items[1].barang.id).toBe(barangList[1].id);
   });
 
-  it('should save permintaan and detail_permintaan atomically', async () => {
-    const dto = {
-      items: [
-        { id_barang: 1, jumlah: 2 },
-        { id_barang: 2, jumlah: 3 },
-      ],
-      catatan: 'Test simpan',
-    };
-    const barangList = [
-      { id: 1, nama_barang: 'Barang A', stok: 10 },
-      { id: 2, nama_barang: 'Barang B', stok: 10 },
-    ];
-    // ================== PERBAIKAN 3 ==================
-    // Gunakan mock 'findByIds' yang sudah benar
-    barangRepo.findByIds.mockResolvedValue(barangList);
+  it('POST /permintaan -> harus gagal jika stok barang tidak mencukupi', async () => {
+    // Langkah 1: Ambil data barang yang aktif
+    const barangRes = await request(app.getHttpServer())
+      .get('/barang?status_aktif=true')
+      .set('Authorization', `Bearer ${adminToken}`);
 
-    const result = await service.create(dto, 1);
+    const barang = barangRes.body[0];
+    const jumlahMinta = barang.stok + 100; // Meminta lebih dari stok yang ada
 
-    expect(result).toHaveProperty('id');
-    expect(result.catatan).toBe(dto.catatan);
+    // Langkah 2: Coba buat permintaan dengan jumlah melebihi stok
+    const res = await request(app.getHttpServer())
+      .post('/permintaan')
+      .set('Authorization', `Bearer ${pegawaiToken}`)
+      .send({
+        items: [{ id_barang: barang.id, jumlah: jumlahMinta }],
+        catatan: 'Test stok tidak cukup',
+      });
+
+    expect(res.status).toBe(400); // 400 Bad Request
+    expect(res.body.message).toMatch(/stok untuk barang .* tidak mencukupi/i);
+  });
+
+  it('GET /permintaan/riwayat -> harus mengembalikan riwayat permintaan milik pegawai yang login', async () => {
+    const res = await request(app.getHttpServer())
+      .get('/permintaan/riwayat')
+      .set('Authorization', `Bearer ${pegawaiToken}`);
+
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body)).toBe(true);
+
+    // Pastikan semua permintaan yang dikembalikan adalah milik user yang sedang login
+    const semuaMilikPegawai = res.body.every(
+      (p) => p.pemohon?.id === reqUserId || p.id_user_pemohon === reqUserId,
+    );
+    expect(semuaMilikPegawai).toBe(true);
   });
 });
