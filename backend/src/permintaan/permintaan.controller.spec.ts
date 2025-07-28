@@ -8,6 +8,7 @@ const mockPermintaanService = () => ({
   getRiwayatByUser: jest.fn(),
   getPermintaanMenunggu: jest.fn(),
   findOneById: jest.fn(),
+  verifikasiPermintaan: jest.fn(), // tambahkan ini
 });
 
 describe('PermintaanController', () => {
@@ -92,6 +93,21 @@ describe('PermintaanController', () => {
       service.findOneById.mockResolvedValue(permintaan);
       const result = await controller.findOne(req as any, 1);
       expect(result).toEqual(permintaan);
+    });
+  });
+
+  describe('verifikasi', () => {
+    it('should call service.verifikasiPermintaan with correct params', async () => {
+      const req = { user: { userId: 1, role: 'admin' } };
+      const dto = {
+        keputusan: 'setuju',
+        items: [{ id_detail: 1, jumlah_disetujui: 2 }],
+        catatan_verifikasi: 'OK',
+      };
+      service.verifikasiPermintaan.mockResolvedValue({ status: 'Disetujui' });
+      const result = await controller.verifikasi(1, dto as any, req as any);
+      expect(service.verifikasiPermintaan).toHaveBeenCalledWith(1, dto, 1);
+      expect(result).toEqual({ status: 'Disetujui' });
     });
   });
 });

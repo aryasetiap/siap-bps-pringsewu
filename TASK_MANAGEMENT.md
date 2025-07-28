@@ -45,7 +45,7 @@ Dokumentasi tahapan kerja detail untuk monitoring dan catatan progres proyek.
 
 - [x] Endpoint daftar permintaan masuk (status: Menunggu)
 - [x] Endpoint detail permintaan (lihat item, jumlah, stok)
-- [ ] Endpoint verifikasi permintaan (setuju, setuju sebagian, tolak)
+- [x] Endpoint verifikasi permintaan (setuju, setuju sebagian, tolak)
 - [ ] Logika pengurangan stok otomatis setelah verifikasi
 - [ ] Validasi stok tidak minus
 - [ ] Catatan verifikasi (opsional)

@@ -7,9 +7,11 @@ import {
   Get,
   Param,
   ForbiddenException, // tambahkan ini
+  Patch,
 } from '@nestjs/common';
 import { PermintaanService } from './permintaan.service';
 import { CreatePermintaanDto } from './dto/create-permintaan.dto';
+import { VerifikasiPermintaanDto } from './dto/verifikasi-permintaan.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../auth/roles.decorator';
 
@@ -54,5 +56,20 @@ export class PermintaanController {
       throw new ForbiddenException('Akses ditolak');
     }
     return permintaan;
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Roles('admin')
+  @Patch(':id/verifikasi')
+  async verifikasi(
+    @Param('id') id: number,
+    @Body() dto: VerifikasiPermintaanDto,
+    @Req() req,
+  ) {
+    return this.permintaanService.verifikasiPermintaan(
+      Number(id),
+      dto,
+      req.user.userId,
+    );
   }
 }

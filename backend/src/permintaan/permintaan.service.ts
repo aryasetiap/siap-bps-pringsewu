@@ -9,6 +9,7 @@ import { DetailPermintaan } from '../entities/detail_permintaan.entity';
 import { Barang } from '../entities/barang.entity';
 import { Repository, DataSource } from 'typeorm';
 import { CreatePermintaanDto } from './dto/create-permintaan.dto';
+import { VerifikasiPermintaanDto } from './dto/verifikasi-permintaan.dto';
 
 @Injectable()
 export class PermintaanService {
@@ -109,6 +110,82 @@ export class PermintaanService {
       where: { status: 'Menunggu' },
       order: { tanggal_permintaan: 'ASC' },
       relations: ['details', 'details.barang', 'pemohon'],
+    });
+  }
+
+  async verifikasiPermintaan(
+    id: number,
+    dto: VerifikasiPermintaanDto,
+    id_user_verifikator: number,
+  ) {
+    return this.dataSource.transaction(async (manager) => {
+      const permintaan = await manager.findOne(Permintaan, {
+        where: { id },
+        relations: ['details', 'details.barang'],
+      });
+      if (!permintaan)
+        throw new NotFoundException('Permintaan tidak ditemukan');
+      if (permintaan.status !== 'Menunggu')
+        throw new BadRequestException('Permintaan sudah diverifikasi');
+
+      // Validasi dan update detail_permintaan
+      let totalDisetujui = 0;
+      for (const item of dto.items) {
+        const detail = permintaan.details.find((d) => d.id === item.id_detail);
+        if (!detail)
+          throw new BadRequestException(`Detail permintaan tidak ditemukan`);
+        if (item.jumlah_disetujui > detail.barang.stok) {
+          throw new BadRequestException(
+            `Stok barang "${detail.barang.nama_barang}" tidak mencukupi. Stok tersedia: ${detail.barang.stok}, diminta: ${item.jumlah_disetujui}`,
+          );
+        }
+        if (item.jumlah_disetujui > detail.jumlah_diminta) {
+          throw new BadRequestException(
+            `Jumlah disetujui tidak boleh melebihi jumlah diminta`,
+          );
+        }
+        detail.jumlah_disetujui = item.jumlah_disetujui;
+        totalDisetujui += item.jumlah_disetujui;
+      }
+
+      // Update stok barang jika disetujui
+      if (dto.keputusan !== 'tolak') {
+        for (const item of dto.items) {
+          const detail = permintaan.details.find(
+            (d) => d.id === item.id_detail,
+          );
+          if (!detail)
+            throw new BadRequestException(`Detail permintaan tidak ditemukan`);
+          if (item.jumlah_disetujui > 0) {
+            detail.barang.stok -= item.jumlah_disetujui;
+            if (detail.barang.stok < 0) {
+              throw new BadRequestException(
+                `Stok barang "${detail.barang.nama_barang}" tidak boleh minus`,
+              );
+            }
+            await manager.save(detail.barang);
+          }
+        }
+      }
+
+      // Update status permintaan
+      let status: 'Menunggu' | 'Disetujui' | 'Disetujui Sebagian' | 'Ditolak' =
+        'Ditolak';
+      if (dto.keputusan === 'setuju') status = 'Disetujui';
+      else if (dto.keputusan === 'sebagian') status = 'Disetujui Sebagian';
+
+      permintaan.status = status;
+      permintaan.id_user_verifikator = id_user_verifikator;
+      permintaan.tanggal_verifikasi = new Date();
+      permintaan.catatan = dto.catatan_verifikasi ?? '';
+
+      await manager.save(permintaan.details);
+      await manager.save(permintaan);
+
+      return {
+        ...permintaan,
+        items: permintaan.details,
+      };
     });
   }
 }

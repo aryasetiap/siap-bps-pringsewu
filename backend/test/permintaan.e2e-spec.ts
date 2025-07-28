@@ -115,4 +115,28 @@ describe('Permintaan E2E', () => {
     expect(res.status).toBe(400);
     expect(res.body.message).toMatch(/Stok barang/);
   });
+
+  it('Admin dapat memverifikasi permintaan (setuju semua)', async () => {
+    // Ambil detail permintaan untuk dapat id_detail
+    const detailRes = await request(app.getHttpServer())
+      .get(`/permintaan/${createdPermintaanId}`)
+      .set('Authorization', `Bearer ${adminToken}`);
+    expect(detailRes.status).toBe(200);
+    const items = detailRes.body.items.map((item) => ({
+      id_detail: item.id,
+      jumlah_disetujui: item.jumlah_diminta,
+    }));
+
+    const res = await request(app.getHttpServer())
+      .patch(`/permintaan/${createdPermintaanId}/verifikasi`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({
+        keputusan: 'setuju',
+        items,
+        catatan_verifikasi: 'Disetujui penuh oleh admin',
+      });
+    expect(res.status).toBe(200);
+    expect(res.body.status).toBe('Disetujui');
+    expect(res.body.catatan).toBe('Disetujui penuh oleh admin');
+  });
 });

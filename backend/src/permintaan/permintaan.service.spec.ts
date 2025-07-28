@@ -139,4 +139,142 @@ describe('PermintaanService', () => {
       expect(result).toEqual([{ id: 1 }]);
     });
   });
+
+  describe('verifikasiPermintaan', () => {
+    it('should throw NotFoundException if permintaan not found', async () => {
+      mockDataSource.transaction.mockImplementation(async (cb) => {
+        await cb({
+          findOne: jest.fn().mockResolvedValue(null),
+        });
+      });
+      await expect(
+        service.verifikasiPermintaan(1, { items: [] } as any, 1),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw BadRequestException if permintaan sudah diverifikasi', async () => {
+      mockDataSource.transaction.mockImplementation(async (cb) => {
+        await cb({
+          findOne: jest.fn().mockResolvedValue({ status: 'Disetujui' }),
+        });
+      });
+      await expect(
+        service.verifikasiPermintaan(1, { items: [] } as any, 1),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw BadRequestException if detail tidak ditemukan', async () => {
+      const permintaan = {
+        status: 'Menunggu',
+        details: [],
+      };
+      mockDataSource.transaction.mockImplementation(async (cb) => {
+        await cb({
+          findOne: jest.fn().mockResolvedValue(permintaan),
+        });
+      });
+      await expect(
+        service.verifikasiPermintaan(
+          1,
+          {
+            items: [{ id_detail: 99, jumlah_disetujui: 1 }],
+            keputusan: 'setuju',
+          } as any,
+          1,
+        ),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw BadRequestException if stok tidak cukup', async () => {
+      const permintaan = {
+        status: 'Menunggu',
+        catatan: '', // tambahkan ini
+        details: [
+          {
+            id: 1,
+            jumlah_diminta: 2,
+            jumlah_disetujui: 0,
+            barang: { stok: 0, nama_barang: 'Barang A' },
+          },
+        ],
+      };
+      mockDataSource.transaction.mockImplementation(async (cb) => {
+        await cb({
+          findOne: jest.fn().mockResolvedValue(permintaan),
+          save: jest.fn(),
+        });
+      });
+      await expect(
+        service.verifikasiPermintaan(
+          1,
+          {
+            items: [{ id_detail: 1, jumlah_disetujui: 1 }],
+            keputusan: 'setuju',
+          } as any,
+          1,
+        ),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw BadRequestException if jumlah_disetujui > jumlah_diminta', async () => {
+      const permintaan = {
+        status: 'Menunggu',
+        details: [
+          {
+            id: 1,
+            jumlah_diminta: 2,
+            jumlah_disetujui: 0,
+            barang: { stok: 10, nama_barang: 'Barang A' },
+          },
+        ],
+      };
+      mockDataSource.transaction.mockImplementation(async (cb) => {
+        await cb({
+          findOne: jest.fn().mockResolvedValue(permintaan),
+          save: jest.fn(),
+        });
+      });
+      await expect(
+        service.verifikasiPermintaan(
+          1,
+          {
+            items: [{ id_detail: 1, jumlah_disetujui: 3 }],
+            keputusan: 'setuju',
+          } as any,
+          1,
+        ),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should update status and stok if verifikasi setuju', async () => {
+      const permintaan = {
+        status: 'Menunggu',
+        catatan: '', // tambahkan ini
+        details: [
+          {
+            id: 1,
+            jumlah_diminta: 2,
+            jumlah_disetujui: 0,
+            barang: { stok: 10, nama_barang: 'Barang A' },
+          },
+        ],
+      };
+      const saveMock = jest.fn();
+      mockDataSource.transaction.mockImplementation(async (cb) => {
+        return cb({
+          findOne: jest.fn().mockResolvedValue(permintaan),
+          save: saveMock,
+        });
+      });
+      const dto = {
+        items: [{ id_detail: 1, jumlah_disetujui: 2 }],
+        keputusan: 'setuju',
+        catatan_verifikasi: 'OK',
+      };
+      const result = await service.verifikasiPermintaan(1, dto as any, 99);
+      expect(result.status).toBe('Disetujui');
+      expect(permintaan.details[0].barang.stok).toBe(8);
+      expect(permintaan.catatan).toBe('OK');
+    });
+  });
 });
