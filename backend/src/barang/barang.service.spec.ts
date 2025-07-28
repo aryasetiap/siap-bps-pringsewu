@@ -3,6 +3,9 @@ import { BarangService } from './barang.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Barang } from '../entities/barang.entity';
 import { Repository } from 'typeorm';
+import { validate } from 'class-validator';
+import { plainToInstance } from 'class-transformer';
+import { CreateBarangDto } from './dto/create-barang.dto';
 
 const mockBarang = {
   id: 1,
@@ -125,5 +128,41 @@ describe('BarangService', () => {
     await expect(service.addStok(1, { jumlah: 5 })).rejects.toThrow(
       'Barang tidak aktif',
     );
+  });
+});
+
+describe('Barang DTO Validation', () => {
+  it('should fail if kode_barang contains invalid chars', async () => {
+    const dto = plainToInstance(CreateBarangDto, {
+      kode_barang: 'BRG 001!',
+      nama_barang: 'Barang',
+      satuan: 'pcs',
+    });
+    const errors = await validate(dto);
+    expect(errors.length).toBeGreaterThan(0);
+    expect(errors[0].constraints?.matches).toBeDefined();
+  });
+
+  it('should fail if stok is negative', async () => {
+    const dto = plainToInstance(CreateBarangDto, {
+      kode_barang: 'BRG001',
+      nama_barang: 'Barang',
+      satuan: 'pcs',
+      stok: -5,
+    });
+    const errors = await validate(dto);
+    expect(errors.length).toBeGreaterThan(0);
+    expect(errors[0].constraints?.min).toBeDefined();
+  });
+
+  it('should pass with valid data', async () => {
+    const dto = plainToInstance(CreateBarangDto, {
+      kode_barang: 'BRG001',
+      nama_barang: 'Barang',
+      satuan: 'pcs',
+      stok: 10,
+    });
+    const errors = await validate(dto);
+    expect(errors.length).toBe(0);
   });
 });

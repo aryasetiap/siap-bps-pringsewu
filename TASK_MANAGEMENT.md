@@ -30,7 +30,7 @@ Dokumentasi tahapan kerja detail untuk monitoring dan catatan progres proyek.
 
 - [x] CRUD Barang (Admin): tambah, edit, hapus, nonaktifkan
 - [x] Endpoint penambahan stok barang
-- [ ] Validasi input barang & stok
+- [x] Validasi input barang & stok
 - [ ] Fitur pencarian & filter barang (API)
 - [ ] Notifikasi stok kritis (API response)
 

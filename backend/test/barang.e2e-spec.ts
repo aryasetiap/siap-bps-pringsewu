@@ -81,6 +81,41 @@ describe('Barang CRUD (e2e)', () => {
     expect(res.body.id).toBe(createdId);
   });
 
+  it('POST /barang (invalid kode_barang)', async () => {
+    const uniqueKode = 'BRG' + Date.now() + '!';
+    const res = await request(app.getHttpServer())
+      .post('/barang')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        kode_barang: uniqueKode, // selalu unik dan invalid
+        nama_barang: 'Barang Test',
+        satuan: 'pcs',
+      });
+    expect(res.status).toBe(400);
+    const msg = Array.isArray(res.body.message)
+      ? res.body.message.join(' ')
+      : res.body.message;
+    expect(msg).toContain('Kode hanya boleh huruf, angka, dan strip');
+  });
+
+  it('POST /barang (negative stok)', async () => {
+    const uniqueKode = 'BRG' + Date.now();
+    const res = await request(app.getHttpServer())
+      .post('/barang')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        kode_barang: uniqueKode, // selalu unik
+        nama_barang: 'Barang Test',
+        satuan: 'pcs',
+        stok: -10,
+      });
+    expect(res.status).toBe(400);
+    const msg = Array.isArray(res.body.message)
+      ? res.body.message.join(' ')
+      : res.body.message;
+    expect(msg).toContain('must not be less than 0');
+  });
+
   afterAll(async () => {
     await app.close();
   });

@@ -8,6 +8,7 @@ import {
   Delete,
   UseGuards,
   ParseIntPipe,
+  ValidationPipe,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../auth/roles.guard';
@@ -24,7 +25,16 @@ export class BarangController {
 
   @Roles('admin')
   @Post()
-  create(@Body() dto: CreateBarangDto) {
+  create(
+    @Body(
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+      }),
+    )
+    dto: CreateBarangDto,
+  ) {
     return this.barangService.create(dto);
   }
 
