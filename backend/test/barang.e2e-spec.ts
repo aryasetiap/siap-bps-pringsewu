@@ -47,6 +47,16 @@ describe('Barang CRUD (e2e)', () => {
     expect(res.body.nama_barang).toBe('Barang Updated');
   });
 
+  it('PATCH /barang/:id/add-stok (add stok)', async () => {
+    // Pastikan barang sudah dibuat di test sebelumnya
+    const res = await request(app.getHttpServer())
+      .patch(`/barang/${createdId}/add-stok`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ jumlah: 10 });
+    expect(res.status).toBe(200);
+    expect(res.body.stok).toBeGreaterThanOrEqual(10);
+  });
+
   it('DELETE /barang/:id (soft delete)', async () => {
     const res = await request(app.getHttpServer())
       .delete(`/barang/${createdId}`)

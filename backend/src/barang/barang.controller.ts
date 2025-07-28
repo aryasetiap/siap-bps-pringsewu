@@ -15,6 +15,7 @@ import { Roles } from '../auth/roles.decorator';
 import { BarangService } from './barang.service';
 import { CreateBarangDto } from './dto/create-barang.dto';
 import { UpdateBarangDto } from './dto/update-barang.dto';
+import { AddStokDto } from './dto/add-stok.dto';
 
 @Controller('barang')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -49,6 +50,12 @@ export class BarangController {
   @Delete(':id')
   softDelete(@Param('id', ParseIntPipe) id: number) {
     return this.barangService.softDelete(id);
+  }
+
+  @Roles('admin')
+  @Patch(':id/add-stok')
+  addStok(@Param('id', ParseIntPipe) id: number, @Body() dto: AddStokDto) {
+    return this.barangService.addStok(id, dto);
   }
 
   // Hapus permanen (opsional, untuk admin superuser)

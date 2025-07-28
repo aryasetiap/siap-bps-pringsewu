@@ -8,6 +8,7 @@ import { Barang } from '../entities/barang.entity';
 import { Repository } from 'typeorm';
 import { CreateBarangDto } from './dto/create-barang.dto';
 import { UpdateBarangDto } from './dto/update-barang.dto';
+import { AddStokDto } from './dto/add-stok.dto';
 
 @Injectable()
 export class BarangService {
@@ -50,5 +51,13 @@ export class BarangService {
   async remove(id: number): Promise<void> {
     const barang = await this.findOne(id);
     await this.barangRepo.remove(barang);
+  }
+
+  async addStok(id: number, dto: AddStokDto): Promise<Barang> {
+    const barang = await this.findOne(id);
+    if (!barang.status_aktif)
+      throw new BadRequestException('Barang tidak aktif');
+    barang.stok = (barang.stok ?? 0) + dto.jumlah;
+    return this.barangRepo.save(barang);
   }
 }

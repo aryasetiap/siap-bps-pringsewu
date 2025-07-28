@@ -107,4 +107,23 @@ describe('BarangService', () => {
       'Barang tidak ditemukan',
     );
   });
+
+  it('should add stok to active barang', async () => {
+    const barangAktif = { ...mockBarang, stok: 10, status_aktif: true };
+    (repo.findOne as jest.Mock).mockResolvedValue(barangAktif);
+    (repo.save as jest.Mock).mockResolvedValue({ ...barangAktif, stok: 15 });
+
+    const result = await service.addStok(1, { jumlah: 5 });
+    expect(result.stok).toBe(15);
+    expect(repo.save).toHaveBeenCalled();
+  });
+
+  it('should throw error if barang not active', async () => {
+    const barangNonAktif = { ...mockBarang, status_aktif: false };
+    (repo.findOne as jest.Mock).mockResolvedValue(barangNonAktif);
+
+    await expect(service.addStok(1, { jumlah: 5 })).rejects.toThrow(
+      'Barang tidak aktif',
+    );
+  });
 });

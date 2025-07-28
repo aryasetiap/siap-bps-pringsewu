@@ -37,4 +37,17 @@ describe('BarangController', () => {
     } as any);
     expect(mockService.create).toHaveBeenCalled();
   });
+
+  it('should call service.addStok on addStok', async () => {
+    const mockService = {
+      addStok: jest.fn().mockResolvedValue({ id: 1, stok: 15 }),
+    };
+    const module: TestingModule = await Test.createTestingModule({
+      controllers: [BarangController],
+      providers: [{ provide: BarangService, useValue: mockService }],
+    }).compile();
+    const controller = module.get<BarangController>(BarangController);
+    await controller.addStok(1, { jumlah: 5 });
+    expect(mockService.addStok).toHaveBeenCalledWith(1, { jumlah: 5 });
+  });
 });
