@@ -32,7 +32,7 @@ Dokumentasi tahapan kerja detail untuk monitoring dan catatan progres proyek.
 - [x] Endpoint penambahan stok barang
 - [x] Validasi input barang & stok
 - [x] Fitur pencarian & filter barang (API)
-- [ ] Notifikasi stok kritis (API response)
+- [x] Notifikasi stok kritis (API response)
 
 ### 4. Modul Permintaan Barang (Pegawai)
 

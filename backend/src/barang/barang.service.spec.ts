@@ -163,12 +163,36 @@ describe('BarangService', () => {
     (repo.createQueryBuilder as jest.Mock).mockReturnValue(qb);
 
     const result = await service.findAll({ status_aktif: true });
-    expect(qb.andWhere).toHaveBeenCalledWith(
-      'barang.status_aktif = :status',
-      { status: true },
-    );
+    expect(qb.andWhere).toHaveBeenCalledWith('barang.status_aktif = :status', {
+      status: true,
+    });
     expect(qb.getMany).toHaveBeenCalled();
     expect(result).toEqual([mockBarang]);
+  });
+
+  it('should return barang with stok kritis', async () => {
+    const kritisBarang = {
+      ...mockBarang,
+      stok: 5,
+      ambang_batas_kritis: 10,
+      status_aktif: true,
+    };
+    const qb = {
+      where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      getMany: jest.fn().mockResolvedValue([kritisBarang]),
+    };
+    (repo.createQueryBuilder as jest.Mock).mockReturnValue(qb);
+
+    const result = await service.getStokKritis();
+    expect(qb.where).toHaveBeenCalledWith(
+      'barang.stok <= barang.ambang_batas_kritis',
+    );
+    expect(qb.andWhere).toHaveBeenCalledWith('barang.status_aktif = :aktif', {
+      aktif: true,
+    });
+    expect(qb.getMany).toHaveBeenCalled();
+    expect(result).toEqual([kritisBarang]);
   });
 });
 

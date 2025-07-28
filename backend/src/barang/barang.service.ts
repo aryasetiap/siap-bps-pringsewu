@@ -87,4 +87,12 @@ export class BarangService {
     barang.stok = (barang.stok ?? 0) + dto.jumlah;
     return this.barangRepo.save(barang);
   }
+
+  async getStokKritis(): Promise<Barang[]> {
+    return this.barangRepo
+      .createQueryBuilder('barang')
+      .where('barang.stok <= barang.ambang_batas_kritis')
+      .andWhere('barang.status_aktif = :aktif', { aktif: true })
+      .getMany();
+  }
 }

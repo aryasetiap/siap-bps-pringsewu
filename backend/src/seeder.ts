@@ -73,6 +73,24 @@ async function seed() {
     console.log('Barang contoh already exists');
   }
 
+  // Tambahkan barang kritis untuk keperluan test
+  const kritisExist = await barangRepo.findOneBy({ kode_barang: 'KRITIS01' });
+  if (!kritisExist) {
+    const barangKritis = barangRepo.create({
+      kode_barang: 'KRITIS01',
+      nama_barang: 'Spidol Kritis',
+      deskripsi: 'Spidol dengan stok kritis',
+      satuan: 'pcs',
+      stok: 2,
+      ambang_batas_kritis: 5,
+      status_aktif: true,
+    });
+    await barangRepo.save(barangKritis);
+    console.log('Barang kritis created');
+  } else {
+    console.log('Barang kritis already exists');
+  }
+
   await dataSource.destroy();
 }
 

@@ -55,6 +55,12 @@ export class BarangController {
   }
 
   @Roles('admin')
+  @Get('stok-kritis')
+  async getStokKritis() {
+    return this.barangService.getStokKritis();
+  }
+
+  @Roles('admin')
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.barangService.findOne(id);

@@ -132,6 +132,20 @@ describe('Barang CRUD (e2e)', () => {
     expect(res.body.every((b) => b.status_aktif === true)).toBe(true);
   });
 
+  it('GET /barang/stok-kritis (should return only kritis items)', async () => {
+    const res = await request(app.getHttpServer())
+      .get('/barang/stok-kritis')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body)).toBe(true);
+    if (res.body.length > 0) {
+      res.body.forEach((item) => {
+        expect(item.stok).toBeLessThanOrEqual(item.ambang_batas_kritis);
+        expect(item.status_aktif).toBe(true);
+      });
+    }
+  });
+
   afterAll(async () => {
     await app.close();
   });
