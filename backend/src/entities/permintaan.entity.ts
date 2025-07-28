@@ -28,7 +28,7 @@ export class Permintaan {
   status: 'Menunggu' | 'Disetujui' | 'Disetujui Sebagian' | 'Ditolak';
 
   @Column({ nullable: true })
-  catatan_admin: string;
+  catatan: string;
 
   @Column({ nullable: true })
   id_user_verifikator: number;

@@ -6,6 +6,7 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { BarangModule } from './barang/barang.module';
+import { PermintaanModule } from './permintaan/permintaan.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { BarangModule } from './barang/barang.module';
     AuthModule,
     UserModule,
     BarangModule,
+    PermintaanModule,
   ],
   controllers: [AppController],
   providers: [AppService],
