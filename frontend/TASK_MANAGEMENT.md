@@ -98,8 +98,8 @@ Dokumentasi tahapan kerja detail untuk monitoring dan catatan progres proyek.
 
 #### Admin
 
-- [ ] Halaman laporan periodik penggunaan barang (filter tanggal, rekap, ekspor PDF)
-- [ ] Halaman cetak bukti permintaan (preview, tombol cetak PDF)
+- [x] Halaman laporan periodik penggunaan barang (filter tanggal, rekap, ekspor PDF)
+- [x] Halaman cetak bukti permintaan (preview, tombol cetak PDF)
 
 #### Umum
 

@@ -15,6 +15,8 @@ import RequestVerification from "./pages/admin/RequestVerification";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import EmployeeHistory from "./pages/employee/EmployeeHistory";
+import LaporanPeriodik from "./pages/admin/LaporanPeriodik";
+import CetakBuktiPermintaan from "./pages/admin/CetakBuktiPermintaan";
 
 function App() {
   const isAuthenticated = () => {
@@ -80,6 +82,28 @@ function App() {
             <PrivateRoute roles={["admin"]}>
               <DashboardLayout>
                 <RequestVerification />
+              </DashboardLayout>
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/admin/laporan"
+          element={
+            <PrivateRoute roles={["admin"]}>
+              <DashboardLayout>
+                <LaporanPeriodik />
+              </DashboardLayout>
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/admin/permintaan/:id/cetak"
+          element={
+            <PrivateRoute roles={["admin"]}>
+              <DashboardLayout>
+                <CetakBuktiPermintaan />
               </DashboardLayout>
             </PrivateRoute>
           }
