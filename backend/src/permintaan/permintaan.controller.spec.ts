@@ -11,6 +11,8 @@ const mockPermintaanService = () => ({
   findOneById: jest.fn(),
   verifikasiPermintaan: jest.fn(), // tambahkan ini
   generateBuktiPermintaanPDF: jest.fn(),
+  getDashboardStatistik: jest.fn(),
+  getTrenPermintaanBulanan: jest.fn(),
 });
 
 describe('PermintaanController', () => {
@@ -41,6 +43,14 @@ describe('PermintaanController', () => {
       const result = await controller.create(dto as any, req as any);
       expect(service.create).toHaveBeenCalledWith(dto, 42);
       expect(result).toEqual({ id: 1 });
+    });
+
+    it('should handle error on create', async () => {
+      service.create.mockRejectedValue(new Error('Create error'));
+      const req = { user: { userId: 1, role: 'pegawai' } };
+      await expect(controller.create({} as any, req as any)).rejects.toThrow(
+        'Create error',
+      );
     });
   });
 
@@ -111,6 +121,16 @@ describe('PermintaanController', () => {
       expect(service.verifikasiPermintaan).toHaveBeenCalledWith(1, dto, 1);
       expect(result).toEqual({ status: 'Disetujui' });
     });
+
+    it('should handle error on verifikasi', async () => {
+      service.verifikasiPermintaan.mockRejectedValue(
+        new Error('Verifikasi error'),
+      );
+      const req = { user: { userId: 1, role: 'admin' } };
+      await expect(
+        controller.verifikasi(1, {} as any, req as any),
+      ).rejects.toThrow('Verifikasi error');
+    });
   });
 
   describe('generateBuktiPermintaanPDF', () => {
@@ -131,6 +151,39 @@ describe('PermintaanController', () => {
         }),
       );
       expect(res.end).toHaveBeenCalledWith(mockBuffer);
+    });
+
+    it('should handle error in generateBuktiPermintaanPDF', async () => {
+      service.generateBuktiPermintaanPDF = jest
+        .fn()
+        .mockRejectedValue(new Error('Not found'));
+      const res = {
+        set: jest.fn().mockReturnThis(),
+        end: jest.fn(),
+      } as any;
+      await expect(
+        controller.generateBuktiPermintaanPDF(999, res),
+      ).rejects.toThrow('Not found');
+    });
+  });
+
+  describe('getDashboardStatistik', () => {
+    it('should call service.getDashboardStatistik', async () => {
+      service.getDashboardStatistik.mockResolvedValue({ totalBarang: 1 });
+      const result = await controller.getDashboardStatistik();
+      expect(service.getDashboardStatistik).toHaveBeenCalled();
+      expect(result).toEqual({ totalBarang: 1 });
+    });
+  });
+
+  describe('getTrenPermintaanBulanan', () => {
+    it('should call service.getTrenPermintaanBulanan', async () => {
+      service.getTrenPermintaanBulanan.mockResolvedValue([
+        { bulan: '2024-07', jumlah: 2 },
+      ]);
+      const result = await controller.getTrenPermintaanBulanan();
+      expect(service.getTrenPermintaanBulanan).toHaveBeenCalled();
+      expect(result).toEqual([{ bulan: '2024-07', jumlah: 2 }]);
     });
   });
 });

@@ -27,11 +27,8 @@ export class PermintaanService {
   ) {}
 
   async create(dto: CreatePermintaanDto, id_user_pemohon: number) {
-    console.log('DTO:', dto);
-
     const barangIds = dto.items.map((i) => i.id_barang);
-    const barangList = await this.barangRepo.findByIds(barangIds);
-
+    const barangList = (await this.barangRepo.findByIds(barangIds)) ?? [];
     if (barangList.length !== barangIds.length) {
       throw new BadRequestException(
         'Ada barang yang tidak ditemukan atau tidak aktif',

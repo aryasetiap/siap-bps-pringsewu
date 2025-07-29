@@ -87,4 +87,67 @@ describe('UserController', () => {
     await controller.updateProfile(req, dto as any);
     expect(service.update).toHaveBeenCalledWith(1, dto);
   });
+
+  it('should call service.update for uploadFotoProfile', async () => {
+    const req = { user: { userId: 1 } } as any;
+    const file = { filename: '1-123.jpg' } as any;
+    const service = { update: jest.fn() };
+    const controller = new UserController(service as any);
+    await controller.uploadFotoProfile(req, file);
+    expect(service.update).toHaveBeenCalledWith(1, {
+      foto: '/uploads/profile/1-123.jpg',
+    });
+  });
+
+  it('should return admin-only data', async () => {
+    expect(await controller.getAdminData()).toEqual({
+      message: 'Data khusus admin',
+    });
+  });
+
+  it('should return pegawai-only data', async () => {
+    expect(await controller.getPegawaiData()).toEqual({
+      message: 'Data khusus pegawai',
+    });
+  });
+
+  it('should handle updateProfile error if user not found', async () => {
+    const req = { user: { userId: 999 } } as any;
+    const dto = { nama: 'X' };
+    service.update = jest
+      .fn()
+      .mockRejectedValue(new Error('User tidak ditemukan'));
+    await expect(controller.updateProfile(req, dto as any)).rejects.toThrow(
+      'User tidak ditemukan',
+    );
+  });
+
+  it('should handle uploadFotoProfile error if user not found', async () => {
+    const req = { user: { userId: 999 } } as any;
+    const file = { filename: 'notfound.jpg' } as any;
+    const service = {
+      update: jest.fn().mockRejectedValue(new Error('User tidak ditemukan')),
+    };
+    const controller = new UserController(service as any);
+    await expect(controller.uploadFotoProfile(req, file)).rejects.toThrow(
+      'User tidak ditemukan',
+    );
+  });
+
+  it('should handle error on create', async () => {
+    service.create = jest.fn().mockRejectedValue(new Error('Create error'));
+    await expect(controller.create({} as any)).rejects.toThrow('Create error');
+  });
+
+  it('should handle error on update', async () => {
+    service.update = jest.fn().mockRejectedValue(new Error('Update error'));
+    await expect(controller.update(1, {} as any)).rejects.toThrow(
+      'Update error',
+    );
+  });
+
+  it('should handle error on softDelete', async () => {
+    service.softDelete = jest.fn().mockRejectedValue(new Error('Delete error'));
+    await expect(controller.softDelete(1)).rejects.toThrow('Delete error');
+  });
 });

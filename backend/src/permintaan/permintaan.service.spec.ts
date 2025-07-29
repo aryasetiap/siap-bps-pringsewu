@@ -72,6 +72,14 @@ describe('PermintaanService', () => {
       );
     });
 
+    it('should throw BadRequestException if barangRepo.findByIds returns null', async () => {
+      barangRepo.findByIds.mockResolvedValue(null);
+      const dto = { items: [{ id_barang: 1, jumlah: 2 }] };
+      await expect(service.create(dto as any, 1)).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+
     it('should throw BadRequestException if stok kurang', async () => {
       barangRepo.findByIds.mockResolvedValue([
         { id: 1, stok: 1, nama_barang: 'Barang A' },
@@ -279,6 +287,36 @@ describe('PermintaanService', () => {
       expect(result.status).toBe('Disetujui');
       expect(permintaan.details[0].barang.stok).toBe(8);
       expect(permintaan.catatan).toBe('OK');
+    });
+
+    it('should set status Ditolak if keputusan tolak', async () => {
+      const permintaan = {
+        status: 'Menunggu',
+        catatan: '',
+        details: [
+          {
+            id: 1,
+            jumlah_diminta: 2,
+            jumlah_disetujui: 0,
+            barang: { stok: 10, nama_barang: 'Barang A' },
+          },
+        ],
+      };
+      const saveMock = jest.fn();
+      mockDataSource.transaction.mockImplementation(async (cb) => {
+        return cb({
+          findOne: jest.fn().mockResolvedValue(permintaan),
+          save: saveMock,
+        });
+      });
+      const dto = {
+        items: [{ id_detail: 1, jumlah_disetujui: 0 }],
+        keputusan: 'tolak',
+        catatan_verifikasi: 'Ditolak',
+      };
+      const result = await service.verifikasiPermintaan(1, dto as any, 99);
+      expect(result.status).toBe('Ditolak');
+      expect(result.catatan).toBe('Ditolak');
     });
   });
 

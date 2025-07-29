@@ -82,6 +82,13 @@ describe('BarangService', () => {
     expect(repo.save).toHaveBeenCalled();
   });
 
+  it('should throw NotFoundException if barang to update not found', async () => {
+    (repo.findOne as jest.Mock).mockResolvedValue(undefined);
+    await expect(
+      service.update(999, { nama_barang: 'X' } as any),
+    ).rejects.toThrow('Barang tidak ditemukan');
+  });
+
   it('should soft delete barang', async () => {
     const softDeleted = { ...mockBarang, status_aktif: false };
     (repo.findOne as jest.Mock).mockResolvedValue(mockBarang);
@@ -89,6 +96,13 @@ describe('BarangService', () => {
 
     const result = await service.softDelete(1);
     expect(result.status_aktif).toBe(false);
+  });
+
+  it('should throw NotFoundException if barang to delete not found', async () => {
+    (repo.findOne as jest.Mock).mockResolvedValue(undefined);
+    await expect(service.softDelete(999)).rejects.toThrow(
+      'Barang tidak ditemukan',
+    );
   });
 
   it('should find all barang', async () => {
@@ -133,6 +147,13 @@ describe('BarangService', () => {
 
     await expect(service.addStok(1, { jumlah: 5 })).rejects.toThrow(
       'Barang tidak aktif',
+    );
+  });
+
+  it('should throw NotFoundException if barang to add stok not found', async () => {
+    (repo.findOne as jest.Mock).mockResolvedValue(undefined);
+    await expect(service.addStok(999, { jumlah: 5 })).rejects.toThrow(
+      'Barang tidak ditemukan',
     );
   });
 

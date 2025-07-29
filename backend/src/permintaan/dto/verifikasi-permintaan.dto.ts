@@ -6,6 +6,7 @@ import {
   IsEnum,
   IsOptional,
   IsString,
+  ArrayMinSize,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -25,6 +26,7 @@ export class VerifikasiPermintaanDto {
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => VerifikasiItemDto)
+  @ArrayMinSize(1, { message: 'items tidak boleh kosong' })
   items: VerifikasiItemDto[];
 
   @IsOptional()
