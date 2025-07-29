@@ -6,17 +6,17 @@ import { Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 
-// Data mock untuk user, digunakan di seluruh test
+// Mock data user untuk pengujian
 const mockUser = {
   id: 1,
   nama: 'Test User',
   username: 'testuser',
-  password: 'hashedpass', // Anggap ini password yang sudah di-hash di DB
+  password: 'hashedpass',
   role: 'pegawai',
   status_aktif: true,
 };
 
-// DTO (Data Transfer Object) mock untuk membuat user baru
+// DTO mock untuk pembuatan user baru
 const createUserDto = {
   nama: 'Test User',
   username: 'testuser',
@@ -28,14 +28,15 @@ describe('UserService', () => {
   let service: UserService;
   let repo: Repository<User>;
 
+  /**
+   * Inisialisasi modul testing dan mock repository sebelum setiap pengujian.
+   */
   beforeEach(async () => {
-    // Membuat module testing tiruan (mock)
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UserService,
         {
           provide: getRepositoryToken(User),
-          // Menggunakan `useValue` untuk meniru (mock) fungsi-fungsi dari Repository
           useValue: {
             findOne: jest.fn(),
             find: jest.fn(),
@@ -50,54 +51,63 @@ describe('UserService', () => {
     repo = module.get<Repository<User>>(getRepositoryToken(User));
   });
 
+  /**
+   * Memastikan service terdefinisi dengan benar.
+   */
   it('should be defined', () => {
     expect(service).toBeDefined();
   });
 
-  // Test suite untuk method `create`
   describe('create', () => {
+    /**
+     * Menguji pembuatan user baru secara sukses.
+     * @returns User yang berhasil dibuat.
+     */
     it('should create a new user successfully', async () => {
-      // Arrange: Atur mock untuk skenario sukses
-      (repo.findOne as jest.Mock).mockResolvedValue(undefined); // Username belum ada
-      (repo.create as jest.Mock).mockReturnValue(mockUser); // `create` mengembalikan entity
-      (repo.save as jest.Mock).mockResolvedValue(mockUser); // `save` berhasil
+      (repo.findOne as jest.Mock).mockResolvedValue(undefined);
+      (repo.create as jest.Mock).mockReturnValue(mockUser);
+      (repo.save as jest.Mock).mockResolvedValue(mockUser);
 
-      // Act: Panggil method `create`
       const result = await service.create(createUserDto as any);
 
-      // Assert: Pastikan method yang benar dipanggil dan hasilnya sesuai
       expect(repo.create).toHaveBeenCalled();
       expect(repo.save).toHaveBeenCalledWith(mockUser);
       expect(result).toEqual(mockUser);
     });
 
+    /**
+     * Menguji error jika username sudah terdaftar.
+     * @throws BadRequestException jika username sudah ada.
+     */
     it('should throw BadRequestException if username already exists', async () => {
-      // Arrange: Atur mock seolah-olah username sudah ada
       (repo.findOne as jest.Mock).mockResolvedValue(mockUser);
 
-      // Act & Assert: Harapkan method `create` melempar error
       await expect(service.create(createUserDto as any)).rejects.toThrow(
         new BadRequestException('Username sudah terdaftar'),
       );
     });
   });
 
-  // Test suite untuk method `update`
   describe('update', () => {
+    /**
+     * Menguji update data user secara sukses.
+     * @returns User yang sudah diperbarui.
+     */
     it('should update user data successfully', async () => {
-      // Arrange
       const updatedUser = { ...mockUser, nama: 'Updated Name' };
       (repo.findOne as jest.Mock).mockResolvedValue(mockUser);
       (repo.save as jest.Mock).mockResolvedValue(updatedUser);
 
-      // Act
       const result = await service.update(1, { nama: 'Updated Name' } as any);
 
-      // Assert
       expect(result.nama).toBe('Updated Name');
       expect(repo.save).toHaveBeenCalled();
     });
 
+    /**
+     * Menguji update user tanpa perubahan data.
+     * @returns User yang sama tanpa perubahan.
+     */
     it('should update user with no changes', async () => {
       (repo.findOne as jest.Mock).mockResolvedValue(mockUser);
       (repo.save as jest.Mock).mockResolvedValue(mockUser);
@@ -107,46 +117,27 @@ describe('UserService', () => {
       expect(result).toEqual(expected);
     });
 
-    // =======================================================================
-    // INI ADALAH TEST YANG GAGAL - PENJELASAN LENGKAP DI BAWAH
-    // =======================================================================
+    /**
+     * Menguji update user dengan perubahan password, memastikan password di-hash.
+     * @returns User dengan password baru yang sudah di-hash.
+     */
     it('should update user and hash the new password if provided', async () => {
-      // Arrange: Siapkan data dan mock
       const updateDtoWithPassword = { password: 'newpass' };
-      const userFromDb = { ...mockUser }; // Buat salinan user dari "DB"
+      const userFromDb = { ...mockUser };
 
-      // Atur mock: saat `findOne` dipanggil, kembalikan user yang ada
       (repo.findOne as jest.Mock).mockResolvedValue(userFromDb);
+      (repo.save as jest.Mock).mockImplementation(
+        async (userToSave) => userToSave,
+      );
 
-      // Atur mock: saat `save` dipanggil, kita ingin menangkap argumen yang dikirim
-      // dan meniru perilaku DB yang akan mengembalikan entity yang disimpan.
-      (repo.save as jest.Mock).mockImplementation(async (userToSave) => {
-        return userToSave;
-      });
-
-      // Act: Panggil method `update` yang sedang diuji
       const result = await service.update(1, updateDtoWithPassword as any);
 
-      // Assert: Periksa apakah hasilnya sesuai harapan
-
-      // 1. Service tidak boleh mengembalikan password ke client setelah update.
       expect(result.password).toBeUndefined();
-
-      // 2. Method `save` harusnya dipanggil tepat satu kali.
       expect(repo.save).toHaveBeenCalledTimes(1);
 
-      // 3. Ambil objek `user` yang dikirim oleh service ke method `repo.save`.
       const savedUser = (repo.save as jest.Mock).mock.calls[0][0];
-
-      // 4. [PENYEBAB ERROR] Password pada objek yang akan disimpan TIDAK BOLEH
-      //    sama dengan password teks biasa ('newpass'). Seharusnya sudah di-hash.
-      //    Jika test ini gagal, artinya `UserService.update` Anda mengirim
-      //    password tanpa di-hash ke `repo.save`.
       expect(savedUser.password).not.toBe('newpass');
 
-      // 5. Untuk memastikan, kita bandingkan password asli ('newpass') dengan
-      //    password yang sudah di-hash (`savedUser.password`) menggunakan `bcrypt`.
-      //    Hasilnya harus `true`.
       const isPasswordCorrect = await bcrypt.compare(
         'newpass',
         savedUser.password,
@@ -154,6 +145,10 @@ describe('UserService', () => {
       expect(isPasswordCorrect).toBe(true);
     });
 
+    /**
+     * Menguji error jika user yang akan diupdate tidak ditemukan.
+     * @throws NotFoundException jika user tidak ada.
+     */
     it('should throw NotFoundException if user to update is not found', async () => {
       (repo.findOne as jest.Mock).mockResolvedValue(undefined);
       await expect(service.update(999, { nama: 'x' } as any)).rejects.toThrow(
@@ -161,6 +156,10 @@ describe('UserService', () => {
       );
     });
 
+    /**
+     * Menguji update status_aktif dengan input string "aktif".
+     * @returns User dengan status_aktif true.
+     */
     it('should handle status_aktif as string "aktif"', async () => {
       const userFromDb = { ...mockUser, status_aktif: false };
       (repo.findOne as jest.Mock).mockResolvedValue(userFromDb);
@@ -173,6 +172,10 @@ describe('UserService', () => {
       expect(result.status_aktif).toBe(true);
     });
 
+    /**
+     * Menguji update status_aktif dengan input boolean.
+     * @returns User dengan status_aktif true.
+     */
     it('should handle status_aktif as boolean', async () => {
       const userFromDb = { ...mockUser, status_aktif: false };
       (repo.findOne as jest.Mock).mockResolvedValue(userFromDb);
@@ -186,8 +189,11 @@ describe('UserService', () => {
     });
   });
 
-  // Test suite untuk method `softDelete`
   describe('softDelete', () => {
+    /**
+     * Menguji soft delete user dengan mengubah status_aktif menjadi false.
+     * @returns User dengan status_aktif false.
+     */
     it('should soft delete a user by setting status_aktif to false', async () => {
       const softDeletedUser = { ...mockUser, status_aktif: false };
       (repo.findOne as jest.Mock).mockResolvedValue(mockUser);
@@ -201,6 +207,10 @@ describe('UserService', () => {
       expect(result.status_aktif).toBe(false);
     });
 
+    /**
+     * Menguji error jika user yang akan dihapus tidak ditemukan.
+     * @throws NotFoundException jika user tidak ada.
+     */
     it('should throw NotFoundException if user to delete is not found', async () => {
       (repo.findOne as jest.Mock).mockResolvedValue(undefined);
       await expect(service.softDelete(999)).rejects.toThrow(
@@ -209,8 +219,11 @@ describe('UserService', () => {
     });
   });
 
-  // Test suite untuk method `findAll`
   describe('findAll', () => {
+    /**
+     * Menguji pengambilan seluruh user.
+     * @returns Array user.
+     */
     it('should return an array of users', async () => {
       (repo.find as jest.Mock).mockResolvedValue([mockUser]);
       const result = await service.findAll();
@@ -219,8 +232,12 @@ describe('UserService', () => {
     });
   });
 
-  // Test suite untuk method `findOne`
   describe('findOne', () => {
+    /**
+     * Menguji pencarian user berdasarkan id.
+     * @param id ID user yang dicari.
+     * @returns User yang ditemukan.
+     */
     it('should find and return a user by id', async () => {
       (repo.findOne as jest.Mock).mockResolvedValue(mockUser);
       const result = await service.findOne(1);
@@ -228,6 +245,10 @@ describe('UserService', () => {
       expect(result).toEqual(mockUser);
     });
 
+    /**
+     * Menguji error jika user tidak ditemukan berdasarkan id.
+     * @throws NotFoundException jika user tidak ada.
+     */
     it('should throw NotFoundException if user is not found', async () => {
       (repo.findOne as jest.Mock).mockResolvedValue(undefined);
       await expect(service.findOne(999)).rejects.toThrow(
@@ -236,8 +257,12 @@ describe('UserService', () => {
     });
   });
 
-  // Test suite untuk method `findByUsername`
   describe('findByUsername', () => {
+    /**
+     * Menguji pencarian user berdasarkan username.
+     * @param username Username yang dicari.
+     * @returns User yang ditemukan.
+     */
     it('should find and return a user by username', async () => {
       (repo.findOne as jest.Mock).mockResolvedValue(mockUser);
       const result = await service.findByUsername('testuser');
@@ -247,6 +272,10 @@ describe('UserService', () => {
       expect(result).toEqual(mockUser);
     });
 
+    /**
+     * Menguji hasil null jika user tidak ditemukan berdasarkan username.
+     * @returns null jika user tidak ada.
+     */
     it('should return null if user is not found by username', async () => {
       (repo.findOne as jest.Mock).mockResolvedValue(null);
       const result = await service.findByUsername('notfound');

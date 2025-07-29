@@ -28,52 +28,87 @@ import * as path from 'path';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  // Endpoint khusus admin
+  /**
+   * Mengambil data khusus untuk admin.
+   * @returns Objek berisi pesan untuk admin.
+   */
   @Roles('admin')
   @Get('admin-only')
   getAdminData() {
     return { message: 'Data khusus admin' };
   }
 
-  // Endpoint khusus pegawai
+  /**
+   * Mengambil data khusus untuk pegawai.
+   * @returns Objek berisi pesan untuk pegawai.
+   */
   @Roles('pegawai')
   @Get('pegawai-only')
   getPegawaiData() {
     return { message: 'Data khusus pegawai' };
   }
 
-  // Endpoint bisa diakses semua user yang sudah login (tanpa role spesifik)
+  /**
+   * Mengambil profil user yang sedang login.
+   * @param req Request dari Express yang berisi user.
+   * @returns Data user yang sedang login.
+   */
   @Get('profile')
   async getProfile(@Req() req: Request) {
     const userId = (req.user as any)?.userId;
     return this.userService.findOne(userId);
   }
 
+  /**
+   * Memperbarui profil user yang sedang login.
+   * @param req Request dari Express yang berisi user.
+   * @param dto Data untuk memperbarui user.
+   * @returns Data user yang telah diperbarui.
+   */
   @Patch('profile')
   async updateProfile(@Req() req: Request, @Body() dto: UpdateUserDto) {
     const userId = (req.user as any)?.userId;
     return this.userService.update(userId, dto);
   }
 
-  // CRUD user hanya untuk admin
+  /**
+   * Membuat user baru (khusus admin).
+   * @param dto Data user baru.
+   * @returns Data user yang telah dibuat.
+   */
   @Roles('admin')
   @Post()
   async create(@Body() dto: CreateUserDto) {
     return this.userService.create(dto);
   }
 
+  /**
+   * Mengambil seluruh data user (khusus admin).
+   * @returns Daftar seluruh user.
+   */
   @Roles('admin')
   @Get()
   async findAll() {
     return this.userService.findAll();
   }
 
+  /**
+   * Mengambil data user berdasarkan ID (khusus admin).
+   * @param id ID user.
+   * @returns Data user yang ditemukan.
+   */
   @Roles('admin')
   @Get(':id')
   async findOne(@Param('id', ParseIntPipe) id: number) {
     return this.userService.findOne(id);
   }
 
+  /**
+   * Memperbarui data user berdasarkan ID (khusus admin).
+   * @param id ID user.
+   * @param dto Data yang akan diperbarui.
+   * @returns Data user yang telah diperbarui.
+   */
   @Roles('admin')
   @Patch(':id')
   async update(
@@ -83,13 +118,22 @@ export class UserController {
     return this.userService.update(id, dto);
   }
 
+  /**
+   * Melakukan soft delete user berdasarkan ID (khusus admin).
+   * @param id ID user.
+   * @returns Hasil soft delete user.
+   */
   @Roles('admin')
   @Delete(':id')
   async softDelete(@Param('id', ParseIntPipe) id: number) {
     return this.userService.softDelete(id);
   }
 
-  // Endpoint untuk hapus user by username (khusus testing/dev)
+  /**
+   * Menghapus user berdasarkan username (khusus admin, untuk testing/dev).
+   * @param body Objek berisi username user yang akan dihapus.
+   * @returns Hasil penghapusan user.
+   */
   @Roles('admin')
   @Delete()
   async deleteByUsername(@Body() body: { username: string }) {
@@ -98,6 +142,12 @@ export class UserController {
     return this.userService.softDelete(user.id);
   }
 
+  /**
+   * Mengunggah dan memperbarui foto profil user yang sedang login.
+   * @param req Request dari Express yang berisi user.
+   * @param file File foto profil yang diunggah.
+   * @returns Data user yang telah diperbarui dengan path foto baru.
+   */
   @Patch('profile/foto')
   @UseInterceptors(
     FileInterceptor('foto', {
@@ -106,7 +156,6 @@ export class UserController {
           cb(null, path.join(__dirname, '..', 'uploads', 'profile'));
         },
         filename: (req, file, cb) => {
-          // Simpan file dengan nama unik: userId-timestamp.ext
           const userId = (req.user as any)?.userId;
           const ext = path.extname(file.originalname);
           cb(null, `${userId}-${Date.now()}${ext}`);
@@ -118,7 +167,7 @@ export class UserController {
         }
         cb(null, true);
       },
-      limits: { fileSize: 2 * 1024 * 1024 }, // 2MB
+      limits: { fileSize: 2 * 1024 * 1024 },
     }),
   )
   async uploadFotoProfile(
@@ -126,7 +175,6 @@ export class UserController {
     @UploadedFile() file: Express.Multer.File,
   ) {
     const userId = (req.user as any)?.userId;
-    // Simpan path relatif ke database
     const fotoPath = `/uploads/profile/${file.filename}`;
     return this.userService.update(userId, { foto: fotoPath });
   }
