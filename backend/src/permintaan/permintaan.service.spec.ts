@@ -12,8 +12,8 @@ const mockPermintaanRepo = () => ({
   save: jest.fn(),
   find: jest.fn(),
   findOne: jest.fn(),
-  count: jest.fn(), // tambahkan ini
-  createQueryBuilder: jest.fn(), // tambahkan ini
+  count: jest.fn(),
+  createQueryBuilder: jest.fn(),
 });
 const mockDetailRepo = () => ({
   create: jest.fn(),
@@ -22,8 +22,8 @@ const mockDetailRepo = () => ({
 const mockBarangRepo = () => ({
   findByIds: jest.fn(),
   findOne: jest.fn(),
-  count: jest.fn(), // tambahkan ini
-  createQueryBuilder: jest.fn(), // tambahkan ini
+  count: jest.fn(),
+  createQueryBuilder: jest.fn(),
 });
 
 const mockDataSource = {
@@ -36,6 +36,9 @@ describe('PermintaanService', () => {
   let detailRepo: ReturnType<typeof mockDetailRepo>;
   let barangRepo: ReturnType<typeof mockBarangRepo>;
 
+  /**
+   * Inisialisasi modul testing dan mock repository sebelum setiap pengujian.
+   */
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -59,11 +62,20 @@ describe('PermintaanService', () => {
     barangRepo = module.get(getRepositoryToken(Barang));
   });
 
+  /**
+   * Membersihkan semua mock setelah setiap pengujian.
+   */
   afterEach(() => {
     jest.clearAllMocks();
   });
 
   describe('create', () => {
+    /**
+     * Menguji validasi jika barang tidak ditemukan.
+     * @param dto Data transfer object permintaan
+     * @param idUser ID user pemohon
+     * @throws BadRequestException jika barang tidak ditemukan
+     */
     it('should throw BadRequestException if barang not found', async () => {
       barangRepo.findByIds.mockResolvedValue([]);
       const dto = { items: [{ id_barang: 1, jumlah: 2 }] };
@@ -72,6 +84,9 @@ describe('PermintaanService', () => {
       );
     });
 
+    /**
+     * Menguji validasi jika hasil findByIds null.
+     */
     it('should throw BadRequestException if barangRepo.findByIds returns null', async () => {
       barangRepo.findByIds.mockResolvedValue(null);
       const dto = { items: [{ id_barang: 1, jumlah: 2 }] };
@@ -80,6 +95,9 @@ describe('PermintaanService', () => {
       );
     });
 
+    /**
+     * Menguji validasi jika stok barang kurang.
+     */
     it('should throw BadRequestException if stok kurang', async () => {
       barangRepo.findByIds.mockResolvedValue([
         { id: 1, stok: 1, nama_barang: 'Barang A' },
@@ -90,6 +108,9 @@ describe('PermintaanService', () => {
       );
     });
 
+    /**
+     * Menguji validasi jika items kosong.
+     */
     it('should throw BadRequestException if items is empty', async () => {
       const dto = { items: [] };
       await expect(service.create(dto as any, 1)).rejects.toThrow(
@@ -97,6 +118,9 @@ describe('PermintaanService', () => {
       );
     });
 
+    /**
+     * Menguji proses pembuatan permintaan dan detail dalam transaksi.
+     */
     it('should create permintaan and details in transaction', async () => {
       barangRepo.findByIds.mockResolvedValue([
         { id: 1, stok: 10, nama_barang: 'Barang A' },
@@ -109,8 +133,8 @@ describe('PermintaanService', () => {
         return cb({
           save: jest
             .fn()
-            .mockResolvedValueOnce({ id: 123, status: 'Menunggu' }) // permintaan
-            .mockResolvedValueOnce([{ id: 456 }]), // details
+            .mockResolvedValueOnce({ id: 123, status: 'Menunggu' })
+            .mockResolvedValueOnce([{ id: 456 }]),
         });
       });
 
@@ -121,6 +145,11 @@ describe('PermintaanService', () => {
   });
 
   describe('getRiwayatByUser', () => {
+    /**
+     * Mengambil riwayat permintaan berdasarkan user.
+     * @param idUser ID user pemohon
+     * @returns Array permintaan
+     */
     it('should call find with correct params', async () => {
       permintaanRepo.find.mockResolvedValue([{ id: 1 }]);
       const result = await service.getRiwayatByUser(1);
@@ -134,6 +163,12 @@ describe('PermintaanService', () => {
   });
 
   describe('findOneById', () => {
+    /**
+     * Mengambil satu permintaan berdasarkan ID.
+     * @param id ID permintaan
+     * @returns Permintaan beserta detailnya
+     * @throws NotFoundException jika permintaan tidak ditemukan
+     */
     it('should throw NotFoundException if not found', async () => {
       permintaanRepo.findOne.mockResolvedValue(null);
       await expect(service.findOneById(1)).rejects.toThrow(NotFoundException);
@@ -147,6 +182,10 @@ describe('PermintaanService', () => {
   });
 
   describe('getPermintaanMenunggu', () => {
+    /**
+     * Mengambil daftar permintaan yang masih menunggu verifikasi.
+     * @returns Array permintaan dengan status 'Menunggu'
+     */
     it('should call find with correct params', async () => {
       permintaanRepo.find.mockResolvedValue([{ id: 1 }]);
       const result = await service.getPermintaanMenunggu();
@@ -160,6 +199,14 @@ describe('PermintaanService', () => {
   });
 
   describe('verifikasiPermintaan', () => {
+    /**
+     * Memverifikasi permintaan berdasarkan keputusan (setuju/tolak).
+     * @param idPermintaan ID permintaan
+     * @param dto Data verifikasi permintaan
+     * @param idUserVerifikator ID user verifikator
+     * @returns Permintaan yang telah diverifikasi
+     * @throws NotFoundException atau BadRequestException jika validasi gagal
+     */
     it('should throw NotFoundException if permintaan not found', async () => {
       mockDataSource.transaction.mockImplementation(async (cb) => {
         await cb({
@@ -207,7 +254,7 @@ describe('PermintaanService', () => {
     it('should throw BadRequestException if stok tidak cukup', async () => {
       const permintaan = {
         status: 'Menunggu',
-        catatan: '', // tambahkan ini
+        catatan: '',
         details: [
           {
             id: 1,
@@ -295,7 +342,7 @@ describe('PermintaanService', () => {
     it('should update status and stok if verifikasi setuju', async () => {
       const permintaan = {
         status: 'Menunggu',
-        catatan: '', // tambahkan ini
+        catatan: '',
         details: [
           {
             id: 1,
@@ -353,17 +400,22 @@ describe('PermintaanService', () => {
       expect(result.catatan).toBe('Ditolak');
     });
 
+    /**
+     * Menguji validasi jika barang tidak aktif.
+     */
     it('should throw BadRequestException if barang status_aktif is false', async () => {
       barangRepo.findByIds.mockResolvedValue([
         { id: 1, stok: 10, nama_barang: 'Barang A', status_aktif: false },
       ]);
       const dto = { items: [{ id_barang: 1, jumlah: 2 }] };
-      // Jangan mock transaksi di sini, biarkan validasi gagal sebelum transaksi
       await expect(service.create(dto as any, 1)).rejects.toThrow(
         BadRequestException,
       );
     });
 
+    /**
+     * Menguji validasi jika status permintaan bukan 'Menunggu'.
+     */
     it('should throw BadRequestException if permintaan status is not Menunggu', async () => {
       mockDataSource.transaction.mockImplementation(async (cb) => {
         await cb({
@@ -382,6 +434,9 @@ describe('PermintaanService', () => {
       ).rejects.toThrow('Permintaan sudah diverifikasi');
     });
 
+    /**
+     * Menguji validasi jika pengurangan stok menyebabkan stok minus.
+     */
     it('should throw BadRequestException if pengurangan stok menyebabkan stok minus', async () => {
       const permintaan = {
         status: 'Menunggu',
@@ -414,6 +469,10 @@ describe('PermintaanService', () => {
   });
 
   describe('getDashboardStatistik', () => {
+    /**
+     * Mengambil statistik dashboard terkait barang dan permintaan.
+     * @returns Statistik total barang, permintaan tertunda, dan barang kritis
+     */
     it('should return dashboard statistik', async () => {
       barangRepo.count.mockResolvedValue(10);
       permintaanRepo.count.mockResolvedValue(2);
@@ -432,6 +491,10 @@ describe('PermintaanService', () => {
   });
 
   describe('getTrenPermintaanBulanan', () => {
+    /**
+     * Mengambil tren permintaan bulanan.
+     * @returns Array tren permintaan per bulan
+     */
     it('should return tren permintaan bulanan', async () => {
       permintaanRepo.createQueryBuilder = jest.fn().mockReturnValue({
         select: jest.fn().mockReturnThis(),
@@ -450,6 +513,11 @@ describe('PermintaanService', () => {
   });
 
   describe('generateBuktiPermintaanPDF', () => {
+    /**
+     * Menghasilkan buffer PDF untuk bukti permintaan.
+     * @param idPermintaan ID permintaan
+     * @returns Buffer PDF
+     */
     it('should generate PDF buffer for bukti permintaan', async () => {
       service.findOneById = jest.fn().mockResolvedValue({
         id: 1,

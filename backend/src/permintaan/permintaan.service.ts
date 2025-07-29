@@ -7,11 +7,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Permintaan } from '../entities/permintaan.entity';
 import { DetailPermintaan } from '../entities/detail_permintaan.entity';
 import { Barang } from '../entities/barang.entity';
-import { Repository, DataSource, Between, Raw } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { CreatePermintaanDto } from './dto/create-permintaan.dto';
 import { VerifikasiPermintaanDto } from './dto/verifikasi-permintaan.dto';
 import * as PdfPrinter from 'pdfmake';
-import * as fs from 'fs';
 import * as path from 'path';
 
 @Injectable()
@@ -23,9 +22,16 @@ export class PermintaanService {
     private detailRepo: Repository<DetailPermintaan>,
     @InjectRepository(Barang)
     private barangRepo: Repository<Barang>,
-    private dataSource: DataSource, // inject DataSource
+    private dataSource: DataSource,
   ) {}
 
+  /**
+   * Membuat permintaan barang baru.
+   * @param dto Data permintaan yang berisi daftar barang dan catatan.
+   * @param userId ID user pemohon.
+   * @returns Data permintaan yang telah dibuat beserta detail barang.
+   * @throws BadRequestException jika data tidak valid atau stok tidak mencukupi.
+   */
   async create(dto: CreatePermintaanDto, userId: number) {
     if (!dto.items || dto.items.length === 0) {
       throw new BadRequestException('Items tidak boleh kosong');
@@ -38,7 +44,6 @@ export class PermintaanService {
       );
     }
 
-    // === Tambahan: Validasi stok tersedia ===
     for (const item of dto.items) {
       const barang = barangList.find((b) => b.id === item.id_barang);
       if (!barang) {
@@ -57,10 +62,8 @@ export class PermintaanService {
         );
       }
     }
-    // === End validasi stok ===
 
     return await this.dataSource.transaction(async (manager) => {
-      // Simpan permintaan
       const permintaan = this.permintaanRepo.create({
         id_user_pemohon: userId,
         catatan: dto.catatan,
@@ -69,7 +72,6 @@ export class PermintaanService {
       });
       const savedPermintaan = await manager.save(permintaan);
 
-      // Simpan detail_permintaan
       const details = dto.items.map((item) =>
         this.detailRepo.create({
           id_permintaan: savedPermintaan.id,
@@ -87,32 +89,45 @@ export class PermintaanService {
     });
   }
 
+  /**
+   * Mengambil riwayat permintaan berdasarkan user.
+   * @param userId ID user pemohon.
+   * @returns Daftar permintaan beserta detail barang yang pernah diajukan user.
+   */
   async getRiwayatByUser(userId: number) {
     const riwayat = await this.permintaanRepo.find({
       where: { id_user_pemohon: userId },
       order: { tanggal_permintaan: 'DESC' },
       relations: ['details', 'details.barang'],
     });
-    // Tambahkan field items agar konsisten dengan response detail
     return riwayat.map((permintaan) => ({
       ...permintaan,
       items: permintaan.details,
     }));
   }
 
+  /**
+   * Mengambil detail permintaan berdasarkan ID.
+   * @param id ID permintaan.
+   * @returns Data permintaan beserta detail barang.
+   * @throws NotFoundException jika permintaan tidak ditemukan.
+   */
   async findOneById(id: number) {
     const permintaan = await this.permintaanRepo.findOne({
       where: { id },
       relations: ['details', 'details.barang', 'pemohon'],
     });
     if (!permintaan) throw new NotFoundException('Permintaan tidak ditemukan');
-    // Map details ke items agar response konsisten
     return {
       ...permintaan,
       items: permintaan.details,
     };
   }
 
+  /**
+   * Mengambil daftar permintaan yang masih menunggu verifikasi.
+   * @returns Daftar permintaan dengan status 'Menunggu'.
+   */
   async getPermintaanMenunggu() {
     return this.permintaanRepo.find({
       where: { status: 'Menunggu' },
@@ -121,6 +136,14 @@ export class PermintaanService {
     });
   }
 
+  /**
+   * Memverifikasi permintaan barang.
+   * @param id ID permintaan yang akan diverifikasi.
+   * @param dto Data verifikasi (keputusan dan detail barang).
+   * @param verifikatorId ID user verifikator.
+   * @returns Data permintaan yang telah diverifikasi.
+   * @throws BadRequestException atau NotFoundException jika data tidak valid.
+   */
   async verifikasiPermintaan(
     id: number,
     dto: VerifikasiPermintaanDto,
@@ -141,7 +164,6 @@ export class PermintaanService {
         throw new BadRequestException('Keputusan tidak valid');
       }
 
-      // Validasi dan update detail_permintaan
       let totalDisetujui = 0;
       for (const item of dto.items) {
         const detail = permintaan.details.find((d) => d.id === item.id_detail);
@@ -161,7 +183,6 @@ export class PermintaanService {
         totalDisetujui += item.jumlah_disetujui;
       }
 
-      // Update stok barang jika disetujui
       if (dto.keputusan !== 'tolak') {
         for (const item of dto.items) {
           const detail = permintaan.details.find(
@@ -181,7 +202,6 @@ export class PermintaanService {
         }
       }
 
-      // Update status permintaan
       let status: 'Menunggu' | 'Disetujui' | 'Disetujui Sebagian' | 'Ditolak' =
         'Ditolak';
       if (dto.keputusan === 'setuju') status = 'Disetujui';
@@ -202,6 +222,10 @@ export class PermintaanService {
     });
   }
 
+  /**
+   * Mengambil statistik dashboard terkait barang dan permintaan.
+   * @returns Statistik total barang, permintaan tertunda, dan barang kritis.
+   */
   async getDashboardStatistik() {
     const [totalBarang, totalPermintaanTertunda, totalBarangKritis] =
       await Promise.all([
@@ -220,6 +244,10 @@ export class PermintaanService {
     };
   }
 
+  /**
+   * Mengambil tren permintaan bulanan selama 12 bulan terakhir.
+   * @returns Array data jumlah permintaan per bulan.
+   */
   async getTrenPermintaanBulanan() {
     const now = new Date();
     const start = new Date(now.getFullYear(), now.getMonth() - 11, 1);
@@ -234,7 +262,6 @@ export class PermintaanService {
       .orderBy('bulan', 'ASC')
       .getRawMany();
 
-    // Lengkapi bulan yang tidak ada permintaan dengan 0
     const result: { bulan: string; jumlah: number }[] = [];
     for (let i = 0; i < 12; i++) {
       const d = new Date(now.getFullYear(), now.getMonth() - 11 + i, 1);
@@ -245,11 +272,16 @@ export class PermintaanService {
     return result;
   }
 
+  /**
+   * Menghasilkan file PDF bukti permintaan barang.
+   * @param id ID permintaan yang akan dibuatkan PDF.
+   * @returns Buffer file PDF.
+   * @throws NotFoundException jika permintaan tidak ditemukan.
+   */
   async generateBuktiPermintaanPDF(id: number): Promise<Buffer> {
     const permintaan = await this.findOneById(id);
     if (!permintaan) throw new NotFoundException('Permintaan tidak ditemukan');
 
-    // Load font
     const fonts = {
       Roboto: {
         normal: path.join(__dirname, '../assets/fonts/Roboto-Regular.ttf'),
@@ -263,7 +295,6 @@ export class PermintaanService {
     };
     const printer = new PdfPrinter(fonts);
 
-    // Compose document definition
     const docDefinition = {
       content: [
         { text: 'Bukti Permintaan Barang', style: 'header' },

@@ -9,7 +9,7 @@ const mockPermintaanService = () => ({
   getRiwayatByUser: jest.fn(),
   getPermintaanMenunggu: jest.fn(),
   findOneById: jest.fn(),
-  verifikasiPermintaan: jest.fn(), // tambahkan ini
+  verifikasiPermintaan: jest.fn(),
   generateBuktiPermintaanPDF: jest.fn(),
   getDashboardStatistik: jest.fn(),
   getTrenPermintaanBulanan: jest.fn(),
@@ -19,6 +19,11 @@ describe('PermintaanController', () => {
   let controller: PermintaanController;
   let service: ReturnType<typeof mockPermintaanService>;
 
+  /**
+   * Inisialisasi modul testing dan controller sebelum setiap pengujian.
+   * Tidak menerima parameter.
+   * Tidak mengembalikan nilai.
+   */
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [PermintaanController],
@@ -31,11 +36,21 @@ describe('PermintaanController', () => {
     service = module.get(PermintaanService);
   });
 
+  /**
+   * Membersihkan mock setelah setiap pengujian.
+   * Tidak menerima parameter.
+   * Tidak mengembalikan nilai.
+   */
   afterEach(() => {
     jest.clearAllMocks();
   });
 
   describe('create', () => {
+    /**
+     * Menguji pemanggilan service.create dengan parameter yang benar.
+     * Tidak menerima parameter.
+     * Tidak mengembalikan nilai.
+     */
     it('should call service.create with correct params', async () => {
       const dto = { items: [{ id_barang: 1, jumlah: 2 }], catatan: 'test' };
       const req = { user: { userId: 42, role: 'pegawai' } };
@@ -45,6 +60,11 @@ describe('PermintaanController', () => {
       expect(result).toEqual({ id: 1 });
     });
 
+    /**
+     * Menguji penanganan error pada proses create.
+     * Tidak menerima parameter.
+     * Tidak mengembalikan nilai.
+     */
     it('should handle error on create', async () => {
       service.create.mockRejectedValue(new Error('Create error'));
       const req = { user: { userId: 1, role: 'pegawai' } };
@@ -55,6 +75,11 @@ describe('PermintaanController', () => {
   });
 
   describe('getRiwayat', () => {
+    /**
+     * Menguji pemanggilan service.getRiwayatByUser dengan userId yang benar.
+     * Tidak menerima parameter.
+     * Tidak mengembalikan nilai.
+     */
     it('should call service.getRiwayatByUser with userId', async () => {
       const req = { user: { userId: 42, role: 'pegawai' } };
       service.getRiwayatByUser.mockResolvedValue([{ id: 1 }]);
@@ -65,6 +90,11 @@ describe('PermintaanController', () => {
   });
 
   describe('getPermintaanMasuk', () => {
+    /**
+     * Menguji jika user bukan admin maka akan dilempar ForbiddenException.
+     * Tidak menerima parameter.
+     * Tidak mengembalikan nilai.
+     */
     it('should throw ForbiddenException if not admin', async () => {
       const req = { user: { userId: 42, role: 'pegawai' } };
       await expect(controller.getPermintaanMasuk(req as any)).rejects.toThrow(
@@ -72,6 +102,11 @@ describe('PermintaanController', () => {
       );
     });
 
+    /**
+     * Menguji pemanggilan service.getPermintaanMenunggu jika user adalah admin.
+     * Tidak menerima parameter.
+     * Tidak mengembalikan nilai.
+     */
     it('should call service.getPermintaanMenunggu if admin', async () => {
       const req = { user: { userId: 1, role: 'admin' } };
       service.getPermintaanMenunggu.mockResolvedValue([{ id: 2 }]);
@@ -82,6 +117,11 @@ describe('PermintaanController', () => {
   });
 
   describe('findOne', () => {
+    /**
+     * Menguji jika pegawai mengakses permintaan milik orang lain maka ForbiddenException dilempar.
+     * Tidak menerima parameter.
+     * Tidak mengembalikan nilai.
+     */
     it('should throw ForbiddenException if pegawai akses milik orang lain', async () => {
       const req = { user: { userId: 42, role: 'pegawai' } };
       service.findOneById.mockResolvedValue({ id_user_pemohon: 99 });
@@ -90,6 +130,11 @@ describe('PermintaanController', () => {
       );
     });
 
+    /**
+     * Menguji jika pegawai mengakses permintaan milik sendiri maka data dikembalikan.
+     * Tidak menerima parameter.
+     * Tidak mengembalikan nilai.
+     */
     it('should return permintaan if pegawai akses milik sendiri', async () => {
       const req = { user: { userId: 42, role: 'pegawai' } };
       const permintaan = { id: 1, id_user_pemohon: 42 };
@@ -99,6 +144,11 @@ describe('PermintaanController', () => {
       expect(result).toEqual(permintaan);
     });
 
+    /**
+     * Menguji jika admin mengakses permintaan maka data dikembalikan.
+     * Tidak menerima parameter.
+     * Tidak mengembalikan nilai.
+     */
     it('should return permintaan if admin', async () => {
       const req = { user: { userId: 1, role: 'admin' } };
       const permintaan = { id: 1, id_user_pemohon: 42 };
@@ -109,6 +159,11 @@ describe('PermintaanController', () => {
   });
 
   describe('verifikasi', () => {
+    /**
+     * Menguji pemanggilan service.verifikasiPermintaan dengan parameter yang benar.
+     * Tidak menerima parameter.
+     * Tidak mengembalikan nilai.
+     */
     it('should call service.verifikasiPermintaan with correct params', async () => {
       const req = { user: { userId: 1, role: 'admin' } };
       const dto = {
@@ -122,6 +177,11 @@ describe('PermintaanController', () => {
       expect(result).toEqual({ status: 'Disetujui' });
     });
 
+    /**
+     * Menguji penanganan error pada proses verifikasi.
+     * Tidak menerima parameter.
+     * Tidak mengembalikan nilai.
+     */
     it('should handle error on verifikasi', async () => {
       service.verifikasiPermintaan.mockRejectedValue(
         new Error('Verifikasi error'),
@@ -134,6 +194,11 @@ describe('PermintaanController', () => {
   });
 
   describe('generateBuktiPermintaanPDF', () => {
+    /**
+     * Menguji pemanggilan service.generateBuktiPermintaanPDF dan pengiriman PDF ke response.
+     * Tidak menerima parameter.
+     * Tidak mengembalikan nilai.
+     */
     it('should call service.generateBuktiPermintaanPDF and send PDF', async () => {
       const mockBuffer = Buffer.from('PDFDATA');
       service.generateBuktiPermintaanPDF = jest
@@ -153,6 +218,11 @@ describe('PermintaanController', () => {
       expect(res.end).toHaveBeenCalledWith(mockBuffer);
     });
 
+    /**
+     * Menguji penanganan error pada proses generateBuktiPermintaanPDF.
+     * Tidak menerima parameter.
+     * Tidak mengembalikan nilai.
+     */
     it('should handle error in generateBuktiPermintaanPDF', async () => {
       service.generateBuktiPermintaanPDF = jest
         .fn()
@@ -168,6 +238,11 @@ describe('PermintaanController', () => {
   });
 
   describe('getDashboardStatistik', () => {
+    /**
+     * Menguji pemanggilan service.getDashboardStatistik.
+     * Tidak menerima parameter.
+     * Tidak mengembalikan nilai.
+     */
     it('should call service.getDashboardStatistik', async () => {
       service.getDashboardStatistik.mockResolvedValue({ totalBarang: 1 });
       const result = await controller.getDashboardStatistik();
@@ -177,6 +252,11 @@ describe('PermintaanController', () => {
   });
 
   describe('getTrenPermintaanBulanan', () => {
+    /**
+     * Menguji pemanggilan service.getTrenPermintaanBulanan.
+     * Tidak menerima parameter.
+     * Tidak mengembalikan nilai.
+     */
     it('should call service.getTrenPermintaanBulanan', async () => {
       service.getTrenPermintaanBulanan.mockResolvedValue([
         { bulan: '2024-07', jumlah: 2 },
