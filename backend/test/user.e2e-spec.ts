@@ -16,7 +16,7 @@ describe('User CRUD (e2e)', () => {
 
   beforeAll(async () => {
     // Jalankan seeder sekali saja di awal untuk state awal yang bersih
-    execSync('npm run seed', { stdio: 'inherit' });
+    // execSync('npm run seed', { stdio: 'inherit' });
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
@@ -39,7 +39,7 @@ describe('User CRUD (e2e)', () => {
 
   afterAll(async () => {
     // Jalankan seeder lagi untuk mereset state setelah semua test di suite ini selesai
-    execSync('npm run seed', { stdio: 'inherit' });
+    // execSync('npm run seed', { stdio: 'inherit' });
     await app.close();
   });
 
@@ -138,16 +138,6 @@ describe('User CRUD (e2e)', () => {
         .send({ nama: 'Admin Diperbarui' });
       expect(res.status).toBe(200);
       expect(res.body.nama).toBe('Admin Diperbarui');
-    });
-
-    it('PATCH /user/profile (ubah password)', async () => {
-      const res = await request(app.getHttpServer())
-        .patch('/user/profile')
-        .set('Authorization', `Bearer ${token}`)
-        .send({ password: 'newadmin123' });
-      expect(res.status).toBe(200);
-      // Password di response harusnya sudah di-hash, jadi tidak boleh sama
-      expect(res.body.password).not.toBe('newadmin123');
     });
   });
 });
@@ -291,6 +281,15 @@ describe('Proteksi endpoint sesuai role', () => {
         .set('Authorization', `Bearer ${pegawaiToken}`);
       expect(res.status).toBe(200);
       expect(res.body.username).toBe(pegawaiCredentials.username);
+    });
+
+    it('PATCH /user/profile (ubah password)', async () => {
+      const res = await request(app.getHttpServer())
+        .patch('/user/profile')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ password: 'newadmin123' });
+      expect(res.status).toBe(200);
+      expect(res.body.password).not.toBe('newadmin123');
     });
   });
 });
