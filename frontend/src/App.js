@@ -17,6 +17,9 @@ import "react-toastify/dist/ReactToastify.css";
 import EmployeeHistory from "./pages/employee/EmployeeHistory";
 import LaporanPeriodik from "./pages/admin/LaporanPeriodik";
 import CetakBuktiPermintaan from "./pages/admin/CetakBuktiPermintaan";
+import ProfilePage from "./pages/ProfilePage";
+import Error404 from "./pages/Error404";
+import Forbidden from "./pages/Forbidden";
 
 function App() {
   const isAuthenticated = () => {
@@ -132,9 +135,20 @@ function App() {
           }
         />
 
+        <Route
+          path="/profile"
+          element={
+            <PrivateRoute roles={["admin", "pegawai"]}>
+              <DashboardLayout>
+                <ProfilePage />
+              </DashboardLayout>
+            </PrivateRoute>
+          }
+        />
+
+        <Route path="/forbidden" element={<Forbidden />} />
+        <Route path="*" element={<Error404 />} />
         <Route path="/" element={<Navigate to="/login" replace />} />
-        {/* <Route path="*" element={<div>404 Not Found</div>} /> 
-        <Route path="/forbidden" element={<div>Akses Ditolak! Anda tidak memiliki izin untuk halaman ini.</div>} /> */}
       </Routes>
       <ToastContainer position="top-right" autoClose={3000} />
     </Router>

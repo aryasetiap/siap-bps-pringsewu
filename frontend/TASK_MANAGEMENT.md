@@ -103,9 +103,9 @@ Dokumentasi tahapan kerja detail untuk monitoring dan catatan progres proyek.
 
 #### Umum
 
-- [ ] Halaman profil user (lihat/edit data diri, ubah password)
-- [ ] Halaman error/forbidden/404
-- [ ] Komponen notifikasi visual (stok kritis, permintaan baru, dsb)
+- [x] Halaman profil user (lihat/edit data diri, ubah password)
+- [x] Halaman error/forbidden/404
+- [x] Komponen notifikasi visual (stok kritis, permintaan baru, dsb)
 
 ### 3. Integrasi dengan Backend
 
