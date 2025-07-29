@@ -67,8 +67,8 @@ Dokumentasi tahapan kerja detail untuk monitoring dan catatan progres proyek.
 
 - [x] Unit test dan E2E Test fungsi utama
 - [x] Integration test API utama
-- [ ] Dokumentasi API (endpoint, request/response, error)
-- [ ] Refactor & code review
+- [x] Dokumentasi API (endpoint, request/response, error)
+- [x] Refactor & code review
 
 ### 9. Deployment & Maintenance
 
