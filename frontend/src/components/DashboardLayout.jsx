@@ -8,17 +8,9 @@ function DashboardLayout({ children }) {
   // State untuk status collapse sidebar di desktop
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
-  const toggleSidebarMobile = () => {
-    setIsSidebarMobileOpen(!isSidebarMobileOpen);
-  };
-
-  const closeSidebarMobile = () => {
-    setIsSidebarMobileOpen(false);
-  };
-
-  const toggleSidebarCollapse = () => {
-    setIsSidebarCollapsed(!isSidebarCollapsed);
-  };
+  const toggleSidebarMobile = () => setIsSidebarMobileOpen((v) => !v);
+  const closeSidebarMobile = () => setIsSidebarMobileOpen(false);
+  const toggleSidebarCollapse = () => setIsSidebarCollapsed((v) => !v);
 
   return (
     <div className="flex min-h-screen overflow-hidden bg-gray-100">
@@ -44,9 +36,7 @@ function DashboardLayout({ children }) {
         {/* Page Content */}
         <main className="flex-1 overflow-x-hidden overflow-y-auto p-6 bg-gray-100">
           <div className="bg-white p-6 rounded-lg shadow-md min-h-[calc(100vh-100px)]">
-            {" "}
-            {/* Menambahkan box konten */}
-            {children} {/* Konten halaman akan dirender di sini */}
+            {children}
           </div>
         </main>
       </div>

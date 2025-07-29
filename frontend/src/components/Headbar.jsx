@@ -19,7 +19,7 @@ function Headbar({
 }) {
   const navigate = useNavigate();
 
-  // Mendapatkan nama pengguna dan role dari localStorage (simulasi)
+  // Ambil nama dan role user dari localStorage (atau context/auth jika sudah ada)
   const username = localStorage.getItem("username") || "Pengguna";
   const userRole = localStorage.getItem("userRole") || "Tamu";
 
@@ -33,7 +33,7 @@ function Headbar({
   return (
     <header className="bg-white ml-6 shadow-sm p-4 flex justify-between items-center rounded-lg top-0 right-0 z-40 transition-all duration-300 ease-in-out">
       <div className="flex items-center h-full">
-        {/* Tombol Toggle Sidebar Mobile (hanya tampil di mobile) */}
+        {/* Tombol Toggle Sidebar Mobile */}
         <button
           type="button"
           className="md:hidden p-2 text-gray-700 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 rounded-md"
@@ -43,18 +43,14 @@ function Headbar({
           <Bars3Icon className="h-6 w-6" aria-hidden="true" />
         </button>
 
-        {/* Tombol Toggle Collapse Sidebar (hanya tampil di desktop) */}
+        {/* Tombol Toggle Collapse Sidebar Desktop */}
         <button
           type="button"
           className="hidden md:block p-2 text-gray-700 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 rounded-md"
           onClick={onToggleSidebarCollapse}
         >
           <span className="sr-only">Toggle sidebar</span>
-          {isSidebarCollapsed ? (
-            <Bars3Icon className="h-6 w-6" aria-hidden="true" />
-          ) : (
-            <Bars3Icon className="h-6 w-6" aria-hidden="true" />
-          )}
+          <Bars3Icon className="h-6 w-6" aria-hidden="true" />
         </button>
 
         <h1 className="ml-4 text-xl font-semibold text-gray-800">
@@ -86,7 +82,7 @@ function Headbar({
               <Menu.Item>
                 {({ active }) => (
                   <Link
-                    to="/profile" // Ganti dengan path profil Anda
+                    to="/profile"
                     className={classNames(
                       active ? "bg-gray-100 text-gray-900" : "text-gray-700",
                       "block px-4 py-2 text-sm"
