@@ -6,6 +6,15 @@ import { AuthController } from './auth.controller';
 import { UserModule } from '../user/user.module';
 import { JwtStrategy } from './jwt.strategy';
 
+/**
+ * Modul otentikasi untuk aplikasi.
+ * 
+ * Modul ini mengatur dependensi yang diperlukan untuk proses otentikasi,
+ * seperti konfigurasi JWT, layanan pengguna, serta strategi otentikasi.
+ * 
+ * @module AuthModule
+ * @description Mengelola proses otentikasi, pendaftaran JWT, dan menyediakan controller serta provider terkait otentikasi.
+ */
 @Module({
   imports: [
     JwtModule.registerAsync({

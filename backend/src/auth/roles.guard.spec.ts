@@ -32,6 +32,15 @@ describe('RolesGuard', () => {
 
   it('should deny if user does not have required role', () => {
     (reflector.getAllAndOverride as jest.Mock).mockReturnValue(['admin']);
+    /**
+     * Membuat objek context tiruan untuk keperluan unit testing pada guard role.
+     *
+     * Objek ini mensimulasikan context eksekusi pada aplikasi NestJS, khususnya untuk pengujian guard.
+     *
+     * @property switchToHttp Fungsi yang mengembalikan objek dengan method getRequest, yang berisi user dengan properti role.
+     * @property getHandler Fungsi tiruan (mock) untuk mendapatkan handler route.
+     * @property getClass Fungsi tiruan (mock) untuk mendapatkan class controller.
+     */
     const context = {
       switchToHttp: () => ({
         getRequest: () => ({ user: { role: 'pegawai' } }),
