@@ -1,70 +1,68 @@
-# Getting Started with Create React App
+# SIAP BPS Pringsewu
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Sistem Aplikasi Pengelolaan Aset & Persediaan (SIAP) adalah aplikasi berbasis web untuk mendukung digitalisasi proses pengelolaan barang persediaan di BPS Kabupaten Pringsewu. Sistem ini dibangun dengan arsitektur **API-first** menggunakan **NestJS** (backend) dan **React.js** (frontend).
 
-## Available Scripts
+## Fitur Utama (MVP)
 
-In the project directory, you can run:
+- **Manajemen Data Barang & Pengguna** (CRUD)
+- **Manajemen Stok Otomatis** (penambahan & pengurangan stok)
+- **Alur Permintaan & Verifikasi Barang** (multi-item, status, catatan)
+- **Dashboard Interaktif Admin** (statistik, grafik, notifikasi stok kritis)
+- **Pencarian & Filter Data**
+- **Riwayat & Pelacakan Permintaan**
+- **Cetak Bukti Permintaan ke PDF**
+- **Laporan Periodik Penggunaan Barang**
 
-### `npm start`
+## Teknologi
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- **Backend:** NestJS (Node.js), JWT Auth, TypeORM, PostgreSQL
+- **Frontend:** React.js, Tailwind CSS
+- **PDF Generator:** pdfmake / node-pdfkit (atau library PDF untuk Node.js)
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Struktur Database (Entitas Utama)
 
-### `npm test`
+- **User:** Admin & Pegawai, role-based, autentikasi aman
+- **Barang:** Data master barang, stok, ambang batas kritis
+- **Permintaan:** Header permintaan barang, status, catatan
+- **Detail_Permintaan:** Item permintaan, jumlah diminta/disetujui
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Alur Pengembangan (Sprint 5 Hari)
 
-### `npm run build`
+1. **Hari 1:** Setup proyek, database, autentikasi, CRUD barang (API)
+2. **Hari 2:** CRUD barang lanjut, penambahan stok, UI dasar barang & dashboard
+3. **Hari 3:** Proses permintaan barang (pegawai), riwayat permintaan
+4. **Hari 4:** Verifikasi permintaan (admin), pengurangan stok, dashboard dinamis
+5. **Hari 5:** Cetak PDF, laporan periodik, polish, staging/UAT
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## Instalasi & Penggunaan
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+1. **Clone repo:**  
+   `git clone <repo-url>`
+2. **Inisialisasi Backend (NestJS):**
+   - Install NestJS CLI: `npm install -g @nestjs/cli`
+   - Inisialisasi project: `nest new backend`
+   - Masuk ke folder backend: `cd backend`
+   - Jalankan development server: `npm run start:dev`
+3. **Setup Backend:**
+   - `cd backend`
+   - `npm install`
+   - Copy `.env.example` ke `.env`, atur koneksi database PostgreSQL
+   - `npm run typeorm migration:run`
+   - `npm run start:dev`
+4. **Setup Frontend:**
+   - `cd frontend`
+   - `npm install`
+   - `npm start`
+5. **Akses aplikasi:**
+   - Backend API: `http://localhost:3001/api`
+   - Frontend: `http://localhost:3000`
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## Dokumentasi Lengkap
 
-### `npm run eject`
+Lihat [SDLC_SIAP.md](./SDLC_SIAP.md) untuk dokumen analisis kebutuhan, desain, dan timeline pengembangan.
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+---
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+**Developer:** Arya Setia Pratama & Divany Pangestika
+**Klien:** Pengelola Barang Persediaan BPS Kabupaten Pringsewu  
+**Versi:** 1.0
