@@ -6,12 +6,6 @@ import BarangStokModal from "../../components/barang/BarangStokModal";
 import * as barangService from "../../services/barangService";
 import { toast } from "react-toastify";
 
-const kategoriOptions = [
-  "Alat Tulis Kantor",
-  "Consumables",
-  "Perlengkapan",
-  "Elektronik",
-];
 const satuanOptions = ["pcs", "box", "rim", "pack", "unit", "set"];
 
 const ManajemenBarang = () => {
@@ -41,6 +35,8 @@ const ManajemenBarang = () => {
     keterangan: "",
   });
 
+  const [kategoriOptions, setKategoriOptions] = useState([]);
+
   // Fetch data barang dari API
   useEffect(() => {
     fetchBarang();
@@ -51,8 +47,13 @@ const ManajemenBarang = () => {
     try {
       const res = await barangService.getAllBarang();
       setBarang(res.data);
+      // Generate kategori unik dari data barang
+      const kategoriSet = new Set(
+        res.data.map((item) => item.kategori).filter(Boolean)
+      );
+      setKategoriOptions(Array.from(kategoriSet));
     } catch (err) {
-      // TODO: tampilkan notifikasi error
+      toast.error("Gagal memuat data barang.");
     }
     setLoading(false);
   };

@@ -91,10 +91,10 @@ Dokumentasi tahapan kerja detail untuk monitoring dan catatan progres proyek.
 
 #### Pegawai
 
-- [ ] Halaman daftar barang (pegawai): tabel, search, filter, info stok
-- [ ] Form pengajuan permintaan barang (multi-item, pilih barang, jumlah, satuan)
-- [ ] Halaman riwayat permintaan pegawai (tabel, status, detail)
-- [ ] Halaman detail permintaan (pegawai)
+- [x] Halaman daftar barang (pegawai): tabel, search, filter, info stok
+- [x] Form pengajuan permintaan barang (multi-item, pilih barang, jumlah, satuan)
+- [x] Halaman riwayat permintaan pegawai (tabel, status, detail)
+- [x] Halaman detail permintaan (pegawai)
 
 #### Admin
 

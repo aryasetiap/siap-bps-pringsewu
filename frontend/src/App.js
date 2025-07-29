@@ -14,6 +14,7 @@ import UserManagement from "./pages/admin/UserManagement";
 import RequestVerification from "./pages/admin/RequestVerification";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import EmployeeHistory from "./pages/employee/EmployeeHistory";
 
 function App() {
   const isAuthenticated = () => {
@@ -96,15 +97,16 @@ function App() {
           }
         />
 
-        {/* <Route
         <Route
           path="/pegawai/riwayat"
           element={
-            <PrivateRoute roles={['pegawai']}>
-              <div>Halaman Riwayat Permintaan (Pegawai)</div> 
+            <PrivateRoute roles={["pegawai"]}>
+              <DashboardLayout>
+                <EmployeeHistory />
+              </DashboardLayout>
             </PrivateRoute>
           }
-        /> */}
+        />
 
         <Route path="/" element={<Navigate to="/login" replace />} />
         {/* <Route path="*" element={<div>404 Not Found</div>} /> 

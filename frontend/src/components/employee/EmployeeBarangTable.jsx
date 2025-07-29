@@ -7,6 +7,7 @@ const EmployeeBarangTable = ({
   onSearchChange,
   onFilterKategoriChange,
   onAddItem,
+  kategoriOptions, // Menerima props kategoriOptions
 }) => (
   <div className="bg-white rounded-lg shadow mb-6">
     <div className="flex flex-col md:flex-row md:items-center md:justify-between p-4">
@@ -23,11 +24,11 @@ const EmployeeBarangTable = ({
         className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
       >
         <option value="">Semua Kategori</option>
-        {/* Kategori bisa diambil dari props jika dinamis */}
-        <option value="Alat Tulis Kantor">Alat Tulis Kantor</option>
-        <option value="Consumables">Consumables</option>
-        <option value="Perlengkapan">Perlengkapan</option>
-        <option value="Elektronik">Elektronik</option>
+        {kategoriOptions.map((kategori) => (
+          <option key={kategori} value={kategori}>
+            {kategori}
+          </option>
+        ))}
       </select>
     </div>
     <div className="overflow-x-auto">

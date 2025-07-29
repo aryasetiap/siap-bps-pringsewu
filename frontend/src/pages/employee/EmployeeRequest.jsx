@@ -5,13 +5,6 @@ import EmployeeRequestForm from "../../components/employee/EmployeeRequestForm";
 import * as barangService from "../../services/barangService";
 import * as employeeRequestService from "../../services/employeeRequestService";
 
-const kategoriOptions = [
-  "Alat Tulis Kantor",
-  "Consumables",
-  "Perlengkapan",
-  "Elektronik",
-];
-
 const EmployeeRequestPage = () => {
   const [barang, setBarang] = useState([]);
   const [filteredBarang, setFilteredBarang] = useState([]);
@@ -20,6 +13,7 @@ const EmployeeRequestPage = () => {
   const [keranjang, setKeranjang] = useState([]);
   const [catatan, setCatatan] = useState("");
   const [loading, setLoading] = useState(false);
+  const [kategoriOptions, setKategoriOptions] = useState([]);
 
   // Fetch barang dari API
   useEffect(() => {
@@ -31,8 +25,13 @@ const EmployeeRequestPage = () => {
     try {
       const res = await barangService.getAllBarang();
       setBarang(res.data);
+      // Generate kategori unik dari data barang
+      const kategoriSet = new Set(
+        res.data.map((item) => item.kategori).filter(Boolean)
+      );
+      setKategoriOptions(Array.from(kategoriSet));
     } catch (err) {
-      // TODO: tampilkan notifikasi error
+      toast.error("Gagal memuat data barang.");
     }
     setLoading(false);
   };
@@ -130,6 +129,7 @@ const EmployeeRequestPage = () => {
         barang={filteredBarang}
         searchTerm={searchTerm}
         filterKategori={filterKategori}
+        kategoriOptions={kategoriOptions}
         onSearchChange={handleSearchChange}
         onFilterKategoriChange={handleFilterKategoriChange}
         onAddItem={handleAddItem}
