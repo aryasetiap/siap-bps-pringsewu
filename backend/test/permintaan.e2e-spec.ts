@@ -4,14 +4,22 @@ import * as request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { execSync } from 'child_process';
 
+/**
+ * Pengujian End-to-End untuk fitur Permintaan Barang.
+ * Meliputi pengajuan, verifikasi, akses riwayat, dan dashboard statistik permintaan.
+ */
 describe('Permintaan E2E', () => {
   let app: INestApplication;
   let pegawaiToken: string;
   let adminToken: string;
   let createdPermintaanId: number;
 
+  /**
+   * Inisialisasi aplikasi dan autentikasi pengguna sebelum seluruh pengujian dijalankan.
+   * Melakukan seed database dan login sebagai pegawai serta admin.
+   * @returns {Promise<void>}
+   */
   beforeAll(async () => {
-    // Reset DB state
     execSync('npm run seed', { stdio: 'inherit' });
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -21,31 +29,37 @@ describe('Permintaan E2E', () => {
     app = moduleFixture.createNestApplication();
     await app.init();
 
-    // Login sebagai pegawai
     const pegawaiRes = await request(app.getHttpServer())
       .post('/auth/login')
       .send({ username: 'budi', password: 'budi123' });
     pegawaiToken = pegawaiRes.body.access_token;
 
-    // Login sebagai admin
     const adminRes = await request(app.getHttpServer())
       .post('/auth/login')
       .send({ username: 'admin', password: 'admin123' });
     adminToken = adminRes.body.access_token;
   });
 
+  /**
+   * Menutup aplikasi setelah seluruh pengujian selesai.
+   * @returns {Promise<void>}
+   */
   afterAll(async () => {
     await app.close();
   });
 
+  /**
+   * Menguji apakah pegawai dapat mengajukan permintaan barang.
+   * @returns {Promise<void>}
+   */
   it('Pegawai dapat mengajukan permintaan barang', async () => {
     const res = await request(app.getHttpServer())
       .post('/permintaan')
       .set('Authorization', `Bearer ${pegawaiToken}`)
       .send({
         items: [
-          { id_barang: 1, jumlah: 2 }, // Kertas A4 80gsm
-          { id_barang: 2, jumlah: 1 }, // Spidol Whiteboard
+          { id_barang: 1, jumlah: 2 },
+          { id_barang: 2, jumlah: 1 },
         ],
         catatan: 'Untuk kebutuhan rapat',
       });
@@ -55,6 +69,10 @@ describe('Permintaan E2E', () => {
     createdPermintaanId = res.body.id;
   });
 
+  /**
+   * Menguji apakah pegawai dapat melihat riwayat permintaan miliknya.
+   * @returns {Promise<void>}
+   */
   it('Pegawai dapat melihat riwayat permintaan miliknya', async () => {
     const res = await request(app.getHttpServer())
       .get('/permintaan/riwayat')
@@ -64,6 +82,10 @@ describe('Permintaan E2E', () => {
     expect(res.body[0]).toHaveProperty('items');
   });
 
+  /**
+   * Menguji apakah pegawai dapat melihat detail permintaan miliknya.
+   * @returns {Promise<void>}
+   */
   it('Pegawai dapat melihat detail permintaan miliknya', async () => {
     const res = await request(app.getHttpServer())
       .get(`/permintaan/${createdPermintaanId}`)
@@ -73,8 +95,11 @@ describe('Permintaan E2E', () => {
     expect(res.body.items.length).toBeGreaterThan(0);
   });
 
+  /**
+   * Menguji bahwa pegawai tidak dapat melihat permintaan milik user lain.
+   * @returns {Promise<void>}
+   */
   it('Pegawai TIDAK BISA melihat permintaan milik user lain', async () => {
-    // Login sebagai pegawai lain
     const pegawaiRes = await request(app.getHttpServer())
       .post('/auth/login')
       .send({ username: 'siti', password: 'siti123' });
@@ -86,6 +111,10 @@ describe('Permintaan E2E', () => {
     expect(res.status).toBe(403);
   });
 
+  /**
+   * Menguji apakah admin dapat melihat daftar permintaan masuk dengan status 'Menunggu'.
+   * @returns {Promise<void>}
+   */
   it('Admin dapat melihat daftar permintaan masuk (Menunggu)', async () => {
     const res = await request(app.getHttpServer())
       .get('/permintaan/masuk')
@@ -95,6 +124,10 @@ describe('Permintaan E2E', () => {
     expect(res.body[0]).toHaveProperty('status', 'Menunggu');
   });
 
+  /**
+   * Menguji bahwa non-admin tidak dapat mengakses daftar permintaan masuk.
+   * @returns {Promise<void>}
+   */
   it('Non-admin TIDAK BISA akses daftar permintaan masuk', async () => {
     const res = await request(app.getHttpServer())
       .get('/permintaan/masuk')
@@ -102,22 +135,27 @@ describe('Permintaan E2E', () => {
     expect(res.status).toBe(403);
   });
 
+  /**
+   * Menguji bahwa permintaan barang dengan stok kurang akan gagal.
+   * @returns {Promise<void>}
+   */
   it('Tidak bisa mengajukan permintaan barang dengan stok kurang', async () => {
     const res = await request(app.getHttpServer())
       .post('/permintaan')
       .set('Authorization', `Bearer ${pegawaiToken}`)
       .send({
-        items: [
-          { id_barang: 5, jumlah: 10 }, // Pulpen Biru, stok hanya 1
-        ],
+        items: [{ id_barang: 5, jumlah: 10 }],
         catatan: 'Test stok kurang',
       });
     expect(res.status).toBe(400);
     expect(res.body.message).toMatch(/Stok barang/);
   });
 
+  /**
+   * Menguji apakah admin dapat memverifikasi permintaan dan menyetujui seluruh item.
+   * @returns {Promise<void>}
+   */
   it('Admin dapat memverifikasi permintaan (setuju semua)', async () => {
-    // Ambil detail permintaan untuk dapat id_detail
     const detailRes = await request(app.getHttpServer())
       .get(`/permintaan/${createdPermintaanId}`)
       .set('Authorization', `Bearer ${adminToken}`);
@@ -140,6 +178,10 @@ describe('Permintaan E2E', () => {
     expect(res.body.catatan).toBe('Disetujui penuh oleh admin');
   });
 
+  /**
+   * Menguji endpoint statistik dashboard permintaan.
+   * @returns {Promise<void>}
+   */
   it('GET /permintaan/dashboard/statistik returns dashboard stats', async () => {
     const res = await request(app.getHttpServer())
       .get('/permintaan/dashboard/statistik')
@@ -150,6 +192,10 @@ describe('Permintaan E2E', () => {
     expect(res.body).toHaveProperty('totalBarangKritis');
   });
 
+  /**
+   * Menguji endpoint tren permintaan pada dashboard.
+   * @returns {Promise<void>}
+   */
   it('GET /permintaan/dashboard/tren-permintaan returns trend data', async () => {
     const res = await request(app.getHttpServer())
       .get('/permintaan/dashboard/tren-permintaan')
@@ -160,6 +206,10 @@ describe('Permintaan E2E', () => {
     expect(res.body[0]).toHaveProperty('jumlah');
   });
 
+  /**
+   * Menguji endpoint untuk mengunduh PDF permintaan.
+   * @returns {Promise<void>}
+   */
   it('GET /permintaan/:id/pdf returns PDF', async () => {
     const res = await request(app.getHttpServer())
       .get(`/permintaan/${createdPermintaanId}/pdf`)

@@ -2,22 +2,24 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from './../src/app.module';
-import { execSync } from 'child_process';
 
-// =================================================================================
-// SUITE 1: User CRUD (e2e)
-// Fokus: Menguji fungsionalitas dasar CRUD pada endpoint /user oleh admin.
-// =================================================================================
+/**
+ * Suite pengujian CRUD User (e2e)
+ *
+ * Menguji fungsionalitas dasar CRUD pada endpoint /user oleh admin.
+ */
 describe('User CRUD (e2e)', () => {
   let app: INestApplication;
   let token: string;
   let createdUserId: number;
-  const uniqueUsername = `usertest_${Date.now()}`; // Pastikan username unik setiap run
+  const uniqueUsername = `usertest_${Date.now()}`;
 
+  /**
+   * Inisialisasi aplikasi dan login sebagai admin sebelum seluruh pengujian dijalankan.
+   *
+   * @returns {Promise<void>}
+   */
   beforeAll(async () => {
-    // Jalankan seeder sekali saja di awal untuk state awal yang bersih
-    // execSync('npm run seed', { stdio: 'inherit' });
-
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
@@ -25,25 +27,30 @@ describe('User CRUD (e2e)', () => {
     app = moduleFixture.createNestApplication();
     await app.init();
 
-    // Login sebagai admin untuk mendapatkan token
     const res = await request(app.getHttpServer()).post('/auth/login').send({
       username: 'admin',
       password: 'admin123',
     });
 
-    // Aplikasi ini mengembalikan 201 untuk login, jadi kita expect 201
     expect(res.status).toBe(201);
     token = res.body.access_token;
     expect(token).toBeDefined();
   }, 30000);
 
+  /**
+   * Menutup aplikasi setelah seluruh pengujian selesai.
+   *
+   * @returns {Promise<void>}
+   */
   afterAll(async () => {
-    // Jalankan seeder lagi untuk mereset state setelah semua test di suite ini selesai
-    // execSync('npm run seed', { stdio: 'inherit' });
     await app.close();
   });
 
-  // Test cases untuk CRUD (sebagian besar sudah benar, hanya perbaikan kecil)
+  /**
+   * Menguji endpoint pembuatan user baru.
+   *
+   * @returns {Promise<void>}
+   */
   it('POST /user (create)', async () => {
     const res = await request(app.getHttpServer())
       .post('/user')
@@ -56,11 +63,16 @@ describe('User CRUD (e2e)', () => {
       });
     expect(res.status).toBe(201);
     expect(res.body.username).toBe(uniqueUsername);
-    createdUserId = res.body.id; // Simpan ID user yang baru dibuat
+    createdUserId = res.body.id;
   });
 
-  // Pastikan createdUserId ada sebelum menjalankan test yang bergantung padanya
+  /**
+   * Pengujian yang bergantung pada user yang telah dibuat.
+   */
   describe('tests with created user', () => {
+    /**
+     * Memastikan createdUserId sudah terdefinisi sebelum menjalankan pengujian terkait.
+     */
     beforeEach(() => {
       if (!createdUserId) {
         throw new Error(
@@ -69,6 +81,11 @@ describe('User CRUD (e2e)', () => {
       }
     });
 
+    /**
+     * Menguji endpoint update user.
+     *
+     * @returns {Promise<void>}
+     */
     it('PATCH /user/:id (update)', async () => {
       const res = await request(app.getHttpServer())
         .patch(`/user/${createdUserId}`)
@@ -78,6 +95,11 @@ describe('User CRUD (e2e)', () => {
       expect(res.body.nama).toBe('User Test Updated');
     });
 
+    /**
+     * Menguji endpoint mendapatkan user berdasarkan id.
+     *
+     * @returns {Promise<void>}
+     */
     it('GET /user/:id (find one)', async () => {
       const res = await request(app.getHttpServer())
         .get(`/user/${createdUserId}`)
@@ -86,12 +108,17 @@ describe('User CRUD (e2e)', () => {
       expect(res.body.id).toBe(createdUserId);
     });
 
+    /**
+     * Menguji endpoint soft delete user.
+     *
+     * @returns {Promise<void>}
+     */
     it('DELETE /user/:id (soft delete)', async () => {
       const res = await request(app.getHttpServer())
         .delete(`/user/${createdUserId}`)
         .set('Authorization', `Bearer ${token}`);
       expect(res.status).toBe(200);
-      // Cek kembali user untuk memastikan status_aktif sudah false
+
       const checkRes = await request(app.getHttpServer())
         .get(`/user/${createdUserId}`)
         .set('Authorization', `Bearer ${token}`);
@@ -99,6 +126,11 @@ describe('User CRUD (e2e)', () => {
     });
   });
 
+  /**
+   * Menguji endpoint mendapatkan seluruh user.
+   *
+   * @returns {Promise<void>}
+   */
   it('GET /user (find all)', async () => {
     const res = await request(app.getHttpServer())
       .get('/user')
@@ -107,7 +139,13 @@ describe('User CRUD (e2e)', () => {
     expect(Array.isArray(res.body)).toBe(true);
   });
 
-  // Test cases untuk not found (sudah benar)
+  /**
+   * Menguji endpoint user yang tidak ditemukan.
+   *
+   * @param {string} method - Metode HTTP
+   * @param {string} path - Path endpoint
+   * @returns {Promise<void>}
+   */
   it.each([
     ['GET', '/user/999999'],
     ['PATCH', '/user/999999'],
@@ -116,13 +154,20 @@ describe('User CRUD (e2e)', () => {
     const res = await request(app.getHttpServer())
       [method.toLowerCase()](path)
       .set('Authorization', `Bearer ${token}`)
-      .send({ nama: 'X' }); // Kirim body untuk PATCH
+      .send({ nama: 'X' });
     expect(res.status).toBe(404);
     expect(res.body.message).toMatch(/User tidak ditemukan/i);
   });
 
-  // Test cases untuk profile (sudah benar)
+  /**
+   * Pengujian terkait profil user.
+   */
   describe('User Profile', () => {
+    /**
+     * Menguji endpoint melihat profil user.
+     *
+     * @returns {Promise<void>}
+     */
     it('GET /user/profile (lihat profil)', async () => {
       const res = await request(app.getHttpServer())
         .get('/user/profile')
@@ -131,6 +176,11 @@ describe('User CRUD (e2e)', () => {
       expect(res.body.username).toBe('admin');
     });
 
+    /**
+     * Menguji endpoint mengubah profil user.
+     *
+     * @returns {Promise<void>}
+     */
     it('PATCH /user/profile (edit profil)', async () => {
       const res = await request(app.getHttpServer())
         .patch('/user/profile')
@@ -142,18 +192,17 @@ describe('User CRUD (e2e)', () => {
   });
 });
 
-// =================================================================================
-// SUITE 2: Proteksi Endpoint Sesuai Role
-// Fokus: Memastikan guard dan role-based access control berfungsi dengan benar.
-// Prinsip: Buat data test sendiri dan bersihkan setelahnya (Setup & Teardown).
-// =================================================================================
+/**
+ * Suite pengujian proteksi endpoint sesuai role.
+ *
+ * Memastikan guard dan role-based access control berjalan dengan benar.
+ */
 describe('Proteksi endpoint sesuai role', () => {
   let app: INestApplication;
   let adminToken: string;
   let pegawaiToken: string;
   let createdPegawaiId: number;
 
-  // Gunakan data unik untuk user pegawai agar tidak konflik dengan seeder/test lain
   const pegawaiCredentials = {
     username: `pegawai.test.${Date.now()}`,
     password: 'password123',
@@ -161,6 +210,11 @@ describe('Proteksi endpoint sesuai role', () => {
     role: 'pegawai',
   };
 
+  /**
+   * Inisialisasi aplikasi, login admin, dan membuat user pegawai sebelum pengujian.
+   *
+   * @returns {Promise<void>}
+   */
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
@@ -169,7 +223,6 @@ describe('Proteksi endpoint sesuai role', () => {
     app = moduleFixture.createNestApplication();
     await app.init();
 
-    // 1. Login sebagai Admin
     const adminRes = await request(app.getHttpServer())
       .post('/auth/login')
       .send({
@@ -179,15 +232,13 @@ describe('Proteksi endpoint sesuai role', () => {
     adminToken = adminRes.body.access_token;
     expect(adminToken).toBeDefined();
 
-    // 2. Admin membuat user Pegawai baru untuk test ini
     const createPegawaiRes = await request(app.getHttpServer())
       .post('/user')
       .set('Authorization', `Bearer ${adminToken}`)
       .send(pegawaiCredentials);
     expect(createPegawaiRes.status).toBe(201);
-    createdPegawaiId = createPegawaiRes.body.id; // Simpan ID untuk cleanup
+    createdPegawaiId = createPegawaiRes.body.id;
 
-    // 3. Login sebagai user Pegawai yang baru dibuat
     const pegawaiRes = await request(app.getHttpServer())
       .post('/auth/login')
       .send({
@@ -195,14 +246,17 @@ describe('Proteksi endpoint sesuai role', () => {
         password: pegawaiCredentials.password,
       });
 
-    // Login sukses di aplikasi ini mengembalikan 201
     expect(pegawaiRes.status).toBe(201);
     pegawaiToken = pegawaiRes.body.access_token;
     expect(pegawaiToken).toBeDefined();
   }, 30000);
 
+  /**
+   * Menghapus user pegawai yang dibuat setelah pengujian selesai.
+   *
+   * @returns {Promise<void>}
+   */
   afterAll(async () => {
-    // Cleanup: Hapus user pegawai yang dibuat untuk test ini
     if (createdPegawaiId) {
       await request(app.getHttpServer())
         .delete(`/user/${createdPegawaiId}`)
@@ -211,37 +265,62 @@ describe('Proteksi endpoint sesuai role', () => {
     await app.close();
   });
 
-  // Test cases role access
+  /**
+   * Pengujian akses endpoint berdasarkan role.
+   */
   describe('Role-based Access', () => {
+    /**
+     * Menguji admin dapat mengakses endpoint khusus admin.
+     *
+     * @returns {Promise<void>}
+     */
     it('Admin HARUS bisa akses endpoint admin-only', async () => {
       const res = await request(app.getHttpServer())
-        .get('/user/admin-only') // Asumsi endpoint ini ada
+        .get('/user/admin-only')
         .set('Authorization', `Bearer ${adminToken}`);
       expect(res.status).toBe(200);
     });
 
+    /**
+     * Menguji pegawai tidak dapat mengakses endpoint khusus admin.
+     *
+     * @returns {Promise<void>}
+     */
     it('Pegawai TIDAK BISA akses endpoint admin-only', async () => {
       const res = await request(app.getHttpServer())
-        .get('/user/admin-only') // Asumsi endpoint ini ada
+        .get('/user/admin-only')
         .set('Authorization', `Bearer ${pegawaiToken}`);
-      expect(res.status).toBe(403); // 403 Forbidden
+      expect(res.status).toBe(403);
     });
 
+    /**
+     * Menguji pegawai dapat mengakses endpoint khusus pegawai.
+     *
+     * @returns {Promise<void>}
+     */
     it('Pegawai HARUS bisa akses endpoint pegawai-only', async () => {
       const res = await request(app.getHttpServer())
-        .get('/user/pegawai-only') // Asumsi endpoint ini ada
+        .get('/user/pegawai-only')
         .set('Authorization', `Bearer ${pegawaiToken}`);
       expect(res.status).toBe(200);
     });
 
+    /**
+     * Menguji admin tidak dapat mengakses endpoint khusus pegawai.
+     *
+     * @returns {Promise<void>}
+     */
     it('Admin TIDAK BISA akses endpoint pegawai-only', async () => {
       const res = await request(app.getHttpServer())
-        .get('/user/pegawai-only') // Asumsi endpoint ini ada
+        .get('/user/pegawai-only')
         .set('Authorization', `Bearer ${adminToken}`);
-      expect(res.status).toBe(403); // 403 Forbidden
+      expect(res.status).toBe(403);
     });
   });
 
+  /**
+   * Pengujian akses CRUD oleh pegawai.
+   */
   describe('CRUD Access for Pegawai', () => {
     const testCases = [
       { method: 'get', path: '/user' },
@@ -254,19 +333,35 @@ describe('Proteksi endpoint sesuai role', () => {
       { method: 'delete', path: '/user/1' },
     ];
 
+    /**
+     * Menguji pegawai tidak dapat mengakses endpoint CRUD user.
+     *
+     * @param {string} method - Metode HTTP
+     * @param {string} path - Path endpoint
+     * @param {object} [body] - Body request (opsional)
+     * @returns {Promise<void>}
+     */
     it.each(testCases)(
       'Pegawai TIDAK BISA akses $method $path',
       async ({ method, path, body }) => {
         const res = await request(app.getHttpServer())
           [method](path)
           .set('Authorization', `Bearer ${pegawaiToken}`)
-          .send(body || {}); // Kirim body jika ada
+          .send(body || {});
         expect(res.status).toBe(403);
       },
     );
   });
 
+  /**
+   * Pengujian akses profil untuk semua user yang sudah login.
+   */
   describe('Profile Access for All Logged-in Users', () => {
+    /**
+     * Menguji admin dapat mengakses profilnya sendiri.
+     *
+     * @returns {Promise<void>}
+     */
     it('Admin HARUS bisa akses profilnya sendiri', async () => {
       const res = await request(app.getHttpServer())
         .get('/user/profile')
@@ -275,6 +370,11 @@ describe('Proteksi endpoint sesuai role', () => {
       expect(res.body.username).toBe('admin');
     });
 
+    /**
+     * Menguji pegawai dapat mengakses profilnya sendiri.
+     *
+     * @returns {Promise<void>}
+     */
     it('Pegawai HARUS bisa akses profilnya sendiri', async () => {
       const res = await request(app.getHttpServer())
         .get('/user/profile')
@@ -283,6 +383,11 @@ describe('Proteksi endpoint sesuai role', () => {
       expect(res.body.username).toBe(pegawaiCredentials.username);
     });
 
+    /**
+     * Menguji admin dapat mengubah password melalui endpoint profil.
+     *
+     * @returns {Promise<void>}
+     */
     it('PATCH /user/profile (ubah password)', async () => {
       const res = await request(app.getHttpServer())
         .patch('/user/profile')

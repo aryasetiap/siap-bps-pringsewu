@@ -3,10 +3,17 @@ import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from './../src/app.module';
 
+/**
+ * Pengujian end-to-end untuk fitur autentikasi.
+ */
 describe('Auth (e2e)', () => {
   let app: INestApplication;
 
-  beforeAll(async () => {
+  /**
+   * Inisialisasi aplikasi NestJS sebelum seluruh pengujian dijalankan.
+   * @returns {Promise<void>}
+   */
+  beforeAll(async (): Promise<void> => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
@@ -15,7 +22,12 @@ describe('Auth (e2e)', () => {
     await app.init();
   });
 
-  it('POST /auth/login - success', async () => {
+  /**
+   * Menguji endpoint POST /auth/login dengan kredensial yang benar.
+   * Memastikan login berhasil dan token akses serta data user dikembalikan.
+   * @returns {Promise<void>}
+   */
+  it('POST /auth/login - success', async (): Promise<void> => {
     const res = await request(app.getHttpServer())
       .post('/auth/login')
       .send({ username: 'admin', password: 'admin123' });
@@ -24,19 +36,28 @@ describe('Auth (e2e)', () => {
     expect(res.body.user.username).toBe('admin');
   });
 
-  it('POST /auth/login - wrong password', async () => {
+  /**
+   * Menguji endpoint POST /auth/login dengan password yang salah.
+   * Memastikan respons status 401 dan pesan error yang sesuai.
+   * @returns {Promise<void>}
+   */
+  it('POST /auth/login - wrong password', async (): Promise<void> => {
     const res = await request(app.getHttpServer())
       .post('/auth/login')
       .send({ username: 'admin', password: 'wrongpass' });
     expect(res.status).toBe(401);
-    // Terima dua kemungkinan pesan error
     expect(
       res.body.message === 'Invalid password' ||
         res.body.message === 'User not found',
     ).toBe(true);
   });
 
-  it('POST /auth/login - user not found', async () => {
+  /**
+   * Menguji endpoint POST /auth/login dengan username yang tidak terdaftar.
+   * Memastikan respons status 401 dan pesan error "User not found".
+   * @returns {Promise<void>}
+   */
+  it('POST /auth/login - user not found', async (): Promise<void> => {
     const res = await request(app.getHttpServer())
       .post('/auth/login')
       .send({ username: 'nouser', password: 'pass' });
@@ -44,7 +65,12 @@ describe('Auth (e2e)', () => {
     expect(res.body.message).toMatch(/User not found/);
   });
 
-  it('POST /auth/logout - success', async () => {
+  /**
+   * Menguji endpoint POST /auth/logout setelah login berhasil.
+   * Memastikan logout berhasil dan pesan sukses dikembalikan.
+   * @returns {Promise<void>}
+   */
+  it('POST /auth/logout - success', async (): Promise<void> => {
     const login = await request(app.getHttpServer())
       .post('/auth/login')
       .send({ username: 'admin', password: 'admin123' });
@@ -56,7 +82,11 @@ describe('Auth (e2e)', () => {
     expect(res.body.message).toMatch(/Logout success/);
   });
 
-  afterAll(async () => {
+  /**
+   * Menutup aplikasi NestJS setelah seluruh pengujian selesai.
+   * @returns {Promise<void>}
+   */
+  afterAll(async (): Promise<void> => {
     await app.close();
   });
 });
