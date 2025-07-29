@@ -46,6 +46,11 @@ export class PermintaanService {
           `Barang dengan ID ${item.id_barang} tidak ditemukan`,
         );
       }
+      if (barang.status_aktif === false) {
+        throw new BadRequestException(
+          `Barang dengan ID ${item.id_barang} tidak aktif`,
+        );
+      }
       if (barang.stok < item.jumlah) {
         throw new BadRequestException(
           `Stok barang "${barang.nama_barang}" tidak mencukupi. Stok tersedia: ${barang.stok}, diminta: ${item.jumlah}`,

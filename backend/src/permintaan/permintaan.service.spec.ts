@@ -90,6 +90,13 @@ describe('PermintaanService', () => {
       );
     });
 
+    it('should throw BadRequestException if items is empty', async () => {
+      const dto = { items: [] };
+      await expect(service.create(dto as any, 1)).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+
     it('should create permintaan and details in transaction', async () => {
       barangRepo.findByIds.mockResolvedValue([
         { id: 1, stok: 10, nama_barang: 'Barang A' },
@@ -258,6 +265,33 @@ describe('PermintaanService', () => {
       ).rejects.toThrow(BadRequestException);
     });
 
+    it('should throw BadRequestException if keputusan is invalid', async () => {
+      const permintaan = {
+        status: 'Menunggu',
+        details: [
+          {
+            id: 1,
+            jumlah_diminta: 2,
+            jumlah_disetujui: 0,
+            barang: { stok: 10, nama_barang: 'Barang A' },
+          },
+        ],
+      };
+      mockDataSource.transaction.mockImplementation(async (cb) => {
+        return cb({
+          findOne: jest.fn().mockResolvedValue(permintaan),
+          save: jest.fn(),
+        });
+      });
+      const dto = {
+        items: [{ id_detail: 1, jumlah_disetujui: 1 }],
+        keputusan: 'invalid',
+      };
+      await expect(
+        service.verifikasiPermintaan(1, dto as any, 1),
+      ).rejects.toThrow(BadRequestException);
+    });
+
     it('should update status and stok if verifikasi setuju', async () => {
       const permintaan = {
         status: 'Menunggu',
@@ -317,6 +351,65 @@ describe('PermintaanService', () => {
       const result = await service.verifikasiPermintaan(1, dto as any, 99);
       expect(result.status).toBe('Ditolak');
       expect(result.catatan).toBe('Ditolak');
+    });
+
+    it('should throw BadRequestException if barang status_aktif is false', async () => {
+      barangRepo.findByIds.mockResolvedValue([
+        { id: 1, stok: 10, nama_barang: 'Barang A', status_aktif: false },
+      ]);
+      const dto = { items: [{ id_barang: 1, jumlah: 2 }] };
+      // Jangan mock transaksi di sini, biarkan validasi gagal sebelum transaksi
+      await expect(service.create(dto as any, 1)).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+
+    it('should throw BadRequestException if permintaan status is not Menunggu', async () => {
+      mockDataSource.transaction.mockImplementation(async (cb) => {
+        await cb({
+          findOne: jest.fn().mockResolvedValue({ status: 'Ditolak' }),
+        });
+      });
+      await expect(
+        service.verifikasiPermintaan(
+          1,
+          {
+            items: [{ id_detail: 1, jumlah_disetujui: 1 }],
+            keputusan: 'setuju',
+          } as any,
+          1,
+        ),
+      ).rejects.toThrow('Permintaan sudah diverifikasi');
+    });
+
+    it('should throw BadRequestException if pengurangan stok menyebabkan stok minus', async () => {
+      const permintaan = {
+        status: 'Menunggu',
+        details: [
+          {
+            id: 1,
+            jumlah_diminta: 1,
+            jumlah_disetujui: 0,
+            barang: { stok: 0, nama_barang: 'Barang A' },
+          },
+        ],
+      };
+      mockDataSource.transaction.mockImplementation(async (cb) => {
+        await cb({
+          findOne: jest.fn().mockResolvedValue(permintaan),
+          save: jest.fn(),
+        });
+      });
+      await expect(
+        service.verifikasiPermintaan(
+          1,
+          {
+            items: [{ id_detail: 1, jumlah_disetujui: 1 }],
+            keputusan: 'setuju',
+          } as any,
+          1,
+        ),
+      ).rejects.toThrow(/tidak mencukupi/);
     });
   });
 
