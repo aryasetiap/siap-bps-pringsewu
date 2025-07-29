@@ -135,7 +135,7 @@ describe('Barang CRUD (e2e)', () => {
     expect(res.body.every((b) => b.status_aktif === true)).toBe(true);
   });
 
-  it('GET /barang/stok-kritis (should return only kritis items)', async () => {
+  it('GET /barang/stok-kritis returns kritis items', async () => {
     const res = await request(app.getHttpServer())
       .get('/barang/stok-kritis')
       .set('Authorization', `Bearer ${token}`);

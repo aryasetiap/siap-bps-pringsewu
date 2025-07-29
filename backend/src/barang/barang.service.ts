@@ -95,4 +95,13 @@ export class BarangService {
       .andWhere('barang.status_aktif = :aktif', { aktif: true })
       .getMany();
   }
+
+  async getBarangKritis() {
+    return this.barangRepo
+      .createQueryBuilder('barang')
+      .where('barang.stok <= barang.ambang_batas_kritis')
+      .andWhere('barang.status_aktif = :aktif', { aktif: true })
+      .orderBy('barang.stok', 'ASC')
+      .getMany();
+  }
 }

@@ -139,4 +139,24 @@ describe('Permintaan E2E', () => {
     expect(res.body.status).toBe('Disetujui');
     expect(res.body.catatan).toBe('Disetujui penuh oleh admin');
   });
+
+  it('GET /permintaan/dashboard/statistik returns dashboard stats', async () => {
+    const res = await request(app.getHttpServer())
+      .get('/permintaan/dashboard/statistik')
+      .set('Authorization', `Bearer ${adminToken}`);
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveProperty('totalBarang');
+    expect(res.body).toHaveProperty('totalPermintaanTertunda');
+    expect(res.body).toHaveProperty('totalBarangKritis');
+  });
+
+  it('GET /permintaan/dashboard/tren-permintaan returns trend data', async () => {
+    const res = await request(app.getHttpServer())
+      .get('/permintaan/dashboard/tren-permintaan')
+      .set('Authorization', `Bearer ${adminToken}`);
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body)).toBe(true);
+    expect(res.body[0]).toHaveProperty('bulan');
+    expect(res.body[0]).toHaveProperty('jumlah');
+  });
 });

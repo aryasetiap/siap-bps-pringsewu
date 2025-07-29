@@ -7,7 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Permintaan } from '../entities/permintaan.entity';
 import { DetailPermintaan } from '../entities/detail_permintaan.entity';
 import { Barang } from '../entities/barang.entity';
-import { Repository, DataSource } from 'typeorm';
+import { Repository, DataSource, Between, Raw } from 'typeorm';
 import { CreatePermintaanDto } from './dto/create-permintaan.dto';
 import { VerifikasiPermintaanDto } from './dto/verifikasi-permintaan.dto';
 
@@ -187,5 +187,48 @@ export class PermintaanService {
         items: permintaan.details,
       };
     });
+  }
+
+  async getDashboardStatistik() {
+    const [totalBarang, totalPermintaanTertunda, totalBarangKritis] =
+      await Promise.all([
+        this.barangRepo.count(),
+        this.permintaanRepo.count({ where: { status: 'Menunggu' } }),
+        this.barangRepo
+          .createQueryBuilder('barang')
+          .where('barang.stok <= barang.ambang_batas_kritis')
+          .andWhere('barang.status_aktif = :aktif', { aktif: true })
+          .getCount(),
+      ]);
+    return {
+      totalBarang,
+      totalPermintaanTertunda,
+      totalBarangKritis,
+    };
+  }
+
+  async getTrenPermintaanBulanan() {
+    const now = new Date();
+    const start = new Date(now.getFullYear(), now.getMonth() - 11, 1);
+    const data = await this.permintaanRepo
+      .createQueryBuilder('permintaan')
+      .select([
+        "TO_CHAR(permintaan.tanggal_permintaan, 'YYYY-MM') AS bulan",
+        'COUNT(*)::int AS jumlah',
+      ])
+      .where('permintaan.tanggal_permintaan >= :start', { start })
+      .groupBy('bulan')
+      .orderBy('bulan', 'ASC')
+      .getRawMany();
+
+    // Lengkapi bulan yang tidak ada permintaan dengan 0
+    const result: { bulan: string; jumlah: number }[] = [];
+    for (let i = 0; i < 12; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() - 11 + i, 1);
+      const bulan = d.toISOString().slice(0, 7);
+      const found = data.find((row) => row.bulan === bulan);
+      result.push({ bulan, jumlah: found ? Number(found.jumlah) : 0 });
+    }
+    return result;
   }
 }

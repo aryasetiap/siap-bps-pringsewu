@@ -12,6 +12,8 @@ const mockPermintaanRepo = () => ({
   save: jest.fn(),
   find: jest.fn(),
   findOne: jest.fn(),
+  count: jest.fn(), // tambahkan ini
+  createQueryBuilder: jest.fn(), // tambahkan ini
 });
 const mockDetailRepo = () => ({
   create: jest.fn(),
@@ -20,6 +22,8 @@ const mockDetailRepo = () => ({
 const mockBarangRepo = () => ({
   findByIds: jest.fn(),
   findOne: jest.fn(),
+  count: jest.fn(), // tambahkan ini
+  createQueryBuilder: jest.fn(), // tambahkan ini
 });
 
 const mockDataSource = {
@@ -275,6 +279,42 @@ describe('PermintaanService', () => {
       expect(result.status).toBe('Disetujui');
       expect(permintaan.details[0].barang.stok).toBe(8);
       expect(permintaan.catatan).toBe('OK');
+    });
+  });
+
+  describe('getDashboardStatistik', () => {
+    it('should return dashboard statistik', async () => {
+      barangRepo.count.mockResolvedValue(10);
+      permintaanRepo.count.mockResolvedValue(2);
+      barangRepo.createQueryBuilder = jest.fn().mockReturnValue({
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        getCount: jest.fn().mockResolvedValue(3),
+      });
+      const result = await service.getDashboardStatistik();
+      expect(result).toEqual({
+        totalBarang: 10,
+        totalPermintaanTertunda: 2,
+        totalBarangKritis: 3,
+      });
+    });
+  });
+
+  describe('getTrenPermintaanBulanan', () => {
+    it('should return tren permintaan bulanan', async () => {
+      permintaanRepo.createQueryBuilder = jest.fn().mockReturnValue({
+        select: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        groupBy: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        getRawMany: jest.fn().mockResolvedValue([
+          { bulan: '2024-07', jumlah: 5 },
+          { bulan: '2024-08', jumlah: 2 },
+        ]),
+      });
+      const result = await service.getTrenPermintaanBulanan();
+      expect(Array.isArray(result)).toBe(true);
+      expect(result.some((r) => r.bulan === '2024-07')).toBe(true);
     });
   });
 });

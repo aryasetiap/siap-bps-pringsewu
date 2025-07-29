@@ -18,6 +18,7 @@ import { BarangService } from './barang.service';
 import { CreateBarangDto } from './dto/create-barang.dto';
 import { UpdateBarangDto } from './dto/update-barang.dto';
 import { AddStokDto } from './dto/add-stok.dto';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('barang')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -82,6 +83,12 @@ export class BarangController {
   @Patch(':id/add-stok')
   addStok(@Param('id', ParseIntPipe) id: number, @Body() dto: AddStokDto) {
     return this.barangService.addStok(id, dto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('dashboard/notifikasi-stok-kritis')
+  async getNotifikasiStokKritis() {
+    return this.barangService.getBarangKritis();
   }
 
   // Hapus permanen (opsional, untuk admin superuser)

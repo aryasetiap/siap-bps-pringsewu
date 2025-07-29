@@ -52,9 +52,9 @@ Dokumentasi tahapan kerja detail untuk monitoring dan catatan progres proyek.
 
 ### 6. Dashboard & Monitoring (Admin)
 
-- [ ] Endpoint statistik dashboard (jumlah barang, permintaan tertunda, barang kritis)
-- [ ] Endpoint grafik tren permintaan bulanan
-- [ ] Endpoint notifikasi stok kritis
+- [x] Endpoint statistik dashboard (jumlah barang, permintaan tertunda, barang kritis)
+- [x] Endpoint grafik tren permintaan bulanan
+- [x] Endpoint notifikasi stok kritis
 
 ### 7. Pelaporan & Ekspor PDF
 

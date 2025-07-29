@@ -72,4 +72,18 @@ export class PermintaanController {
       req.user.userId,
     );
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Roles('admin')
+  @Get('dashboard/statistik')
+  async getDashboardStatistik() {
+    return this.permintaanService.getDashboardStatistik();
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Roles('admin')
+  @Get('dashboard/tren-permintaan')
+  async getTrenPermintaanBulanan() {
+    return this.permintaanService.getTrenPermintaanBulanan();
+  }
 }
