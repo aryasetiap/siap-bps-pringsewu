@@ -7,19 +7,27 @@ import ormconfig from '../ormconfig';
 
 dotenv.config();
 
-async function seed() {
+/**
+ * Melakukan proses seeding data awal ke database.
+ *
+ * Fungsi ini akan:
+ * 1. Menginisialisasi koneksi database.
+ * 2. Mengosongkan tabel detail_permintaan, permintaan, barang, dan users.
+ * 3. Menambahkan data user (admin dan pegawai).
+ * 4. Menambahkan data barang.
+ * 5. Menutup koneksi database setelah selesai.
+ *
+ * @returns {Promise<void>} Tidak mengembalikan nilai apapun.
+ */
+async function seed(): Promise<void> {
   const dataSource = await ormconfig.initialize();
 
-  // Hapus data lama (urutan: detail_permintaan → permintaan → barang → users)
-  // Reset all tables and identity (auto increment)
   await dataSource.query(`
     TRUNCATE TABLE "detail_permintaan", "permintaan", "barang", "users" RESTART IDENTITY CASCADE
   `);
 
-  // User Seeder
   const userRepo = dataSource.getRepository(User);
 
-  // Admin
   await userRepo.save(
     userRepo.create({
       nama: 'Admin SIAP',
@@ -32,7 +40,6 @@ async function seed() {
     }),
   );
 
-  // Pegawai
   const pegawaiList = [
     {
       nama: 'Budi Santoso',
@@ -64,7 +71,6 @@ async function seed() {
   ];
   await userRepo.save(userRepo.create(pegawaiList));
 
-  // Barang Seeder
   const barangRepo = dataSource.getRepository(Barang);
   const barangList = [
     {
@@ -119,6 +125,11 @@ async function seed() {
   console.log('Seeding selesai');
 }
 
+/**
+ * Menjalankan fungsi seed dan menangani error jika terjadi.
+ *
+ * @returns {void}
+ */
 seed().catch((err) => {
   console.error('Seeding gagal:', err);
   process.exit(1);
