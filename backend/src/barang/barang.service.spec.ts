@@ -21,6 +21,9 @@ describe('BarangService', () => {
   let service: BarangService;
   let repo: Repository<Barang>;
 
+  /**
+   * Inisialisasi modul testing dan mock repository sebelum setiap pengujian.
+   */
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -33,7 +36,7 @@ describe('BarangService', () => {
             save: jest.fn(),
             remove: jest.fn(),
             createQueryBuilder: jest.fn(),
-            query: jest.fn(), // tambahkan ini
+            query: jest.fn(),
           },
         },
       ],
@@ -43,6 +46,10 @@ describe('BarangService', () => {
     repo = module.get<Repository<Barang>>(getRepositoryToken(Barang));
   });
 
+  /**
+   * Menguji validasi update stok negatif.
+   * @returns Error jika stok bernilai negatif.
+   */
   it('should throw BadRequestException if update called with negative stok', async () => {
     (repo.findOne as jest.Mock).mockResolvedValue(mockBarang);
     await expect(service.update(1, { stok: -1 } as any)).rejects.toThrow(
@@ -50,6 +57,10 @@ describe('BarangService', () => {
     );
   });
 
+  /**
+   * Menguji penambahan stok dengan jumlah 0 tidak mengubah stok.
+   * @returns Barang dengan stok tetap.
+   */
   it('should not change stok if addStok called with jumlah 0', async () => {
     const barang = { ...mockBarang, stok: 10, status_aktif: true };
     (repo.findOne as jest.Mock).mockResolvedValue(barang);
@@ -58,6 +69,10 @@ describe('BarangService', () => {
     expect(result.stok).toBe(10);
   });
 
+  /**
+   * Menguji pengambilan semua barang tanpa query filter.
+   * @returns Daftar seluruh barang.
+   */
   it('should return all barang if no query is provided', async () => {
     const qb = {
       andWhere: jest.fn().mockReturnThis(),
@@ -68,10 +83,17 @@ describe('BarangService', () => {
     expect(result).toEqual([mockBarang]);
   });
 
+  /**
+   * Memastikan service terdefinisi.
+   */
   it('should be defined', () => {
     expect(service).toBeDefined();
   });
 
+  /**
+   * Menguji pembuatan barang baru.
+   * @returns Barang yang berhasil dibuat.
+   */
   it('should create barang', async () => {
     (repo.findOne as jest.Mock).mockResolvedValue(undefined);
     (repo.create as jest.Mock).mockReturnValue(mockBarang);
@@ -88,6 +110,10 @@ describe('BarangService', () => {
     expect(result).toEqual(mockBarang);
   });
 
+  /**
+   * Menguji validasi kode_barang yang sudah terdaftar.
+   * @returns Error jika kode_barang sudah ada.
+   */
   it('should throw BadRequestException if kode_barang exists', async () => {
     (repo.findOne as jest.Mock).mockResolvedValue(mockBarang);
     const dto = { kode_barang: 'BRG001', nama_barang: 'X', satuan: 'rim' };
@@ -96,6 +122,10 @@ describe('BarangService', () => {
     );
   });
 
+  /**
+   * Menguji update data barang.
+   * @returns Barang yang sudah diperbarui.
+   */
   it('should update barang', async () => {
     const updated = { ...mockBarang, nama_barang: 'Updated' };
     (repo.findOne as jest.Mock).mockResolvedValue(mockBarang);
@@ -107,6 +137,10 @@ describe('BarangService', () => {
     expect(repo.save).toHaveBeenCalled();
   });
 
+  /**
+   * Menguji error jika barang yang akan diupdate tidak ditemukan.
+   * @returns Error NotFoundException.
+   */
   it('should throw NotFoundException if barang to update not found', async () => {
     (repo.findOne as jest.Mock).mockResolvedValue(undefined);
     await expect(
@@ -114,11 +148,19 @@ describe('BarangService', () => {
     ).rejects.toThrow('Barang tidak ditemukan');
   });
 
+  /**
+   * Menguji validasi stok negatif saat update.
+   * @returns Error jika stok negatif.
+   */
   it('should throw error if update called with invalid stok', async () => {
     (repo.findOne as jest.Mock).mockResolvedValue(mockBarang);
     await expect(service.update(1, { stok: -10 } as any)).rejects.toThrow();
   });
 
+  /**
+   * Menguji soft delete barang.
+   * @returns Barang dengan status_aktif false.
+   */
   it('should soft delete barang', async () => {
     const softDeleted = { ...mockBarang, status_aktif: false };
     (repo.findOne as jest.Mock).mockResolvedValue(mockBarang);
@@ -128,6 +170,10 @@ describe('BarangService', () => {
     expect(result.status_aktif).toBe(false);
   });
 
+  /**
+   * Menguji error jika barang yang akan dihapus tidak ditemukan.
+   * @returns Error NotFoundException.
+   */
   it('should throw NotFoundException if barang to delete not found', async () => {
     (repo.findOne as jest.Mock).mockResolvedValue(undefined);
     await expect(service.softDelete(999)).rejects.toThrow(
@@ -135,6 +181,10 @@ describe('BarangService', () => {
     );
   });
 
+  /**
+   * Menguji pengambilan seluruh barang.
+   * @returns Daftar barang.
+   */
   it('should find all barang', async () => {
     const qb = {
       andWhere: jest.fn().mockReturnThis(),
@@ -147,6 +197,10 @@ describe('BarangService', () => {
     expect(result).toEqual([mockBarang]);
   });
 
+  /**
+   * Menguji pencarian barang berdasarkan id.
+   * @returns Barang yang ditemukan.
+   */
   it('should find one barang by id', async () => {
     (repo.findOne as jest.Mock).mockResolvedValue(mockBarang);
     const result = await service.findOne(1);
@@ -154,6 +208,10 @@ describe('BarangService', () => {
     expect(result).toEqual(mockBarang);
   });
 
+  /**
+   * Menguji error jika barang tidak ditemukan berdasarkan id.
+   * @returns Error NotFoundException.
+   */
   it('should throw NotFoundException if barang not found', async () => {
     (repo.findOne as jest.Mock).mockResolvedValue(undefined);
     await expect(service.findOne(999)).rejects.toThrow(
@@ -161,6 +219,10 @@ describe('BarangService', () => {
     );
   });
 
+  /**
+   * Menguji penambahan stok pada barang aktif.
+   * @returns Barang dengan stok bertambah.
+   */
   it('should add stok to active barang', async () => {
     const barangAktif = { ...mockBarang, stok: 10, status_aktif: true };
     (repo.findOne as jest.Mock).mockResolvedValue(barangAktif);
@@ -171,6 +233,10 @@ describe('BarangService', () => {
     expect(repo.save).toHaveBeenCalled();
   });
 
+  /**
+   * Menguji error jika barang tidak aktif saat menambah stok.
+   * @returns Error jika barang tidak aktif.
+   */
   it('should throw error if barang not active', async () => {
     const barangNonAktif = { ...mockBarang, status_aktif: false };
     (repo.findOne as jest.Mock).mockResolvedValue(barangNonAktif);
@@ -180,6 +246,10 @@ describe('BarangService', () => {
     );
   });
 
+  /**
+   * Menguji error jika barang tidak ditemukan saat menambah stok.
+   * @returns Error NotFoundException.
+   */
   it('should throw NotFoundException if barang to add stok not found', async () => {
     (repo.findOne as jest.Mock).mockResolvedValue(undefined);
     await expect(service.addStok(999, { jumlah: 5 })).rejects.toThrow(
@@ -187,11 +257,19 @@ describe('BarangService', () => {
     );
   });
 
+  /**
+   * Menguji validasi jumlah negatif saat menambah stok.
+   * @returns Error jika jumlah negatif.
+   */
   it('should throw error if addStok called with negative jumlah', async () => {
     (repo.findOne as jest.Mock).mockResolvedValue(mockBarang);
     await expect(service.addStok(1, { jumlah: -5 })).rejects.toThrow();
   });
 
+  /**
+   * Menguji filter barang berdasarkan query string.
+   * @returns Daftar barang yang sesuai filter q.
+   */
   it('should filter barang by q', async () => {
     const qb = {
       andWhere: jest.fn().mockReturnThis(),
@@ -208,6 +286,10 @@ describe('BarangService', () => {
     expect(result).toEqual([mockBarang]);
   });
 
+  /**
+   * Menguji filter barang berdasarkan status_aktif.
+   * @returns Daftar barang dengan status_aktif tertentu.
+   */
   it('should filter barang by status_aktif', async () => {
     const qb = {
       andWhere: jest.fn().mockReturnThis(),
@@ -223,6 +305,10 @@ describe('BarangService', () => {
     expect(result).toEqual([mockBarang]);
   });
 
+  /**
+   * Menguji pengambilan barang dengan stok kritis.
+   * @returns Daftar barang dengan stok di bawah ambang batas kritis.
+   */
   it('should return barang with stok kritis', async () => {
     const kritisBarang = {
       ...mockBarang,
@@ -246,6 +332,12 @@ describe('BarangService', () => {
     expect(result).toEqual([kritisBarang]);
   });
 
+  /**
+   * Menguji pembuatan buffer PDF untuk laporan penggunaan barang.
+   * @param tanggal_awal Tanggal awal periode laporan
+   * @param tanggal_akhir Tanggal akhir periode laporan
+   * @returns Buffer PDF laporan penggunaan
+   */
   it('should generate PDF buffer for laporan penggunaan', async () => {
     (repo.query as jest.Mock).mockResolvedValue([
       { nama_barang: 'Kertas', satuan: 'rim', total_digunakan: 5 },
@@ -259,6 +351,10 @@ describe('BarangService', () => {
 });
 
 describe('Barang DTO Validation', () => {
+  /**
+   * Menguji validasi kode_barang dengan karakter tidak valid.
+   * @returns Error validasi pada kode_barang.
+   */
   it('should fail if kode_barang contains invalid chars', async () => {
     const dto = plainToInstance(CreateBarangDto, {
       kode_barang: 'BRG 001!',
@@ -270,6 +366,10 @@ describe('Barang DTO Validation', () => {
     expect(errors[0].constraints?.matches).toBeDefined();
   });
 
+  /**
+   * Menguji validasi stok negatif pada DTO.
+   * @returns Error validasi pada stok.
+   */
   it('should fail if stok is negative', async () => {
     const dto = plainToInstance(CreateBarangDto, {
       kode_barang: 'BRG001',
@@ -282,6 +382,10 @@ describe('Barang DTO Validation', () => {
     expect(errors[0].constraints?.min).toBeDefined();
   });
 
+  /**
+   * Menguji validasi DTO dengan data yang valid.
+   * @returns Tidak ada error validasi.
+   */
   it('should pass with valid data', async () => {
     const dto = plainToInstance(CreateBarangDto, {
       kode_barang: 'BRG001',

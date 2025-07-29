@@ -23,11 +23,22 @@ import { AddStokDto } from './dto/add-stok.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Response } from 'express';
 
+/**
+ * Controller untuk manajemen data barang.
+ * Mengatur endpoint terkait CRUD barang, stok, notifikasi, dan laporan.
+ */
 @Controller('barang')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 export class BarangController {
   constructor(private readonly barangService: BarangService) {}
 
+  /**
+   * Membuat data barang baru.
+   * Hanya dapat diakses oleh admin.
+   *
+   * @param dto Data barang yang akan dibuat (CreateBarangDto)
+   * @returns Data barang yang berhasil dibuat
+   */
   @Roles('admin')
   @Post()
   create(
@@ -43,6 +54,15 @@ export class BarangController {
     return this.barangService.create(dto);
   }
 
+  /**
+   * Mengambil daftar seluruh barang dengan opsi filter.
+   * Hanya dapat diakses oleh admin.
+   *
+   * @param q Kata kunci pencarian (opsional)
+   * @param status_aktif Filter status aktif barang (opsional)
+   * @param stok_kritis Filter barang dengan stok kritis (opsional)
+   * @returns Daftar barang sesuai filter yang diberikan
+   */
   @Roles('admin')
   @Get()
   findAll(
@@ -58,42 +78,94 @@ export class BarangController {
     });
   }
 
+  /**
+   * Mengambil daftar barang yang memiliki stok kritis.
+   * Hanya dapat diakses oleh admin.
+   *
+   * @returns Daftar barang dengan stok kritis
+   */
   @Roles('admin')
   @Get('stok-kritis')
   async getStokKritis() {
     return this.barangService.getStokKritis();
   }
 
+  /**
+   * Mengambil detail barang berdasarkan ID.
+   * Hanya dapat diakses oleh admin.
+   *
+   * @param id ID barang
+   * @returns Detail barang yang ditemukan
+   */
   @Roles('admin')
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.barangService.findOne(id);
   }
 
+  /**
+   * Memperbarui data barang berdasarkan ID.
+   * Hanya dapat diakses oleh admin.
+   *
+   * @param id ID barang yang akan diperbarui
+   * @param dto Data barang yang akan diperbarui (UpdateBarangDto)
+   * @returns Data barang yang telah diperbarui
+   */
   @Roles('admin')
   @Patch(':id')
   update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateBarangDto) {
     return this.barangService.update(id, dto);
   }
 
+  /**
+   * Melakukan soft delete pada barang berdasarkan ID.
+   * Hanya dapat diakses oleh admin.
+   *
+   * @param id ID barang yang akan dihapus
+   * @returns Status penghapusan barang
+   */
   @Roles('admin')
   @Delete(':id')
   softDelete(@Param('id', ParseIntPipe) id: number) {
     return this.barangService.softDelete(id);
   }
 
+  /**
+   * Menambah stok pada barang tertentu.
+   * Hanya dapat diakses oleh admin.
+   *
+   * @param id ID barang yang akan ditambah stoknya
+   * @param dto Data penambahan stok (AddStokDto)
+   * @returns Data barang setelah stok ditambah
+   */
   @Roles('admin')
   @Patch(':id/add-stok')
   addStok(@Param('id', ParseIntPipe) id: number, @Body() dto: AddStokDto) {
     return this.barangService.addStok(id, dto);
   }
 
+  /**
+   * Mengambil notifikasi barang dengan stok kritis untuk dashboard.
+   * Hanya dapat diakses oleh user yang sudah login.
+   *
+   * @returns Daftar notifikasi barang stok kritis
+   */
   @UseGuards(JwtAuthGuard)
   @Get('dashboard/notifikasi-stok-kritis')
   async getNotifikasiStokKritis() {
     return this.barangService.getBarangKritis();
   }
 
+  /**
+   * Menghasilkan laporan penggunaan barang dalam format PDF.
+   * Hanya dapat diakses oleh user yang sudah login.
+   *
+   * @param start Tanggal mulai periode laporan (format: YYYY-MM-DD)
+   * @param end Tanggal akhir periode laporan (format: YYYY-MM-DD)
+   * @param res Response object untuk mengirim file PDF
+   * @throws BadRequestException Jika format tanggal tidak valid atau tanggal mulai > tanggal akhir
+   * @returns File PDF laporan penggunaan barang
+   */
   @Get('laporan-penggunaan/pdf')
   @UseGuards(JwtAuthGuard)
   async generateLaporanPenggunaanPDF(
@@ -120,11 +192,4 @@ export class BarangController {
     });
     res.end(pdfBuffer);
   }
-
-  // Hapus permanen (opsional, untuk admin superuser)
-  // @Roles('admin')
-  // @Delete(':id/permanent')
-  // remove(@Param('id', ParseIntPipe) id: number) {
-  //   return this.barangService.remove(id);
-  // }
 }

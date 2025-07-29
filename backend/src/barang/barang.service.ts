@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Barang } from '../entities/barang.entity';
-import { Repository, FindOptionsWhere, ILike, LessThanOrEqual } from 'typeorm';
+import { Repository } from 'typeorm';
 import { CreateBarangDto } from './dto/create-barang.dto';
 import { UpdateBarangDto } from './dto/update-barang.dto';
 import { AddStokDto } from './dto/add-stok.dto';
@@ -19,6 +19,12 @@ export class BarangService {
     private barangRepo: Repository<Barang>,
   ) {}
 
+  /**
+   * Membuat data barang baru.
+   * @param dto Data barang yang akan dibuat.
+   * @returns Barang yang berhasil dibuat.
+   * @throws BadRequestException jika kode barang sudah terdaftar.
+   */
   async create(dto: CreateBarangDto): Promise<Barang> {
     const exist = await this.barangRepo.findOne({
       where: { kode_barang: dto.kode_barang },
@@ -28,6 +34,11 @@ export class BarangService {
     return this.barangRepo.save(barang);
   }
 
+  /**
+   * Mengambil daftar barang dengan filter pencarian, status aktif, dan stok kritis.
+   * @param query Opsi pencarian: q (nama/kode), status_aktif, stok_kritis.
+   * @returns Daftar barang sesuai filter.
+   */
   async findAll(query?: {
     q?: string;
     status_aktif?: boolean;
@@ -36,7 +47,6 @@ export class BarangService {
     const repo = this.barangRepo;
     const qb = repo.createQueryBuilder('barang');
 
-    // Pencarian nama/kode
     if (query?.q) {
       qb.andWhere(
         '(barang.nama_barang ILIKE :q OR barang.kode_barang ILIKE :q)',
@@ -44,14 +54,12 @@ export class BarangService {
       );
     }
 
-    // Filter status aktif
     if (typeof query?.status_aktif === 'boolean') {
       qb.andWhere('barang.status_aktif = :status', {
         status: query.status_aktif,
       });
     }
 
-    // Filter stok kritis
     if (query?.stok_kritis) {
       qb.andWhere('barang.stok <= barang.ambang_batas_kritis');
     }
@@ -59,12 +67,25 @@ export class BarangService {
     return qb.getMany();
   }
 
+  /**
+   * Mengambil detail barang berdasarkan ID.
+   * @param id ID barang.
+   * @returns Barang yang ditemukan.
+   * @throws NotFoundException jika barang tidak ditemukan.
+   */
   async findOne(id: number): Promise<Barang> {
     const barang = await this.barangRepo.findOne({ where: { id } });
     if (!barang) throw new NotFoundException('Barang tidak ditemukan');
     return barang;
   }
 
+  /**
+   * Memperbarui data barang berdasarkan ID.
+   * @param id ID barang.
+   * @param dto Data yang akan diperbarui.
+   * @returns Barang yang telah diperbarui.
+   * @throws BadRequestException jika stok negatif.
+   */
   async update(id: number, dto: UpdateBarangDto): Promise<Barang> {
     if (dto.stok !== undefined && dto.stok < 0) {
       throw new BadRequestException('Stok tidak boleh negatif');
@@ -74,17 +95,34 @@ export class BarangService {
     return this.barangRepo.save(barang);
   }
 
+  /**
+   * Melakukan soft delete pada barang (mengubah status_aktif menjadi false).
+   * @param id ID barang.
+   * @returns Barang yang telah di-nonaktifkan.
+   */
   async softDelete(id: number): Promise<Barang> {
     const barang = await this.findOne(id);
     barang.status_aktif = false;
     return this.barangRepo.save(barang);
   }
 
+  /**
+   * Menghapus barang secara permanen dari database.
+   * @param id ID barang.
+   * @returns void
+   */
   async remove(id: number): Promise<void> {
     const barang = await this.findOne(id);
     await this.barangRepo.remove(barang);
   }
 
+  /**
+   * Menambah stok barang berdasarkan ID.
+   * @param id ID barang.
+   * @param dto Data penambahan stok.
+   * @returns Barang dengan stok yang telah diperbarui.
+   * @throws BadRequestException jika barang tidak aktif.
+   */
   async addStok(id: number, dto: AddStokDto): Promise<Barang> {
     const barang = await this.findOne(id);
     if (!barang.status_aktif)
@@ -93,6 +131,10 @@ export class BarangService {
     return this.barangRepo.save(barang);
   }
 
+  /**
+   * Mengambil daftar barang yang stoknya kritis dan masih aktif.
+   * @returns Daftar barang dengan stok kritis.
+   */
   async getStokKritis(): Promise<Barang[]> {
     return this.barangRepo
       .createQueryBuilder('barang')
@@ -101,7 +143,11 @@ export class BarangService {
       .getMany();
   }
 
-  async getBarangKritis() {
+  /**
+   * Mengambil daftar barang kritis (stok di bawah ambang batas) dan mengurutkan berdasarkan stok.
+   * @returns Daftar barang kritis terurut.
+   */
+  async getBarangKritis(): Promise<Barang[]> {
     return this.barangRepo
       .createQueryBuilder('barang')
       .where('barang.stok <= barang.ambang_batas_kritis')
@@ -110,11 +156,16 @@ export class BarangService {
       .getMany();
   }
 
+  /**
+   * Menghasilkan laporan penggunaan barang dalam format PDF untuk periode tertentu.
+   * @param start Tanggal awal periode (format: YYYY-MM-DD).
+   * @param end Tanggal akhir periode (format: YYYY-MM-DD).
+   * @returns Buffer PDF laporan penggunaan barang.
+   */
   async generateLaporanPenggunaanPDF(
     start: string,
     end: string,
   ): Promise<Buffer> {
-    // Query data penggunaan barang dari tabel detail_permintaan + permintaan
     const penggunaan = await this.barangRepo.query(
       `
       SELECT b.nama_barang, b.satuan, SUM(d.jumlah_disetujui) as total_digunakan

@@ -8,6 +8,21 @@ import {
   MaxLength,
 } from 'class-validator';
 
+/**
+ * DTO untuk membuat entitas Barang baru.
+ *
+ * Digunakan untuk validasi data saat membuat barang baru di sistem.
+ * Setiap properti memiliki validasi sesuai kebutuhan bisnis.
+ *
+ * Properti:
+ * - kode_barang: Kode unik barang, hanya boleh huruf, angka, dan strip, maksimal 20 karakter.
+ * - nama_barang: Nama barang, wajib diisi, maksimal 100 karakter.
+ * - deskripsi: Deskripsi tambahan mengenai barang, opsional, maksimal 255 karakter.
+ * - satuan: Satuan barang, wajib diisi, maksimal 20 karakter.
+ * - stok: Jumlah stok barang, opsional, minimal 0.
+ * - ambang_batas_kritis: Ambang batas stok kritis, opsional, minimal 0.
+ * - foto: URL atau path foto barang, opsional, maksimal 255 karakter.
+ */
 export class CreateBarangDto {
   @IsString()
   @IsNotEmpty()
