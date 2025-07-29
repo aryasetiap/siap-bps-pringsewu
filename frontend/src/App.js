@@ -12,6 +12,8 @@ import EmployeeRequestPage from "./pages/employee/EmployeeRequest";
 import DashboardLayout from "./components/DashboardLayout";
 import UserManagement from "./pages/admin/UserManagement";
 import RequestVerification from "./pages/admin/RequestVerification";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 function App() {
   const isAuthenticated = () => {
@@ -52,7 +54,7 @@ function App() {
         <Route
           path="/admin/barang"
           element={
-            <PrivateRoute roles={['admin']}>
+            <PrivateRoute roles={["admin"]}>
               <DashboardLayout>
                 <ManajemenBarang />
               </DashboardLayout>
@@ -60,28 +62,27 @@ function App() {
           }
         />
 
-          <Route
-            path="/admin/pengguna"
-            element={
-              <PrivateRoute roles={['admin']}>
-                <DashboardLayout>
-                  <UserManagement />
-                </DashboardLayout>
-              </PrivateRoute>
-            }
-          />
+        <Route
+          path="/admin/pengguna"
+          element={
+            <PrivateRoute roles={["admin"]}>
+              <DashboardLayout>
+                <UserManagement />
+              </DashboardLayout>
+            </PrivateRoute>
+          }
+        />
 
-          <Route
-            path="/admin/verifikasi"
-            element={
-              <PrivateRoute roles={['admin']}>
-                <DashboardLayout>
-                  <RequestVerification />
-                </DashboardLayout>
-              </PrivateRoute>
-            }
-          />
-        
+        <Route
+          path="/admin/verifikasi"
+          element={
+            <PrivateRoute roles={["admin"]}>
+              <DashboardLayout>
+                <RequestVerification />
+              </DashboardLayout>
+            </PrivateRoute>
+          }
+        />
 
         {/* Rute untuk Pegawai */}
         <Route
@@ -94,7 +95,7 @@ function App() {
             </PrivateRoute>
           }
         />
-        
+
         {/* <Route
         <Route
           path="/pegawai/riwayat"
@@ -109,6 +110,7 @@ function App() {
         {/* <Route path="*" element={<div>404 Not Found</div>} /> 
         <Route path="/forbidden" element={<div>Akses Ditolak! Anda tidak memiliki izin untuk halaman ini.</div>} /> */}
       </Routes>
+      <ToastContainer position="top-right" autoClose={3000} />
     </Router>
   );
 }

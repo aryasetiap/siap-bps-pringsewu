@@ -35,6 +35,13 @@ const RequestVerifikasiModal = ({
           </div>
           <form onSubmit={onSubmit}>
             {/* ...form keputusan, tabel item, summary, catatan, tombol aksi... */}
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50"
+            >
+              {loading ? "Memproses..." : "Verifikasi"}
+            </button>
           </form>
         </div>
       </div>

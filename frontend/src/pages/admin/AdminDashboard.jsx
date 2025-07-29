@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { toast } from "react-toastify";
 import DashboardStats from "../../components/dashboard/DashboardStats";
 import DashboardChart from "../../components/dashboard/DashboardChart";
 import DashboardNotifKritis from "../../components/dashboard/DashboardNotifKritis";
@@ -36,7 +37,7 @@ const AdminDashboard = () => {
       setNotifKritis(notifRes.data);
       setRecentRequests(recentRes.data);
     } catch (err) {
-      // TODO: tampilkan notifikasi error
+      toast.error("Gagal memuat data dashboard.");
     }
     setLoading(false);
   };

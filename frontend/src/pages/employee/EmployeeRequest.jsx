@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { toast } from "react-toastify";
 import EmployeeBarangTable from "../../components/employee/EmployeeBarangTable";
 import EmployeeRequestForm from "../../components/employee/EmployeeRequestForm";
 import * as barangService from "../../services/barangService";
@@ -87,6 +88,21 @@ const EmployeeRequestPage = () => {
   // Handler submit permintaan
   const handleSubmit = async (e) => {
     e.preventDefault();
+    // Validasi
+    if (keranjang.length === 0) {
+      toast.error("Pilih minimal satu barang!");
+      return;
+    }
+    for (const item of keranjang) {
+      if (item.jumlah < 1) {
+        toast.error(`Jumlah untuk ${item.nama} harus minimal 1.`);
+        return;
+      }
+      if (item.jumlah > item.stok) {
+        toast.error(`Jumlah ${item.nama} melebihi stok tersedia.`);
+        return;
+      }
+    }
     setLoading(true);
     try {
       await employeeRequestService.createPermintaan({
@@ -98,9 +114,11 @@ const EmployeeRequestPage = () => {
       });
       setKeranjang([]);
       setCatatan("");
-      // TODO: tampilkan notifikasi sukses
+      toast.success("Permintaan berhasil diajukan!");
     } catch (err) {
-      // TODO: tampilkan notifikasi error
+      toast.error(
+        err?.response?.data?.message || "Gagal mengajukan permintaan."
+      );
     }
     setLoading(false);
   };

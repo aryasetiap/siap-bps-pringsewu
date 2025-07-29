@@ -4,6 +4,7 @@ import RequestTable from "../../components/permintaan/RequestTable";
 import RequestDetailModal from "../../components/permintaan/RequestDetailModal";
 import RequestVerifikasiModal from "../../components/permintaan/RequestVerifikasiModal";
 import * as permintaanService from "../../services/permintaanService";
+import { toast } from "react-toastify";
 
 const statusOptions = [
   { value: "Menunggu", label: "Menunggu", color: "yellow" },
@@ -128,6 +129,29 @@ const RequestVerification = () => {
   // Submit verifikasi
   const handleVerifikasiSubmit = async (e) => {
     e.preventDefault();
+    // Validasi keputusan
+    if (!verifikasiData.keputusan) {
+      toast.error("Pilih keputusan verifikasi!");
+      return;
+    }
+    for (const item of verifikasiData.items) {
+      if (item.jumlahDisetujui < 0) {
+        toast.error("Jumlah disetujui tidak boleh negatif.");
+        return;
+      }
+      if (item.jumlahDisetujui > item.jumlahDiminta) {
+        toast.error(
+          `Jumlah disetujui untuk ${item.namaBarang} melebihi jumlah diminta.`
+        );
+        return;
+      }
+      if (item.jumlahDisetujui > item.stokTersedia) {
+        toast.error(
+          `Jumlah disetujui untuk ${item.namaBarang} melebihi stok tersedia.`
+        );
+        return;
+      }
+    }
     setLoading(true);
     try {
       await permintaanService.verifikasiPermintaan(selectedPermintaan.id, {
@@ -140,9 +164,11 @@ const RequestVerification = () => {
       });
       setShowVerifikasiModal(false);
       fetchPermintaan();
-      // TODO: tampilkan notifikasi sukses
+      toast.success("Permintaan berhasil diverifikasi!");
     } catch (err) {
-      // TODO: tampilkan notifikasi error
+      toast.error(
+        err?.response?.data?.message || "Gagal memverifikasi permintaan."
+      );
     }
     setLoading(false);
   };

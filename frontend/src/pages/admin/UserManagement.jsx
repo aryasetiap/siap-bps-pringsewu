@@ -10,6 +10,7 @@ import {
 import UserTable from "../../components/user/UserTable";
 import UserFormModal from "../../components/user/UserFormModal";
 import * as userService from "../../services/userService";
+import { toast } from "react-toastify";
 
 const roleOptions = [
   { value: "admin", label: "Administrator" },
@@ -57,7 +58,7 @@ const UserManagement = () => {
       const res = await userService.getAllUsers();
       setUsers(res.data);
     } catch (err) {
-      // TODO: tampilkan notifikasi error
+      toast.error("Gagal memuat data pengguna.");
     }
     setLoading(false);
   };
@@ -118,18 +119,38 @@ const UserManagement = () => {
   // CRUD handlers
   const handleSubmit = async (e) => {
     e.preventDefault();
+    // Validasi manual
+    if (
+      !formData.nama ||
+      !formData.username ||
+      !formData.role ||
+      !formData.unitKerja
+    ) {
+      toast.error("Semua field wajib diisi!");
+      return;
+    }
+    if (
+      modalMode === "add" &&
+      (!formData.password || formData.password.length < 6)
+    ) {
+      toast.error("Password minimal 6 karakter!");
+      return;
+    }
     setLoading(true);
     try {
       if (modalMode === "add") {
         await userService.createUser(formData);
+        toast.success("Pengguna berhasil ditambahkan!");
       } else {
         await userService.updateUser(selectedUser.id, formData);
+        toast.success("Pengguna berhasil diupdate!");
       }
       setShowModal(false);
       fetchUsers();
-      // TODO: tampilkan notifikasi sukses
     } catch (err) {
-      // TODO: tampilkan notifikasi error
+      toast.error(
+        err?.response?.data?.message || "Gagal menyimpan data pengguna."
+      );
     }
     setLoading(false);
   };
@@ -148,9 +169,9 @@ const UserManagement = () => {
     try {
       await userService.toggleUserStatus(user.id, newStatus);
       fetchUsers();
-      // TODO: tampilkan notifikasi sukses
+      toast.success("Status pengguna berhasil diubah!");
     } catch (err) {
-      // TODO: tampilkan notifikasi error
+      toast.error("Gagal mengubah status pengguna.");
     }
     setLoading(false);
   };

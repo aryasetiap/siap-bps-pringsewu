@@ -4,6 +4,7 @@ import BarangTable from "../../components/barang/BarangTable";
 import BarangFormModal from "../../components/barang/BarangFormModal";
 import BarangStokModal from "../../components/barang/BarangStokModal";
 import * as barangService from "../../services/barangService";
+import { toast } from "react-toastify";
 
 const kategoriOptions = [
   "Alat Tulis Kantor",
@@ -126,6 +127,24 @@ const ManajemenBarang = () => {
   // CRUD handlers
   const handleSubmit = async (e) => {
     e.preventDefault();
+    // Validasi manual
+    if (
+      !formData.kode ||
+      !formData.nama ||
+      !formData.kategori ||
+      !formData.satuan
+    ) {
+      toast.error("Semua field wajib diisi!");
+      return;
+    }
+    if (isNaN(formData.stok) || parseInt(formData.stok) < 0) {
+      toast.error("Stok harus angka positif!");
+      return;
+    }
+    if (isNaN(formData.stokMinimum) || parseInt(formData.stokMinimum) < 0) {
+      toast.error("Stok minimum harus angka positif!");
+      return;
+    }
     setLoading(true);
     try {
       if (modalMode === "add") {
@@ -134,18 +153,19 @@ const ManajemenBarang = () => {
           stok: parseInt(formData.stok),
           stokMinimum: parseInt(formData.stokMinimum),
         });
+        toast.success("Barang berhasil ditambahkan!");
       } else {
         await barangService.updateBarang(selectedBarang.id, {
           ...formData,
           stok: parseInt(formData.stok),
           stokMinimum: parseInt(formData.stokMinimum),
         });
+        toast.success("Barang berhasil diupdate!");
       }
       setShowModal(false);
       fetchBarang();
-      // TODO: tampilkan notifikasi sukses
     } catch (err) {
-      // TODO: tampilkan notifikasi error
+      toast.error("Gagal menyimpan data barang.");
     }
     setLoading(false);
   };
@@ -238,14 +258,20 @@ const ManajemenBarang = () => {
           </div>
         </div>
       </div>
-      <BarangTable
-        data={filteredBarang}
-        onEdit={openEditModal}
-        onDelete={handleDelete}
-        onTambahStok={openStokModal}
-        getStatusColor={getStatusColor}
-        getStatusText={getStatusText}
-      />
+      {loading ? (
+        <div className="flex justify-center py-8">
+          <span className="text-blue-600">Memuat data...</span>
+        </div>
+      ) : (
+        <BarangTable
+          data={filteredBarang}
+          onEdit={openEditModal}
+          onDelete={handleDelete}
+          onTambahStok={openStokModal}
+          getStatusColor={getStatusColor}
+          getStatusText={getStatusText}
+        />
+      )}
       <BarangFormModal
         show={showModal}
         mode={modalMode}

@@ -84,8 +84,8 @@ Dokumentasi tahapan kerja detail untuk monitoring dan catatan progres proyek.
 
 ### 1. Audit & Refactor
 
-- [ ] Audit seluruh komponen yang sudah ada (struktur, style, konsistensi)
-- [ ] Refactor komponen agar siap integrasi API (pisahkan logic & UI)
+- [x] Audit seluruh komponen yang sudah ada (struktur, style, konsistensi)
+- [x] Refactor komponen agar siap integrasi API (pisahkan logic & UI)
 
 ### 2. Penyelesaian Fitur Utama (UI/UX)
 

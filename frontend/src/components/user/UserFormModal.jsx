@@ -14,7 +14,7 @@ const UserFormModal = ({
   if (!show) return null;
   return (
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-      <div className="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
+      <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
         <div className="mt-3">
           <h3 className="text-lg font-medium text-gray-900 mb-4">
             {mode === "add" ? "Tambah Pengguna Baru" : "Edit Pengguna"}
@@ -132,7 +132,11 @@ const UserFormModal = ({
                 disabled={loading}
                 className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
               >
-                {loading ? "Menyimpan..." : "Simpan"}
+                {loading
+                  ? "Menyimpan..."
+                  : mode === "add"
+                  ? "Tambah"
+                  : "Simpan"}
               </button>
             </div>
           </form>
