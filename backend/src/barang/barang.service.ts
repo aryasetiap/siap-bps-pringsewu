@@ -66,6 +66,9 @@ export class BarangService {
   }
 
   async update(id: number, dto: UpdateBarangDto): Promise<Barang> {
+    if (dto.stok !== undefined && dto.stok < 0) {
+      throw new BadRequestException('Stok tidak boleh negatif');
+    }
     const barang = await this.findOne(id);
     Object.assign(barang, dto);
     return this.barangRepo.save(barang);

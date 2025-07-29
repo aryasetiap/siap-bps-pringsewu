@@ -43,6 +43,31 @@ describe('BarangService', () => {
     repo = module.get<Repository<Barang>>(getRepositoryToken(Barang));
   });
 
+  it('should throw BadRequestException if update called with negative stok', async () => {
+    (repo.findOne as jest.Mock).mockResolvedValue(mockBarang);
+    await expect(service.update(1, { stok: -1 } as any)).rejects.toThrow(
+      'Stok tidak boleh negatif',
+    );
+  });
+
+  it('should not change stok if addStok called with jumlah 0', async () => {
+    const barang = { ...mockBarang, stok: 10, status_aktif: true };
+    (repo.findOne as jest.Mock).mockResolvedValue(barang);
+    (repo.save as jest.Mock).mockResolvedValue({ ...barang, stok: 10 });
+    const result = await service.addStok(1, { jumlah: 0 });
+    expect(result.stok).toBe(10);
+  });
+
+  it('should return all barang if no query is provided', async () => {
+    const qb = {
+      andWhere: jest.fn().mockReturnThis(),
+      getMany: jest.fn().mockResolvedValue([mockBarang]),
+    };
+    (repo.createQueryBuilder as jest.Mock).mockReturnValue(qb);
+    const result = await service.findAll();
+    expect(result).toEqual([mockBarang]);
+  });
+
   it('should be defined', () => {
     expect(service).toBeDefined();
   });
@@ -87,6 +112,11 @@ describe('BarangService', () => {
     await expect(
       service.update(999, { nama_barang: 'X' } as any),
     ).rejects.toThrow('Barang tidak ditemukan');
+  });
+
+  it('should throw error if update called with invalid stok', async () => {
+    (repo.findOne as jest.Mock).mockResolvedValue(mockBarang);
+    await expect(service.update(1, { stok: -10 } as any)).rejects.toThrow();
   });
 
   it('should soft delete barang', async () => {
@@ -155,6 +185,11 @@ describe('BarangService', () => {
     await expect(service.addStok(999, { jumlah: 5 })).rejects.toThrow(
       'Barang tidak ditemukan',
     );
+  });
+
+  it('should throw error if addStok called with negative jumlah', async () => {
+    (repo.findOne as jest.Mock).mockResolvedValue(mockBarang);
+    await expect(service.addStok(1, { jumlah: -5 })).rejects.toThrow();
   });
 
   it('should filter barang by q', async () => {

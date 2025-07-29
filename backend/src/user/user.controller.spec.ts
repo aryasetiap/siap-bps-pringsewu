@@ -150,4 +150,54 @@ describe('UserController', () => {
     service.softDelete = jest.fn().mockRejectedValue(new Error('Delete error'));
     await expect(controller.softDelete(1)).rejects.toThrow('Delete error');
   });
+
+  it('should handle error on uploadFotoProfile', async () => {
+    const req = { user: { userId: 1 } } as any;
+    const file = { filename: '1-123.jpg' } as any;
+    service.update = jest.fn().mockRejectedValue(new Error('Upload error'));
+    await expect(controller.uploadFotoProfile(req, file)).rejects.toThrow(
+      'Upload error',
+    );
+  });
+
+  it('should handle error on updateProfile if user not found', async () => {
+    const req = { user: { userId: 999 } } as any;
+    const dto = { nama: 'X' };
+    service.update = jest
+      .fn()
+      .mockRejectedValue(new Error('User tidak ditemukan'));
+    await expect(controller.updateProfile(req, dto as any)).rejects.toThrow(
+      'User tidak ditemukan',
+    );
+  });
+
+  it('should handle error on uploadFotoProfile', async () => {
+    const req = { user: { userId: 1 } } as any;
+    const file = { filename: '1-123.jpg' } as any;
+    service.update = jest.fn().mockRejectedValue(new Error('Upload error'));
+    await expect(controller.uploadFotoProfile(req, file)).rejects.toThrow(
+      'Upload error',
+    );
+  });
+
+  it('should handle error on updateProfile', async () => {
+    const req = { user: { userId: 1 } } as any;
+    const dto = { nama: 'X' };
+    service.update = jest.fn().mockRejectedValue(new Error('Update error'));
+    await expect(controller.updateProfile(req, dto as any)).rejects.toThrow(
+      'Update error',
+    );
+  });
+
+  it('should return admin-only data', async () => {
+    expect(await controller.getAdminData()).toEqual({
+      message: 'Data khusus admin',
+    });
+  });
+
+  it('should return pegawai-only data', async () => {
+    expect(await controller.getPegawaiData()).toEqual({
+      message: 'Data khusus pegawai',
+    });
+  });
 });

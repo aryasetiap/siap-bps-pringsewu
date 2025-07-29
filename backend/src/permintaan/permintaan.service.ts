@@ -26,7 +26,10 @@ export class PermintaanService {
     private dataSource: DataSource, // inject DataSource
   ) {}
 
-  async create(dto: CreatePermintaanDto, id_user_pemohon: number) {
+  async create(dto: CreatePermintaanDto, userId: number) {
+    if (!dto.items || dto.items.length === 0) {
+      throw new BadRequestException('Items tidak boleh kosong');
+    }
     const barangIds = dto.items.map((i) => i.id_barang);
     const barangList = (await this.barangRepo.findByIds(barangIds)) ?? [];
     if (barangList.length !== barangIds.length) {
@@ -54,7 +57,7 @@ export class PermintaanService {
     return await this.dataSource.transaction(async (manager) => {
       // Simpan permintaan
       const permintaan = this.permintaanRepo.create({
-        id_user_pemohon,
+        id_user_pemohon: userId,
         catatan: dto.catatan,
         status: 'Menunggu',
         tanggal_permintaan: new Date(),
@@ -116,7 +119,7 @@ export class PermintaanService {
   async verifikasiPermintaan(
     id: number,
     dto: VerifikasiPermintaanDto,
-    id_user_verifikator: number,
+    verifikatorId: number,
   ) {
     return this.dataSource.transaction(async (manager) => {
       const permintaan = await manager.findOne(Permintaan, {
@@ -127,6 +130,11 @@ export class PermintaanService {
         throw new NotFoundException('Permintaan tidak ditemukan');
       if (permintaan.status !== 'Menunggu')
         throw new BadRequestException('Permintaan sudah diverifikasi');
+
+      const allowed = ['setuju', 'setuju_sebagian', 'tolak'];
+      if (!allowed.includes(dto.keputusan)) {
+        throw new BadRequestException('Keputusan tidak valid');
+      }
 
       // Validasi dan update detail_permintaan
       let totalDisetujui = 0;
@@ -175,7 +183,7 @@ export class PermintaanService {
       else if (dto.keputusan === 'sebagian') status = 'Disetujui Sebagian';
 
       permintaan.status = status;
-      permintaan.id_user_verifikator = id_user_verifikator;
+      permintaan.id_user_verifikator = verifikatorId;
       permintaan.tanggal_verifikasi = new Date();
       permintaan.catatan = dto.catatan_verifikasi ?? '';
 
