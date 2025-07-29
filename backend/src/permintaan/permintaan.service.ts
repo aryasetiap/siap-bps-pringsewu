@@ -10,6 +10,9 @@ import { Barang } from '../entities/barang.entity';
 import { Repository, DataSource, Between, Raw } from 'typeorm';
 import { CreatePermintaanDto } from './dto/create-permintaan.dto';
 import { VerifikasiPermintaanDto } from './dto/verifikasi-permintaan.dto';
+import * as PdfPrinter from 'pdfmake';
+import * as fs from 'fs';
+import * as path from 'path';
 
 @Injectable()
 export class PermintaanService {
@@ -230,5 +233,76 @@ export class PermintaanService {
       result.push({ bulan, jumlah: found ? Number(found.jumlah) : 0 });
     }
     return result;
+  }
+
+  async generateBuktiPermintaanPDF(id: number): Promise<Buffer> {
+    const permintaan = await this.findOneById(id);
+    if (!permintaan) throw new NotFoundException('Permintaan tidak ditemukan');
+
+    // Load font
+    const fonts = {
+      Roboto: {
+        normal: path.join(__dirname, '../assets/fonts/Roboto-Regular.ttf'),
+        bold: path.join(__dirname, '../assets/fonts/Roboto-Bold.ttf'),
+        italics: path.join(__dirname, '../assets/fonts/Roboto-Italic.ttf'),
+        bolditalics: path.join(
+          __dirname,
+          '../assets/fonts/Roboto-BoldItalic.ttf',
+        ),
+      },
+    };
+    const printer = new PdfPrinter(fonts);
+
+    // Compose document definition
+    const docDefinition = {
+      content: [
+        { text: 'Bukti Permintaan Barang', style: 'header' },
+        { text: `Nomor: ${permintaan.id}`, margin: [0, 10, 0, 0] },
+        {
+          text: `Tanggal: ${new Date(permintaan.tanggal_permintaan).toLocaleDateString('id-ID')}`,
+        },
+        { text: `Pemohon: ${permintaan.pemohon?.nama ?? '-'}` },
+        { text: `Unit Kerja: ${permintaan.pemohon?.unit_kerja ?? '-'}` },
+        { text: `Status: ${permintaan.status}` },
+        {
+          text: `Catatan: ${permintaan.catatan ?? '-'}`,
+          margin: [0, 0, 0, 10],
+        },
+        {
+          table: {
+            headerRows: 1,
+            widths: ['*', 50, 50, 50],
+            body: [
+              [
+                { text: 'Nama Barang', style: 'tableHeader' },
+                { text: 'Diminta', style: 'tableHeader' },
+                { text: 'Disetujui', style: 'tableHeader' },
+                { text: 'Satuan', style: 'tableHeader' },
+              ],
+              ...permintaan.items.map((item) => [
+                item.barang?.nama_barang ?? '-',
+                item.jumlah_diminta,
+                item.jumlah_disetujui,
+                item.barang?.satuan ?? '-',
+              ]),
+            ],
+          },
+          layout: 'lightHorizontalLines',
+        },
+      ],
+      styles: {
+        header: { fontSize: 16, bold: true, alignment: 'center' },
+        tableHeader: { bold: true, fillColor: '#eeeeee' },
+      },
+    };
+
+    const pdfDoc = printer.createPdfKitDocument(docDefinition);
+    const chunks: Buffer[] = [];
+    return new Promise<Buffer>((resolve, reject) => {
+      pdfDoc.on('data', (chunk) => chunks.push(chunk));
+      pdfDoc.on('end', () => resolve(Buffer.concat(chunks)));
+      pdfDoc.on('error', reject);
+      pdfDoc.end();
+    });
   }
 }

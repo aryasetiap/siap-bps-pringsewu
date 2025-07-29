@@ -9,6 +9,8 @@ import { Repository, FindOptionsWhere, ILike, LessThanOrEqual } from 'typeorm';
 import { CreateBarangDto } from './dto/create-barang.dto';
 import { UpdateBarangDto } from './dto/update-barang.dto';
 import { AddStokDto } from './dto/add-stok.dto';
+import * as PdfPrinter from 'pdfmake';
+import * as path from 'path';
 
 @Injectable()
 export class BarangService {
@@ -103,5 +105,88 @@ export class BarangService {
       .andWhere('barang.status_aktif = :aktif', { aktif: true })
       .orderBy('barang.stok', 'ASC')
       .getMany();
+  }
+
+  async generateLaporanPenggunaanPDF(
+    start: string,
+    end: string,
+  ): Promise<Buffer> {
+    // Query data penggunaan barang dari tabel detail_permintaan + permintaan
+    const penggunaan = await this.barangRepo.query(
+      `
+      SELECT b.nama_barang, b.satuan, SUM(d.jumlah_disetujui) as total_digunakan
+      FROM detail_permintaan d
+      JOIN barang b ON d.id_barang = b.id
+      JOIN permintaan p ON d.id_permintaan = p.id
+      WHERE p.status IN ('Disetujui', 'Disetujui Sebagian')
+        AND p.tanggal_permintaan BETWEEN $1 AND $2
+      GROUP BY b.nama_barang, b.satuan
+      ORDER BY b.nama_barang
+    `,
+      [start, end],
+    );
+
+    const fonts = {
+      Roboto: {
+        normal: path.join(__dirname, '../assets/fonts/Roboto-Regular.ttf'),
+        bold: path.join(__dirname, '../assets/fonts/Roboto-Bold.ttf'),
+        italics: path.join(__dirname, '../assets/fonts/Roboto-Italic.ttf'),
+        bolditalics: path.join(
+          __dirname,
+          '../assets/fonts/Roboto-BoldItalic.ttf',
+        ),
+      },
+    };
+    const printer = new PdfPrinter(fonts);
+
+    const bodyRows =
+      penggunaan.length > 0
+        ? penggunaan.map((row) => [
+            row.nama_barang,
+            row.total_digunakan,
+            row.satuan,
+          ])
+        : [
+            [
+              { text: 'Tidak ada data', colSpan: 3, alignment: 'center' },
+              {},
+              {},
+            ],
+          ];
+
+    const docDefinition = {
+      content: [
+        { text: 'Laporan Penggunaan Barang', style: 'header' },
+        { text: `Periode: ${start} s/d ${end}`, margin: [0, 10, 0, 10] },
+        {
+          table: {
+            headerRows: 1,
+            widths: ['*', 60, 60],
+            body: [
+              [
+                { text: 'Nama Barang', style: 'tableHeader' },
+                { text: 'Total Digunakan', style: 'tableHeader' },
+                { text: 'Satuan', style: 'tableHeader' },
+              ],
+              ...bodyRows,
+            ],
+          },
+          layout: 'lightHorizontalLines',
+        },
+      ],
+      styles: {
+        header: { fontSize: 16, bold: true, alignment: 'center' },
+        tableHeader: { bold: true, fillColor: '#eeeeee' },
+      },
+    };
+
+    const pdfDoc = printer.createPdfKitDocument(docDefinition);
+    const chunks: Buffer[] = [];
+    return new Promise<Buffer>((resolve, reject) => {
+      pdfDoc.on('data', (chunk) => chunks.push(chunk));
+      pdfDoc.on('end', () => resolve(Buffer.concat(chunks)));
+      pdfDoc.on('error', reject);
+      pdfDoc.end();
+    });
   }
 }

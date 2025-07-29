@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { PermintaanController } from './permintaan.controller';
 import { PermintaanService } from './permintaan.service';
 import { ForbiddenException } from '@nestjs/common';
+import { Response } from 'express';
 
 const mockPermintaanService = () => ({
   create: jest.fn(),
@@ -9,6 +10,7 @@ const mockPermintaanService = () => ({
   getPermintaanMenunggu: jest.fn(),
   findOneById: jest.fn(),
   verifikasiPermintaan: jest.fn(), // tambahkan ini
+  generateBuktiPermintaanPDF: jest.fn(),
 });
 
 describe('PermintaanController', () => {
@@ -108,6 +110,27 @@ describe('PermintaanController', () => {
       const result = await controller.verifikasi(1, dto as any, req as any);
       expect(service.verifikasiPermintaan).toHaveBeenCalledWith(1, dto, 1);
       expect(result).toEqual({ status: 'Disetujui' });
+    });
+  });
+
+  describe('generateBuktiPermintaanPDF', () => {
+    it('should call service.generateBuktiPermintaanPDF and send PDF', async () => {
+      const mockBuffer = Buffer.from('PDFDATA');
+      service.generateBuktiPermintaanPDF = jest
+        .fn()
+        .mockResolvedValue(mockBuffer);
+      const res = {
+        set: jest.fn().mockReturnThis(),
+        end: jest.fn(),
+      } as any;
+      await controller.generateBuktiPermintaanPDF(1, res);
+      expect(service.generateBuktiPermintaanPDF).toHaveBeenCalledWith(1);
+      expect(res.set).toHaveBeenCalledWith(
+        expect.objectContaining({
+          'Content-Type': 'application/pdf',
+        }),
+      );
+      expect(res.end).toHaveBeenCalledWith(mockBuffer);
     });
   });
 });

@@ -29,14 +29,11 @@ describe('BarangService', () => {
           provide: getRepositoryToken(Barang),
           useValue: {
             findOne: jest.fn(),
-            find: jest.fn(),
             create: jest.fn(),
             save: jest.fn(),
             remove: jest.fn(),
-            createQueryBuilder: jest.fn(() => ({
-              andWhere: jest.fn().mockReturnThis(),
-              getMany: jest.fn().mockResolvedValue([mockBarang]),
-            })),
+            createQueryBuilder: jest.fn(),
+            query: jest.fn(), // tambahkan ini
           },
         },
       ],
@@ -191,6 +188,17 @@ describe('BarangService', () => {
       aktif: true,
     });
     expect(result).toEqual([kritisBarang]);
+  });
+
+  it('should generate PDF buffer for laporan penggunaan', async () => {
+    (repo.query as jest.Mock).mockResolvedValue([
+      { nama_barang: 'Kertas', satuan: 'rim', total_digunakan: 5 },
+    ]);
+    const buffer = await service.generateLaporanPenggunaanPDF(
+      '2024-07-01',
+      '2024-07-31',
+    );
+    expect(Buffer.isBuffer(buffer)).toBe(true);
   });
 });
 

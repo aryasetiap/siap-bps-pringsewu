@@ -149,6 +149,16 @@ describe('Barang CRUD (e2e)', () => {
     }
   });
 
+  it('GET /barang/laporan-penggunaan/pdf returns PDF', async () => {
+    const res = await request(app.getHttpServer())
+      .get('/barang/laporan-penggunaan/pdf?start=2024-07-01&end=2024-07-31')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    expect(res.header['content-type']).toBe('application/pdf');
+    expect(res.header['content-disposition']).toMatch(/attachment/);
+    expect(res.body).toBeInstanceOf(Buffer);
+  });
+
   afterAll(async () => {
     await app.close();
   });

@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { BarangController } from './barang.controller';
 import { BarangService } from './barang.service';
+import { Response } from 'express';
 
 describe('BarangController', () => {
   let controller: BarangController;
@@ -49,5 +50,39 @@ describe('BarangController', () => {
     const controller = module.get<BarangController>(BarangController);
     await controller.addStok(1, { jumlah: 5 });
     expect(mockService.addStok).toHaveBeenCalledWith(1, { jumlah: 5 });
+  });
+
+  it('should call service.generateLaporanPenggunaanPDF and send PDF', async () => {
+    const mockService = {
+      generateLaporanPenggunaanPDF: jest
+        .fn()
+        .mockResolvedValue(Buffer.from('PDFDATA')),
+    };
+    const module: TestingModule = await Test.createTestingModule({
+      controllers: [BarangController],
+      providers: [{ provide: BarangService, useValue: mockService }],
+    }).compile();
+    const controller = module.get<BarangController>(BarangController);
+
+    const res = {
+      set: jest.fn().mockReturnThis(),
+      end: jest.fn(),
+    } as any;
+
+    await controller.generateLaporanPenggunaanPDF(
+      '2024-07-01',
+      '2024-07-31',
+      res,
+    );
+    expect(mockService.generateLaporanPenggunaanPDF).toHaveBeenCalledWith(
+      '2024-07-01',
+      '2024-07-31',
+    );
+    expect(res.set).toHaveBeenCalledWith(
+      expect.objectContaining({
+        'Content-Type': 'application/pdf',
+      }),
+    );
+    expect(res.end).toHaveBeenCalledWith(expect.any(Buffer));
   });
 });

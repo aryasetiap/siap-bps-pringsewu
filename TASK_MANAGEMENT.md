@@ -58,8 +58,10 @@ Dokumentasi tahapan kerja detail untuk monitoring dan catatan progres proyek.
 
 ### 7. Pelaporan & Ekspor PDF
 
-- [ ] Endpoint generate PDF bukti permintaan (pdfmake/node-pdfkit)
-- [ ] Endpoint laporan periodik penggunaan barang (filter tanggal, ekspor PDF)
+- [x] Endpoint generate PDF bukti permintaan (pdfmake/node-pdfkit)
+- [x] Endpoint laporan periodik penggunaan barang (filter tanggal, ekspor PDF)
+- [x] Endpoint generate PDF laporan periodik penggunaan barang
+  > Filter tanggal, rekap penggunaan, ekspor PDF
 
 ### 8. Testing & Dokumentasi
 

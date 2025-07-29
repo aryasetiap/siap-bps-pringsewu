@@ -159,4 +159,14 @@ describe('Permintaan E2E', () => {
     expect(res.body[0]).toHaveProperty('bulan');
     expect(res.body[0]).toHaveProperty('jumlah');
   });
+
+  it('GET /permintaan/:id/pdf returns PDF', async () => {
+    const res = await request(app.getHttpServer())
+      .get(`/permintaan/${createdPermintaanId}/pdf`)
+      .set('Authorization', `Bearer ${adminToken}`);
+    expect(res.status).toBe(200);
+    expect(res.header['content-type']).toBe('application/pdf');
+    expect(res.header['content-disposition']).toMatch(/attachment/);
+    expect(res.body).toBeInstanceOf(Buffer);
+  });
 });

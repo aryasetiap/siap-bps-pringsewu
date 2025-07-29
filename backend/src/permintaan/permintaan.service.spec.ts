@@ -317,4 +317,25 @@ describe('PermintaanService', () => {
       expect(result.some((r) => r.bulan === '2024-07')).toBe(true);
     });
   });
+
+  describe('generateBuktiPermintaanPDF', () => {
+    it('should generate PDF buffer for bukti permintaan', async () => {
+      service.findOneById = jest.fn().mockResolvedValue({
+        id: 1,
+        tanggal_permintaan: new Date(),
+        pemohon: { nama: 'Budi', unit_kerja: 'Statistik' },
+        status: 'Disetujui',
+        catatan: 'Test',
+        items: [
+          {
+            barang: { nama_barang: 'Kertas', satuan: 'rim' },
+            jumlah_diminta: 2,
+            jumlah_disetujui: 2,
+          },
+        ],
+      });
+      const buffer = await service.generateBuktiPermintaanPDF(1);
+      expect(Buffer.isBuffer(buffer)).toBe(true);
+    });
+  });
 });

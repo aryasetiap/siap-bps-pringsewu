@@ -8,12 +8,14 @@ import {
   Param,
   ForbiddenException, // tambahkan ini
   Patch,
+  Res,
 } from '@nestjs/common';
 import { PermintaanService } from './permintaan.service';
 import { CreatePermintaanDto } from './dto/create-permintaan.dto';
 import { VerifikasiPermintaanDto } from './dto/verifikasi-permintaan.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../auth/roles.decorator';
+import { Response } from 'express';
 
 @Controller('permintaan')
 export class PermintaanController {
@@ -36,6 +38,7 @@ export class PermintaanController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Roles('admin')
   @Get('masuk')
   async getPermintaanMasuk(@Req() req) {
     if (req.user.role !== 'admin') {
@@ -85,5 +88,21 @@ export class PermintaanController {
   @Get('dashboard/tren-permintaan')
   async getTrenPermintaanBulanan() {
     return this.permintaanService.getTrenPermintaanBulanan();
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get(':id/pdf')
+  async generateBuktiPermintaanPDF(
+    @Param('id') id: number,
+    @Res() res: Response,
+  ) {
+    const pdfBuffer = await this.permintaanService.generateBuktiPermintaanPDF(
+      Number(id),
+    );
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="bukti_permintaan_${id}.pdf"`,
+    });
+    res.end(pdfBuffer);
   }
 }
