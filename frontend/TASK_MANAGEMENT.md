@@ -113,7 +113,7 @@ Dokumentasi tahapan kerja detail untuk monitoring dan catatan progres proyek.
 - [ ] Implementasi loading, error handling, dan notifikasi pada setiap aksi
 - [ ] Pastikan autentikasi JWT dan proteksi role berjalan pada setiap request
   - [x] Buat dan konfigurasi `src/services/api.js` (axios instance + interceptor)
-  - [ ] Update seluruh service di `services` untuk pakai axios instance
+  - [x] Update seluruh service di `services` untuk pakai axios instance
   - [ ] Refactor `AdminDashboard.jsx` untuk ambil data dari API
   - [ ] Refactor `ManajemenBarang.jsx` untuk CRUD barang via API
   - [ ] Refactor `UserManagement.jsx` untuk CRUD user via API

@@ -1,8 +1,14 @@
-import axios from "axios";
+import api from "./api";
 
-const API_URL = "/api/dashboard";
+// Statistik dashboard (jumlah barang, permintaan tertunda, barang kritis)
+export const getStats = () => api.get("/permintaan/dashboard/statistik");
 
-export const getStats = () => axios.get(`${API_URL}/stats`);
-export const getChart = () => axios.get(`${API_URL}/chart`);
-export const getNotifKritis = () => axios.get(`${API_URL}/notif-kritis`);
-export const getRecentRequests = () => axios.get(`${API_URL}/recent-requests`);
+// Grafik tren permintaan bulanan
+export const getChart = () => api.get("/permintaan/dashboard/tren-permintaan");
+
+// Notifikasi stok kritis (dashboard)
+export const getNotifKritis = () =>
+  api.get("/barang/dashboard/notifikasi-stok-kritis");
+
+// Daftar permintaan terbaru (opsional, jika ada endpoint khusus)
+export const getRecentRequests = () => api.get("/permintaan/masuk");
