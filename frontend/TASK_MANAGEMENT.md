@@ -112,6 +112,20 @@ Dokumentasi tahapan kerja detail untuk monitoring dan catatan progres proyek.
 - [ ] Ganti seluruh mock data dengan API call ke endpoint backend
 - [ ] Implementasi loading, error handling, dan notifikasi pada setiap aksi
 - [ ] Pastikan autentikasi JWT dan proteksi role berjalan pada setiap request
+  - [x] Buat dan konfigurasi `src/services/api.js` (axios instance + interceptor)
+  - [ ] Update seluruh service di `services` untuk pakai axios instance
+  - [ ] Refactor `AdminDashboard.jsx` untuk ambil data dari API
+  - [ ] Refactor `ManajemenBarang.jsx` untuk CRUD barang via API
+  - [ ] Refactor `UserManagement.jsx` untuk CRUD user via API
+  - [ ] Refactor `RequestVerification.jsx` untuk ambil dan update permintaan via API
+  - [ ] Refactor `LaporanPeriodik.jsx` untuk ambil dan ekspor laporan via API
+  - [ ] Refactor `EmployeeRequest.jsx` untuk submit permintaan via API
+  - [ ] Refactor `EmployeeHistory.jsx` untuk ambil riwayat permintaan via API
+  - [ ] Refactor `ProfilePage.jsx` untuk update profil via API
+  - [ ] Pastikan semua aksi ada loading & error handling
+  - [ ] Pastikan semua route terproteksi sesuai role & token
+  - [ ] Implementasi global error handling (token expired, dsb)
+  - [ ] Review dan refactor komponen agar logic & UI terpisah
 
 ### 4. Testing & Polish
 
