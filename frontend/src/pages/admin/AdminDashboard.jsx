@@ -17,6 +17,7 @@ const AdminDashboard = () => {
   const [notifKritis, setNotifKritis] = useState([]);
   const [recentRequests, setRecentRequests] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState(null);
 
   // Fetch dashboard data
   useEffect(() => {
@@ -43,8 +44,10 @@ const AdminDashboard = () => {
   };
 
   const handleDetailRequest = (req) => {
-    // TODO: buka modal detail permintaan
+    setSelectedRequest(req);
   };
+
+  const closeModal = () => setSelectedRequest(null);
 
   return (
     <div className="p-6">
@@ -60,7 +63,58 @@ const AdminDashboard = () => {
         onDetail={handleDetailRequest}
         loading={loading}
       />
-      {/* TODO: Modal detail permintaan jika diperlukan */}
+
+      {/* Modal Detail Permintaan */}
+      {selectedRequest && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-lg relative">
+            <button
+              className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
+              onClick={closeModal}
+            >
+              &times;
+            </button>
+            <h3 className="text-lg font-bold mb-2">
+              Detail Permintaan #{selectedRequest.id}
+            </h3>
+            <div className="mb-2">
+              <span className="font-medium">Pemohon:</span>{" "}
+              {selectedRequest.pemohon?.nama} (
+              {selectedRequest.pemohon?.unit_kerja})
+            </div>
+            <div className="mb-2">
+              <span className="font-medium">Tanggal Permintaan:</span>{" "}
+              {new Date(selectedRequest.tanggal_permintaan).toLocaleDateString(
+                "id-ID"
+              )}
+            </div>
+            <div className="mb-2">
+              <span className="font-medium">Status:</span>{" "}
+              {selectedRequest.status}
+            </div>
+            <div className="mb-2">
+              <span className="font-medium">Catatan:</span>{" "}
+              {selectedRequest.catatan || "-"}
+            </div>
+            <div className="mb-2">
+              <span className="font-medium">Jumlah Item:</span>{" "}
+              {selectedRequest.details.length}
+            </div>
+            <div className="mb-2">
+              <span className="font-medium">Daftar Barang:</span>
+              <ul className="list-disc ml-6 mt-1">
+                {selectedRequest.details.map((d) => (
+                  <li key={d.id}>
+                    <span className="font-medium">{d.barang?.nama_barang}</span>{" "}
+                    ({d.barang?.kode_barang}) - {d.jumlah_diminta}{" "}
+                    {d.barang?.satuan}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -16,24 +16,43 @@ const DashboardRecentRequests = ({ requests, onDetail, loading }) => (
         {requests.map((req) => (
           <li
             key={req.id}
-            className="py-2 flex justify-between items-center cursor-pointer hover:bg-gray-50"
+            className="py-2 flex flex-col md:flex-row md:justify-between md:items-center cursor-pointer hover:bg-gray-50"
             onClick={() => onDetail(req)}
           >
             <div>
-              <span className="font-medium">
-                {req.nomorPermintaan || req.id}
-              </span>
-              {" - "}
-              {req.pemohon?.nama || "-"}
+              <span className="font-medium">{req.pemohon?.nama || "-"}</span>
               <span className="ml-2 text-xs text-gray-500">
-                {req.tanggalPermintaan
-                  ? new Date(req.tanggalPermintaan).toLocaleDateString()
+                ({req.pemohon?.unit_kerja || "-"})
+              </span>
+              <span className="ml-2 text-xs text-gray-500">
+                {req.tanggal_permintaan
+                  ? new Date(req.tanggal_permintaan).toLocaleDateString("id-ID")
                   : ""}
               </span>
+              <div className="text-xs text-gray-500">
+                {req.details.length} item:{" "}
+                {req.details
+                  .map((d) => d.barang?.nama_barang)
+                  .filter(Boolean)
+                  .slice(0, 3)
+                  .join(", ")}
+                {req.details.length > 3 && " ..."}
+              </div>
             </div>
-            <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">
-              {req.status || "Menunggu"}
-            </span>
+            <div className="flex items-center space-x-2 mt-2 md:mt-0">
+              <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">
+                {req.status || "Menunggu"}
+              </span>
+              <button
+                className="ml-2 text-xs text-blue-600 underline"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDetail(req);
+                }}
+              >
+                Detail
+              </button>
+            </div>
           </li>
         ))}
       </ul>

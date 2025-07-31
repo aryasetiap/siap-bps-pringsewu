@@ -14,14 +14,29 @@ const DashboardNotifKritis = ({ items, loading }) => (
     ) : (
       <ul className="divide-y divide-gray-200">
         {items.map((item) => (
-          <li key={item.id} className="py-2 flex justify-between items-center">
-            <span>
-              <span className="font-medium">{item.nama}</span> (Stok:{" "}
-              <span className="text-red-600 font-bold">{item.stok}</span>)
-            </span>
-            <span className="text-xs text-gray-500">
-              Minimum: {item.ambang_batas_kritis}
-            </span>
+          <li
+            key={item.id}
+            className="py-2 flex flex-col md:flex-row md:justify-between md:items-center"
+          >
+            <div>
+              <span className="font-medium">{item.nama_barang}</span>
+              <span className="ml-2 text-xs text-gray-500">
+                ({item.kode_barang})
+              </span>
+              <span className="ml-2 text-xs text-gray-500">
+                | {item.satuan}
+              </span>
+              <div className="text-xs text-gray-400">{item.deskripsi}</div>
+            </div>
+            <div className="flex items-center space-x-4 mt-1 md:mt-0">
+              <span>
+                Stok:{" "}
+                <span className="text-red-600 font-bold">{item.stok}</span>
+              </span>
+              <span className="text-xs text-gray-500">
+                Minimum: {item.ambang_batas_kritis}
+              </span>
+            </div>
           </li>
         ))}
       </ul>
