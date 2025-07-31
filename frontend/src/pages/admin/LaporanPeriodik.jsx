@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "axios";
+import api from "../../services/api";
 import LaporanFilterForm from "../../components/laporan/LaporanFilterForm";
 import LaporanTable from "../../components/laporan/LaporanTable";
 import { toast } from "react-toastify";
@@ -17,8 +17,8 @@ const LaporanPeriodik = () => {
     }
     setLoading(true);
     try {
-      const res = await axios.get(
-        `/api/laporan/penggunaan?start=${startDate}&end=${endDate}`
+      const res = await api.get(
+        `/laporan/penggunaan?start=${startDate}&end=${endDate}`
       );
       setData(res.data);
     } catch (err) {
@@ -33,8 +33,8 @@ const LaporanPeriodik = () => {
       return;
     }
     try {
-      const res = await axios.get(
-        `/api/laporan/penggunaan/pdf?start=${startDate}&end=${endDate}`,
+      const res = await api.get(
+        `/laporan/penggunaan/pdf?start=${startDate}&end=${endDate}`,
         { responseType: "blob" }
       );
       const url = window.URL.createObjectURL(new Blob([res.data]));

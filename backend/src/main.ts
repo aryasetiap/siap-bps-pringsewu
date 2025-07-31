@@ -24,6 +24,7 @@ import { JwtAuthGuard } from './auth/jwt-auth.guard';
  */
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  app.setGlobalPrefix('api'); // Tambahkan baris ini
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -38,14 +39,13 @@ async function bootstrap(): Promise<void> {
   });
 
   const reflector = app.get(Reflector);
-  app.useGlobalGuards(new JwtAuthGuard(), new RolesGuard(reflector));
 
   const uploadDir = path.join(__dirname, 'uploads', 'profile');
   if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
   }
 
-  await app.listen(process.env.PORT ?? 3000);
+  await app.listen(3001);
 }
 
 bootstrap();

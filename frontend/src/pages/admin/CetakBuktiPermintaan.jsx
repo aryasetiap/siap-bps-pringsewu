@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import axios from "axios";
+import api from "../../services/api";
 import BuktiPermintaanPreview from "../../components/permintaan/BuktiPermintaanPreview";
 import { toast } from "react-toastify";
 
@@ -10,23 +10,22 @@ const CetakBuktiPermintaan = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    const fetchPermintaan = async () => {
+      setLoading(true);
+      try {
+        const res = await api.get(`/permintaan/${id}`);
+        setPermintaan(res.data);
+      } catch (err) {
+        toast.error("Gagal memuat detail permintaan.");
+      }
+      setLoading(false);
+    };
     fetchPermintaan();
   }, [id]);
 
-  const fetchPermintaan = async () => {
-    setLoading(true);
-    try {
-      const res = await axios.get(`/api/permintaan/${id}`);
-      setPermintaan(res.data);
-    } catch (err) {
-      toast.error("Gagal memuat detail permintaan.");
-    }
-    setLoading(false);
-  };
-
   const handleCetakPDF = async () => {
     try {
-      const res = await axios.get(`/api/permintaan/${id}/pdf`, {
+      const res = await api.get(`/permintaan/${id}/pdf`, {
         responseType: "blob",
       });
       const url = window.URL.createObjectURL(new Blob([res.data]));

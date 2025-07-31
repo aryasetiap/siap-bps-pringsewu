@@ -7,51 +7,56 @@ import {
 } from "@heroicons/react/24/outline";
 
 const DashboardStats = ({ stats, loading }) => (
-  <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-    <div className="bg-white p-6 rounded-lg shadow border flex items-center">
-      <div className="flex-1">
-        <p className="text-sm font-medium text-gray-600">Total Barang</p>
-        <p className="text-2xl font-bold text-blue-600">
-          {loading ? "..." : stats.totalBarang}
-        </p>
+  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+    {[
+      {
+        label: "Total Barang",
+        value: stats.totalBarang,
+        color: "from-blue-500 to-blue-300",
+        icon: <CubeIcon className="w-9 h-9" />,
+        text: "text-blue-700",
+      },
+      {
+        label: "Permintaan Tertunda",
+        value: stats.totalPermintaanTertunda,
+        color: "from-yellow-400 to-yellow-200",
+        icon: <ClipboardDocumentListIcon className="w-9 h-9" />,
+        text: "text-yellow-700",
+      },
+      {
+        label: "Barang Kritis",
+        value: stats.totalBarangKritis,
+        color: "from-red-500 to-red-300",
+        icon: <ExclamationTriangleIcon className="w-9 h-9" />,
+        text: "text-red-700",
+      },
+      {
+        label: "Total Pengguna",
+        value: stats.totalUser,
+        color: "from-green-500 to-green-300",
+        icon: <UsersIcon className="w-9 h-9" />,
+        text: "text-green-700",
+      },
+    ].map((stat) => (
+      <div
+        key={stat.label}
+        className="bg-white rounded-2xl shadow-xl border border-gray-100 flex flex-col items-center p-6 group transition-all hover:shadow-2xl hover:-translate-y-1"
+      >
+        <div
+          className={`mb-4 bg-gradient-to-br ${stat.color} rounded-full w-16 h-16 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}
+        >
+          <span className="text-white">{stat.icon}</span>
+        </div>
+        <div className="flex-1 flex flex-col items-center">
+          <p className="text-xs font-medium text-gray-500 mb-1 tracking-wide uppercase">
+            {stat.label}
+          </p>
+          <p className={`text-4xl font-extrabold ${stat.text} tracking-tight`}>
+            {loading ? <span className="animate-pulse">...</span> : stat.value}
+          </p>
+        </div>
       </div>
-      <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-        <CubeIcon className="w-6 h-6 text-blue-600" />
-      </div>
-    </div>
-    <div className="bg-white p-6 rounded-lg shadow border flex items-center">
-      <div className="flex-1">
-        <p className="text-sm font-medium text-gray-600">Permintaan Tertunda</p>
-        <p className="text-2xl font-bold text-yellow-600">
-          {loading ? "..." : stats.totalPermintaanTertunda}
-        </p>
-      </div>
-      <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-        <ClipboardDocumentListIcon className="w-6 h-6 text-yellow-600" />
-      </div>
-    </div>
-    <div className="bg-white p-6 rounded-lg shadow border flex items-center">
-      <div className="flex-1">
-        <p className="text-sm font-medium text-gray-600">Barang Kritis</p>
-        <p className="text-2xl font-bold text-red-600">
-          {loading ? "..." : stats.totalBarangKritis}
-        </p>
-      </div>
-      <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
-        <ExclamationTriangleIcon className="w-6 h-6 text-red-600" />
-      </div>
-    </div>
-    <div className="bg-white p-6 rounded-lg shadow border flex items-center">
-      <div className="flex-1">
-        <p className="text-sm font-medium text-gray-600">Total Pengguna</p>
-        <p className="text-2xl font-bold text-green-600">
-          {loading ? "..." : stats.totalUser}
-        </p>
-      </div>
-      <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-        <UsersIcon className="w-6 h-6 text-green-600" />
-      </div>
-    </div>
+    ))}
   </div>
 );
 

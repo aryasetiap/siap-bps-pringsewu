@@ -15,14 +15,12 @@ function LoginPage() {
     setLoading(true);
 
     try {
-      const res = await api.post("/auth/login", {
-        username,
-        password,
-      });
+      // BENAR: tanpa /api di depan
+      const res = await api.post("/auth/login", { username, password });
       // Simpan token dan info user ke localStorage
       localStorage.setItem("authToken", res.data.access_token);
-      localStorage.setItem("userRole", res.data.user.role);
       localStorage.setItem("username", res.data.user.username);
+      localStorage.setItem("userRole", res.data.user.role);
 
       // Redirect sesuai role
       if (res.data.user.role === "admin") {
