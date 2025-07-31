@@ -167,7 +167,7 @@ const UserManagement = () => {
       return;
     setLoading(true);
     try {
-      await userService.toggleUserStatus(user.id, newStatus);
+      await userService.updateUser(user.id, { status: newStatus });
       fetchUsers();
       toast.success("Status pengguna berhasil diubah!");
     } catch (err) {

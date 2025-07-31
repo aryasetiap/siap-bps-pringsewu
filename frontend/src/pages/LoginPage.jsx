@@ -1,37 +1,43 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom"; // Menggunakan useNavigate untuk navigasi
+import { useNavigate } from "react-router-dom";
+import api from "../services/api";
 
 function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate(); // Inisialisasi hook useNavigate
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
-    // Simulasi penundaan jaringan
-    await new Promise((resolve) => setTimeout(resolve, 1000)); // Tunda 1 detik
+    try {
+      const res = await api.post("/auth/login", {
+        username,
+        password,
+      });
+      // Simpan token dan info user ke localStorage
+      localStorage.setItem("authToken", res.data.access_token);
+      localStorage.setItem("userRole", res.data.user.role);
+      localStorage.setItem("username", res.data.user.username);
 
-    // Logika simulasi autentikasi
-    if (username === "admin" && password === "admin123") {
-      // Contoh kredensial admin
-      localStorage.setItem("authToken", "fake-admin-token"); // Simpan token palsu
-      localStorage.setItem("userRole", "admin"); // Simpan role admin
-      navigate("/admin/dashboard"); // Arahkan ke dashboard admin
-    } else if (username === "pegawai" && password === "pegawai123") {
-      // Contoh kredensial pegawai
-      localStorage.setItem("authToken", "fake-pegawai-token"); // Simpan token palsu
-      localStorage.setItem("userRole", "pegawai"); // Simpan role pegawai
-      navigate("/pegawai/permintaan"); // Arahkan ke halaman permintaan pegawai
-    } else {
-      setError("Username atau password salah. Silakan coba lagi."); // Pesan error jika kredensial tidak cocok
+      // Redirect sesuai role
+      if (res.data.user.role === "admin") {
+        navigate("/admin/dashboard");
+      } else if (res.data.user.role === "pegawai") {
+        navigate("/pegawai/permintaan");
+      } else {
+        navigate("/");
+      }
+    } catch (err) {
+      setError(
+        err?.response?.data?.message || "Login gagal. Username/password salah."
+      );
     }
-
-    setLoading(false); // Selesai loading
+    setLoading(false);
   };
 
   return (

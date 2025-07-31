@@ -5,6 +5,7 @@ import { DetailPermintaan } from '../entities/detail_permintaan.entity';
 import { Barang } from '../entities/barang.entity';
 import { PermintaanController } from './permintaan.controller';
 import { PermintaanService } from './permintaan.service';
+import { User } from '../entities/user.entity'; // Tambahkan import User
 
 /**
  * Modul Permintaan
@@ -17,7 +18,9 @@ import { PermintaanService } from './permintaan.service';
  * - Controller dan Service terkait permintaan.
  */
 @Module({
-  imports: [TypeOrmModule.forFeature([Permintaan, DetailPermintaan, Barang])],
+  imports: [
+    TypeOrmModule.forFeature([Permintaan, DetailPermintaan, Barang, User]),
+  ], // Tambahkan User di sini
   controllers: [PermintaanController],
   providers: [PermintaanService],
 })

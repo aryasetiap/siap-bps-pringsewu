@@ -37,7 +37,7 @@ const RequestVerification = () => {
   const fetchPermintaan = async () => {
     setLoading(true);
     try {
-      const res = await permintaanService.getAllPermintaan();
+      const res = await permintaanService.getPermintaanMasuk();
       setPermintaan(res.data);
     } catch (err) {
       // TODO: tampilkan notifikasi error

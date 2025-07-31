@@ -1,20 +1,14 @@
 {
-  // Ekstensi file yang dikenali oleh Jest
   "moduleFileExtensions": [
     "js",
     "json",
     "ts"
   ],
-  // Direktori root untuk Jest
   "rootDir": ".",
-  // Lingkungan pengujian yang digunakan (Node.js)
   "testEnvironment": "node",
-  // Pola regex untuk menemukan file pengujian end-to-end
   "testRegex": ".e2e-spec.ts$",
-  // Konfigurasi transformasi file menggunakan ts-jest
   "transform": {
     "^.+\\.(t|j)s$": "ts-jest"
   },
-  // Batas waktu maksimum untuk setiap pengujian (dalam milidetik)
   "testTimeout": 30000
 }

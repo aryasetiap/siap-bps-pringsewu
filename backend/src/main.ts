@@ -6,6 +6,7 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import * as fs from 'fs';
 import * as path from 'path';
 import { ValidationPipe } from '@nestjs/common';
+import { JwtAuthGuard } from './auth/jwt-auth.guard';
 
 /**
  * Fungsi utama untuk memulai aplikasi NestJS.
@@ -37,7 +38,7 @@ async function bootstrap(): Promise<void> {
   });
 
   const reflector = app.get(Reflector);
-  app.useGlobalGuards(new RolesGuard(reflector));
+  app.useGlobalGuards(new JwtAuthGuard(), new RolesGuard(reflector));
 
   const uploadDir = path.join(__dirname, 'uploads', 'profile');
   if (!fs.existsSync(uploadDir)) {

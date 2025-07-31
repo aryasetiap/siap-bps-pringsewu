@@ -9,11 +9,11 @@ import * as dashboardService from "../../services/dashboardService";
 const AdminDashboard = () => {
   const [stats, setStats] = useState({
     totalBarang: 0,
-    permintaanTertunda: 0,
-    barangKritis: 0,
+    totalPermintaanTertunda: 0,
+    totalBarangKritis: 0,
     totalUser: 0,
   });
-  const [chartData, setChartData] = useState(null);
+  const [chartData, setChartData] = useState([]);
   const [notifKritis, setNotifKritis] = useState([]);
   const [recentRequests, setRecentRequests] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -52,12 +52,13 @@ const AdminDashboard = () => {
       <p className="text-gray-600 mb-6">
         Statistik, grafik, dan notifikasi stok kritis barang persediaan
       </p>
-      <DashboardStats stats={stats} />
-      <DashboardChart chartData={chartData} />
-      <DashboardNotifKritis items={notifKritis} />
+      <DashboardStats stats={stats} loading={loading} />
+      <DashboardChart chartData={chartData} loading={loading} />
+      <DashboardNotifKritis items={notifKritis} loading={loading} />
       <DashboardRecentRequests
         requests={recentRequests}
         onDetail={handleDetailRequest}
+        loading={loading}
       />
       {/* TODO: Modal detail permintaan jika diperlukan */}
     </div>

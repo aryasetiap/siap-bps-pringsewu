@@ -22,6 +22,7 @@ Modul autentikasi menyediakan endpoint untuk login, logout, serta mekanisme prot
   }
   ```
 - **Response:**
+
   - **200 OK**
     ```json
     {
@@ -62,6 +63,7 @@ Modul autentikasi menyediakan endpoint untuk login, logout, serta mekanisme prot
 - **Headers:**
   - `Authorization: Bearer <jwt_token>`
 - **Response:**
+
   - **200 OK**
     ```json
     { "message": "Logout success (token revoked)" }
@@ -77,6 +79,7 @@ Modul autentikasi menyediakan endpoint untuk login, logout, serta mekanisme prot
 ### Mekanisme Autentikasi
 
 - **JWT (JSON Web Token):**
+
   - Token JWT di-generate saat login dan dikirimkan pada header `Authorization: Bearer <token>` untuk setiap request ke endpoint yang dilindungi.
   - Token memiliki masa berlaku (`expiresIn: 1d`).
   - Token yang sudah di-logout akan masuk blacklist dan tidak dapat digunakan lagi.
@@ -646,9 +649,12 @@ Modul Permintaan menyediakan endpoint untuk pengajuan permintaan barang oleh peg
     {
       "totalBarang": 20,
       "totalPermintaanTertunda": 3,
-      "totalBarangKritis": 2
+      "totalBarangKritis": 2,
+      "totalUser": 15
     }
     ```
+  - **Deskripsi:**  
+    Mengembalikan statistik total barang, permintaan tertunda, barang kritis, **dan total user aktif** untuk dashboard admin.
 
 #### 7. Tren Permintaan Bulanan (Admin)
 
@@ -744,4 +750,6 @@ Authorization: Bearer <token>
 ### Referensi Kode
 
 - Service: [`PermintaanService`](src/permintaan/permintaan.service.ts)
-- Controller:
+- Controller: [`PermintaanController`](src/permintaan/permintaan.controller.ts)
+- DTO: [`CreatePermintaanDto`](src/permintaan/dto/create-permintaan.dto.ts), [`VerifikasiPermintaanDto`](src/permintaan/dto/verifikasi-permintaan.dto.ts)
+- Modul: [`PermintaanModule`](src/permintaan/permintaan.module.ts)

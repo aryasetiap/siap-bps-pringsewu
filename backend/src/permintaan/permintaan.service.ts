@@ -7,6 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Permintaan } from '../entities/permintaan.entity';
 import { DetailPermintaan } from '../entities/detail_permintaan.entity';
 import { Barang } from '../entities/barang.entity';
+import { User } from '../entities/user.entity'; // Tambahkan import User
 import { Repository, DataSource } from 'typeorm';
 import { CreatePermintaanDto } from './dto/create-permintaan.dto';
 import { VerifikasiPermintaanDto } from './dto/verifikasi-permintaan.dto';
@@ -22,6 +23,8 @@ export class PermintaanService {
     private detailRepo: Repository<DetailPermintaan>,
     @InjectRepository(Barang)
     private barangRepo: Repository<Barang>,
+    @InjectRepository(User) // Tambahkan ini
+    private userRepo: Repository<User>, // Tambahkan ini
     private dataSource: DataSource,
   ) {}
 
@@ -227,7 +230,7 @@ export class PermintaanService {
    * @returns Statistik total barang, permintaan tertunda, dan barang kritis.
    */
   async getDashboardStatistik() {
-    const [totalBarang, totalPermintaanTertunda, totalBarangKritis] =
+    const [totalBarang, totalPermintaanTertunda, totalBarangKritis, totalUser] =
       await Promise.all([
         this.barangRepo.count(),
         this.permintaanRepo.count({ where: { status: 'Menunggu' } }),
@@ -236,11 +239,13 @@ export class PermintaanService {
           .where('barang.stok <= barang.ambang_batas_kritis')
           .andWhere('barang.status_aktif = :aktif', { aktif: true })
           .getCount(),
+        this.userRepo.count({ where: { status_aktif: true } }),
       ]);
     return {
       totalBarang,
       totalPermintaanTertunda,
       totalBarangKritis,
+      totalUser,
     };
   }
 

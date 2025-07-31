@@ -27,7 +27,7 @@ const EmployeeHistory = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const res = await permintaanService.getRiwayatPermintaanPegawai();
+      const res = await permintaanService.getRiwayatPermintaan();
       setPermintaan(res.data);
     } catch (err) {
       toast.error("Gagal memuat riwayat permintaan");

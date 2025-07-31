@@ -146,9 +146,12 @@ Modul Permintaan menyediakan endpoint untuk pengajuan permintaan barang oleh peg
     {
       "totalBarang": 20,
       "totalPermintaanTertunda": 3,
-      "totalBarangKritis": 2
+      "totalBarangKritis": 2,
+      "totalUser": 15
     }
     ```
+  - **Deskripsi:**  
+    Mengembalikan statistik total barang, permintaan tertunda, barang kritis, **dan total user aktif** untuk dashboard admin.
 
 ---
 

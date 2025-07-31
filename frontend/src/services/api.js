@@ -2,14 +2,14 @@ import axios from "axios";
 
 // Ganti baseURL sesuai environment (bisa pakai .env)
 const api = axios.create({
-  baseURL: "/api", // proxy ke backend, atau http://localhost:3001/api jika tanpa proxy
+  baseURL: "", // proxy ke backend, atau http://localhost:3001/api jika tanpa proxy
   timeout: 15000,
 });
 
 // Interceptor: Tambahkan Authorization header jika ada token
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("authToken"); // GANTI dari "token" ke "authToken"
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -18,15 +18,15 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Interceptor: Global error handling (contoh: token expired)
+// // Interceptor: Global error handling (contoh: token expired)
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response) {
       // Jika 401/403, redirect ke login atau tampilkan notifikasi
       if (error.response.status === 401 || error.response.status === 403) {
-        // Optional: hapus token, redirect, dsb
-        localStorage.removeItem("token");
+        localStorage.removeItem("authToken"); // tambahkan baris ini
+        localStorage.removeItem("token"); // opsional, jika pernah pakai key ini
         localStorage.removeItem("userRole");
         localStorage.removeItem("username");
         window.location.href = "/login";
