@@ -2,10 +2,10 @@ import React from "react";
 import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 
 const DashboardNotifKritis = ({ items, loading }) => (
-  <div className="bg-white p-6 rounded-2xl shadow-xl mb-6 border border-red-100">
+  <div className="bg-white p-6 rounded-xl shadow-md mb-6 border border-red-100">
     <h2 className="text-lg font-bold mb-4 flex items-center text-red-700">
       <span className="bg-red-100 rounded-full p-2 mr-3 shadow">
-        <ExclamationTriangleIcon className="w-7 h-7 text-red-600" />
+        <ExclamationTriangleIcon className="w-6 h-6 text-red-600" />
       </span>
       Notifikasi Stok Kritis
     </h2>
@@ -30,7 +30,7 @@ const DashboardNotifKritis = ({ items, loading }) => (
               <div className="text-xs text-gray-400">{item.deskripsi}</div>
             </div>
             <div className="flex items-center space-x-4 mt-2 md:mt-0">
-              <span className="inline-flex items-center px-2 py-1 rounded-full bg-red-100 text-red-700 text-xs font-bold">
+              <span className="inline-flex items-center px-2 py-1 rounded-full bg-red-100 text-red-700 text-xs font-bold shadow">
                 Stok: <span className="ml-1">{item.stok}</span>
               </span>
               <span className="text-xs text-gray-500">

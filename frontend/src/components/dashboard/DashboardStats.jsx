@@ -40,15 +40,15 @@ const DashboardStats = ({ stats, loading }) => (
     ].map((stat) => (
       <div
         key={stat.label}
-        className="bg-white rounded-2xl shadow-xl border border-gray-100 flex flex-col items-center p-6 group transition-all hover:shadow-2xl hover:-translate-y-1"
+        className="bg-white rounded-xl shadow-md border border-gray-100 flex flex-col items-center p-6 group transition-all hover:shadow-lg hover:-translate-y-1"
       >
         <div
-          className={`mb-4 bg-gradient-to-br ${stat.color} rounded-full w-16 h-16 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}
+          className={`mb-4 bg-gradient-to-br ${stat.color} rounded-full w-16 h-16 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform`}
         >
           <span className="text-white">{stat.icon}</span>
         </div>
         <div className="flex-1 flex flex-col items-center">
-          <p className="text-xs font-medium text-gray-500 mb-1 tracking-wide uppercase">
+          <p className="text-xs font-semibold text-gray-500 mb-1 tracking-wide uppercase">
             {stat.label}
           </p>
           <p className={`text-4xl font-extrabold ${stat.text} tracking-tight`}>

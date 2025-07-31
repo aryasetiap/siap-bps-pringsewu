@@ -9,7 +9,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
-import { FaChartLine } from "react-icons/fa"; // pastikan react-icons sudah diinstall
+import { FaChartLine } from "react-icons/fa";
 
 ChartJS.register(
   LineElement,
@@ -21,15 +21,14 @@ ChartJS.register(
 );
 
 const chartGradient = (ctx, area) => {
-  if (!area) return "rgba(37,99,235,0.1)";
+  if (!area) return "rgba(37,99,235,0.25)";
   const gradient = ctx.createLinearGradient(0, area.bottom, 0, area.top);
-  gradient.addColorStop(0, "rgba(37,99,235,0.05)");
-  gradient.addColorStop(1, "rgba(37,99,235,0.3)");
+  gradient.addColorStop(0, "rgba(37,99,235,0.45)");
+  gradient.addColorStop(1, "rgba(37,99,235,0.10)");
   return gradient;
 };
 
 const DashboardChart = ({ chartData, loading }) => {
-  // Custom dataset with gradient
   const data = {
     labels: chartData.map((d) => {
       const [year, month] = d.bulan.split("-");
@@ -60,9 +59,7 @@ const DashboardChart = ({ chartData, loading }) => {
     plugins: {
       legend: { display: false },
       tooltip: { mode: "index", intersect: false },
-      title: {
-        display: false,
-      },
+      title: { display: false },
     },
     scales: {
       x: {
@@ -95,7 +92,7 @@ const DashboardChart = ({ chartData, loading }) => {
 
   if (loading) {
     return (
-      <div className="bg-white p-6 rounded-2xl shadow-xl mb-6 flex flex-col items-center justify-center animate-pulse aspect-[2/1] min-h-[280px]">
+      <div className="bg-white p-8 rounded-2xl shadow-lg mb-6 flex flex-col items-center justify-center animate-pulse aspect-[2/1] min-h-[280px]">
         <div className="w-1/3 h-6 bg-gray-200 rounded mb-4"></div>
         <div className="w-full flex-1 bg-gray-100 rounded"></div>
       </div>
@@ -104,23 +101,31 @@ const DashboardChart = ({ chartData, loading }) => {
 
   if (!chartData || chartData.length === 0) {
     return (
-      <div className="bg-white p-6 rounded-2xl shadow-xl mb-6 flex items-center justify-center text-gray-400 aspect-[2/1] min-h-[280px]">
-        Belum ada data tren permintaan
+      <div className="bg-white p-8 rounded-2xl shadow-lg mb-6 flex flex-col items-center justify-center text-gray-400 aspect-[2/1] min-h-[280px]">
+        <div className="flex items-center mb-2">
+          <div className="bg-blue-100 text-blue-600 rounded-full p-2 mr-2 shadow">
+            <FaChartLine className="w-6 h-6" />
+          </div>
+          <span className="text-base font-semibold text-gray-500">
+            Tren Permintaan Bulanan
+          </span>
+        </div>
+        <span>Belum ada data tren permintaan</span>
       </div>
     );
   }
 
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-xl mb-6 w-full">
-      <div className="flex items-center mb-4">
-        <div className="bg-blue-100 text-blue-600 rounded-full p-3 mr-3 shadow">
-          <FaChartLine size={28} />
+    <div className="bg-white p-8 rounded-2xl shadow-lg mb-6 w-full border border-blue-50">
+      <div className="flex items-center mb-6">
+        <div className="bg-blue-100 text-blue-600 rounded-full p-2 mr-3 shadow">
+          <FaChartLine className="w-6 h-6" />
         </div>
-        <h2 className="text-xl font-bold text-gray-800">
+        <h2 className="text-lg font-bold text-blue-700 tracking-tight">
           Tren Permintaan Bulanan
         </h2>
       </div>
-      <div className="w-full aspect-[2/1] min-h-[280px]">
+      <div className="w-full aspect-[2/1] min-h-[280px] bg-blue-50/30 rounded-xl p-4 flex items-center">
         <Line data={data} options={options} />
       </div>
     </div>

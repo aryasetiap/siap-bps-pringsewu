@@ -66,51 +66,98 @@ const AdminDashboard = () => {
 
       {/* Modal Detail Permintaan */}
       {selectedRequest && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-lg relative">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-lg relative animate-fadeIn">
             <button
-              className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
+              className="absolute top-3 right-3 text-gray-400 hover:text-red-500 text-2xl font-bold transition"
               onClick={closeModal}
+              aria-label="Tutup"
             >
               &times;
             </button>
-            <h3 className="text-lg font-bold mb-2">
-              Detail Permintaan #{selectedRequest.id}
-            </h3>
-            <div className="mb-2">
-              <span className="font-medium">Pemohon:</span>{" "}
-              {selectedRequest.pemohon?.nama} (
-              {selectedRequest.pemohon?.unit_kerja})
+            <div className="flex items-center mb-4">
+              <div className="bg-blue-100 text-blue-600 rounded-full p-2 mr-3 shadow">
+                <svg width="28" height="28" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" strokeWidth="2" d="M12 6v6l4 2" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-gray-800">
+                Detail Permintaan #{selectedRequest.id}
+              </h3>
             </div>
-            <div className="mb-2">
-              <span className="font-medium">Tanggal Permintaan:</span>{" "}
-              {new Date(selectedRequest.tanggal_permintaan).toLocaleDateString(
-                "id-ID"
-              )}
-            </div>
-            <div className="mb-2">
-              <span className="font-medium">Status:</span>{" "}
-              {selectedRequest.status}
-            </div>
-            <div className="mb-2">
-              <span className="font-medium">Catatan:</span>{" "}
-              {selectedRequest.catatan || "-"}
-            </div>
-            <div className="mb-2">
-              <span className="font-medium">Jumlah Item:</span>{" "}
-              {selectedRequest.details.length}
-            </div>
-            <div className="mb-2">
-              <span className="font-medium">Daftar Barang:</span>
-              <ul className="list-disc ml-6 mt-1">
-                {selectedRequest.details.map((d) => (
-                  <li key={d.id}>
-                    <span className="font-medium">{d.barang?.nama_barang}</span>{" "}
-                    ({d.barang?.kode_barang}) - {d.jumlah_diminta}{" "}
-                    {d.barang?.satuan}
-                  </li>
-                ))}
-              </ul>
+            <div className="space-y-2 text-sm">
+              <div>
+                <span className="font-medium text-gray-600">Pemohon:</span>{" "}
+                <span className="text-gray-900">
+                  {selectedRequest.pemohon?.nama}
+                </span>{" "}
+                <span className="text-xs text-gray-500">
+                  ({selectedRequest.pemohon?.unit_kerja})
+                </span>
+              </div>
+              <div>
+                <span className="font-medium text-gray-600">
+                  Tanggal Permintaan:
+                </span>{" "}
+                <span className="text-gray-900">
+                  {new Date(
+                    selectedRequest.tanggal_permintaan
+                  ).toLocaleDateString("id-ID")}
+                </span>
+              </div>
+              <div>
+                <span className="font-medium text-gray-600">Status:</span>{" "}
+                <span
+                  className={`px-2 py-1 rounded-full text-xs font-bold shadow-sm align-middle ${(() => {
+                    switch ((selectedRequest.status || "").toLowerCase()) {
+                      case "menunggu":
+                        return "bg-yellow-100 text-yellow-700";
+                      case "disetujui":
+                        return "bg-green-100 text-green-700";
+                      case "disetujui sebagian":
+                        return "bg-orange-100 text-orange-700";
+                      case "ditolak":
+                        return "bg-red-100 text-red-700";
+                      default:
+                        return "bg-gray-100 text-gray-600";
+                    }
+                  })()}`}
+                >
+                  {selectedRequest.status || "Menunggu"}
+                </span>
+              </div>
+              <div>
+                <span className="font-medium text-gray-600">Catatan:</span>{" "}
+                <span className="text-gray-900">
+                  {selectedRequest.catatan || "-"}
+                </span>
+              </div>
+              <div>
+                <span className="font-medium text-gray-600">Jumlah Item:</span>{" "}
+                <span className="text-gray-900">
+                  {selectedRequest.details.length}
+                </span>
+              </div>
+              <div>
+                <span className="font-medium text-gray-600">
+                  Daftar Barang:
+                </span>
+                <ul className="list-disc ml-6 mt-1 space-y-1">
+                  {selectedRequest.details.map((d) => (
+                    <li key={d.id} className="text-gray-800">
+                      <span className="font-semibold">
+                        {d.barang?.nama_barang}
+                      </span>{" "}
+                      <span className="text-xs text-gray-500">
+                        ({d.barang?.kode_barang})
+                      </span>{" "}
+                      <span className="text-gray-600">
+                        - {d.jumlah_diminta} {d.barang?.satuan}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
           </div>
         </div>
