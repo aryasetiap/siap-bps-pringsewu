@@ -173,17 +173,27 @@ const ManajemenBarang = () => {
 
   const handleStokSubmit = async (e) => {
     e.preventDefault();
+    if (
+      !stokData.jumlahTambah ||
+      isNaN(stokData.jumlahTambah) ||
+      parseInt(stokData.jumlahTambah) < 1
+    ) {
+      toast.error("Jumlah penambahan harus angka positif!");
+      return;
+    }
     setLoading(true);
     try {
-      await barangService.tambahStok(selectedBarang.id, {
-        jumlahTambah: parseInt(stokData.jumlahTambah),
-        keterangan: stokData.keterangan,
-      });
+      await barangService.tambahStok(
+        selectedBarang.id,
+        parseInt(stokData.jumlahTambah)
+      );
+      toast.success("Stok barang berhasil ditambah!");
       setShowStokModal(false);
       fetchBarang();
-      // TODO: tampilkan notifikasi sukses
     } catch (err) {
-      // TODO: tampilkan notifikasi error
+      toast.error(
+        err?.response?.data?.message || "Gagal menambah stok barang."
+      );
     }
     setLoading(false);
   };
@@ -194,10 +204,10 @@ const ManajemenBarang = () => {
     setLoading(true);
     try {
       await barangService.deleteBarang(id);
+      toast.success("Barang berhasil dihapus!");
       fetchBarang();
-      // TODO: tampilkan notifikasi sukses
     } catch (err) {
-      // TODO: tampilkan notifikasi error
+      toast.error(err?.response?.data?.message || "Gagal menghapus barang.");
     }
     setLoading(false);
   };

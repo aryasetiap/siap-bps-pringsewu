@@ -1,36 +1,34 @@
 import api from "./api";
 
-const API_URL = "/barang";
-
 // Mendapatkan daftar barang (dengan query opsional)
-export const getAllBarang = (params) => api.get(API_URL, { params });
+export const getAllBarang = (params) => api.get("/barang", { params });
 
 // Mendapatkan detail barang
-export const getBarangById = (id) => api.get(`${API_URL}/${id}`);
+export const getBarangById = (id) => api.get(`/barang/${id}`);
 
 // Membuat barang baru
-export const createBarang = (data) => api.post(API_URL, data);
+export const createBarang = (data) => api.post("/barang", data);
 
 // Memperbarui data barang (parsial)
-export const updateBarang = (id, data) => api.patch(`${API_URL}/${id}`, data);
+export const updateBarang = (id, data) => api.patch(`/barang/${id}`, data);
 
 // Menghapus (soft delete) barang
-export const deleteBarang = (id) => api.delete(`${API_URL}/${id}`);
+export const deleteBarang = (id) => api.delete(`/barang/${id}`);
 
 // Menambah stok barang
 export const tambahStok = (id, jumlah) =>
-  api.patch(`${API_URL}/${id}/add-stok`, { jumlah });
+  api.patch(`/barang/${id}/add-stok`, { jumlah });
 
 // Mendapatkan daftar barang stok kritis
-export const getBarangStokKritis = () => api.get(`${API_URL}/stok-kritis`);
+export const getBarangStokKritis = () => api.get(`/barang/stok-kritis`);
 
 // Mendapatkan notifikasi stok kritis (dashboard)
 export const getNotifStokKritis = () =>
-  api.get(`${API_URL}/dashboard/notifikasi-stok-kritis`);
+  api.get(`/barang/dashboard/notifikasi-stok-kritis`);
 
 // Mendapatkan laporan penggunaan barang (PDF)
 export const getLaporanPenggunaanPDF = (start, end, config = {}) =>
-  api.get(`${API_URL}/laporan-penggunaan/pdf`, {
+  api.get(`/barang/laporan-penggunaan/pdf`, {
     params: { start, end },
     responseType: "blob",
     ...config,
