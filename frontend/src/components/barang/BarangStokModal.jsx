@@ -24,6 +24,17 @@ const BarangStokModal = ({
             <p className="font-medium">
               {barang.stok} {barang.satuan}
             </p>
+            {stokData.jumlahTambah && (
+              <div className="p-3 bg-blue-50 rounded-md">
+                <p className="text-sm text-blue-600">
+                  Stok Setelah Penambahan:
+                </p>
+                <p className="font-medium text-blue-800">
+                  {barang.stok + parseInt(stokData.jumlahTambah || 0)}{" "}
+                  {barang.satuan}
+                </p>
+              </div>
+            )}
           </div>
           <form onSubmit={onSubmit} className="space-y-4">
             <div>

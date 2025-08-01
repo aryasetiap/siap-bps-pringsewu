@@ -70,6 +70,12 @@ export class Barang {
   foto: string;
 
   /**
+   * Kategori barang (opsional).
+   */
+  @Column({ nullable: true })
+  kategori: string;
+
+  /**
    * Tanggal dan waktu data barang dibuat (otomatis diisi oleh sistem).
    */
   @CreateDateColumn()

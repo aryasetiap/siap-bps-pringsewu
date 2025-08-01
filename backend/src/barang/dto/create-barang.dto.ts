@@ -61,4 +61,9 @@ export class CreateBarangDto {
   @IsOptional()
   @MaxLength(255)
   foto?: string;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(50)
+  kategori?: string;
 }

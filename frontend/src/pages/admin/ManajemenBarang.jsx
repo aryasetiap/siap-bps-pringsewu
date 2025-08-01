@@ -46,10 +46,23 @@ const ManajemenBarang = () => {
     setLoading(true);
     try {
       const res = await barangService.getAllBarang();
-      setBarang(res.data);
-      // Generate kategori unik dari data barang
+      const mapped = res.data.map((item) => ({
+        id: item.id,
+        kode: item.kode_barang,
+        nama: item.nama_barang,
+        kategori: item.kategori, // gunakan langsung dari backend
+        satuan: item.satuan,
+        stok: item.stok,
+        stokMinimum: item.ambang_batas_kritis,
+        deskripsi: item.deskripsi,
+        statusAktif: item.status_aktif,
+        foto: item.foto,
+        createdAt: item.created_at,
+        updatedAt: item.updated_at,
+      }));
+      setBarang(mapped);
       const kategoriSet = new Set(
-        res.data.map((item) => item.kategori).filter(Boolean)
+        mapped.map((item) => item.kategori).filter(Boolean)
       );
       setKategoriOptions(Array.from(kategoriSet));
     } catch (err) {
@@ -129,12 +142,7 @@ const ManajemenBarang = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     // Validasi manual
-    if (
-      !formData.kode ||
-      !formData.nama ||
-      !formData.kategori ||
-      !formData.satuan
-    ) {
+    if (!formData.kode || !formData.nama || !formData.satuan) {
       toast.error("Semua field wajib diisi!");
       return;
     }
@@ -150,16 +158,24 @@ const ManajemenBarang = () => {
     try {
       if (modalMode === "add") {
         await barangService.createBarang({
-          ...formData,
+          kode_barang: formData.kode,
+          nama_barang: formData.nama,
+          kategori: formData.kategori, // <-- pastikan ini ada!
+          satuan: formData.satuan,
           stok: parseInt(formData.stok),
-          stokMinimum: parseInt(formData.stokMinimum),
+          ambang_batas_kritis: parseInt(formData.stokMinimum),
+          deskripsi: formData.deskripsi,
         });
         toast.success("Barang berhasil ditambahkan!");
       } else {
         await barangService.updateBarang(selectedBarang.id, {
-          ...formData,
+          kode_barang: formData.kode,
+          nama_barang: formData.nama,
+          kategori: formData.kategori, // <-- pastikan ini ada!
+          satuan: formData.satuan,
           stok: parseInt(formData.stok),
-          stokMinimum: parseInt(formData.stokMinimum),
+          ambang_batas_kritis: parseInt(formData.stokMinimum),
+          deskripsi: formData.deskripsi,
         });
         toast.success("Barang berhasil diupdate!");
       }
@@ -183,10 +199,9 @@ const ManajemenBarang = () => {
     }
     setLoading(true);
     try {
-      await barangService.tambahStok(
-        selectedBarang.id,
-        parseInt(stokData.jumlahTambah)
-      );
+      await barangService.tambahStok(selectedBarang.id, {
+        jumlah: parseInt(stokData.jumlahTambah),
+      });
       toast.success("Stok barang berhasil ditambah!");
       setShowStokModal(false);
       fetchBarang();

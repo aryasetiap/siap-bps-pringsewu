@@ -84,124 +84,73 @@ async function seed(): Promise<void> {
   const savedUsers = await userRepo.save(userRepo.create(users));
 
   // 2. Barang
-  const barangList = [
-    {
-      kode_barang: 'BRG001',
-      nama_barang: 'Kertas A4 80gsm',
-      deskripsi: 'Kertas HVS ukuran A4, 80gsm, putih',
-      satuan: 'rim',
-      stok: 50,
-      ambang_batas_kritis: 10,
+  const kategoriList = ['ATK', 'Elektronik', 'Konsumsi', 'Dokumen', 'Lainnya'];
+  const barangList: Partial<Barang>[] = []; // <-- tambahkan tipe Partial<Barang>
+  for (let i = 1; i <= 50; i++) {
+    barangList.push({
+      kode_barang: `BRG${i.toString().padStart(3, '0')}`,
+      nama_barang: `Barang Contoh ${i}`,
+      deskripsi: `Deskripsi barang contoh ke-${i}`,
+      satuan: ['pcs', 'box', 'pak', 'rim', 'unit'][i % 5],
+      stok: Math.floor(Math.random() * 100),
+      ambang_batas_kritis: Math.floor(Math.random() * 10) + 1,
       status_aktif: true,
-    },
-    {
-      kode_barang: 'BRG002',
-      nama_barang: 'Spidol Whiteboard',
-      deskripsi: 'Spidol untuk papan tulis putih',
-      satuan: 'pcs',
-      stok: 20,
-      ambang_batas_kritis: 5,
-      status_aktif: true,
-    },
-    {
-      kode_barang: 'BRG003',
-      nama_barang: 'Toner Printer HP',
-      deskripsi: 'Toner printer HP LaserJet',
-      satuan: 'pcs',
-      stok: 5,
-      ambang_batas_kritis: 2,
-      status_aktif: true,
-    },
-    {
-      kode_barang: 'BRG004',
-      nama_barang: 'Map Folder Plastik',
-      deskripsi: 'Map plastik untuk dokumen',
-      satuan: 'box',
-      stok: 15,
-      ambang_batas_kritis: 3,
-      status_aktif: true,
-    },
-    {
-      kode_barang: 'KRITIS01',
-      nama_barang: 'Pulpen Biru',
-      deskripsi: 'Pulpen tinta biru',
-      satuan: 'box',
-      stok: 1,
-      ambang_batas_kritis: 5,
-      status_aktif: true,
-    },
-    {
-      kode_barang: 'BRG005',
-      nama_barang: 'Amplop Coklat',
-      deskripsi: 'Amplop coklat besar',
-      satuan: 'pak',
-      stok: 8,
-      ambang_batas_kritis: 3,
-      status_aktif: true,
-    },
-    {
-      kode_barang: 'BRG006',
-      nama_barang: 'Stempel',
-      deskripsi: 'Stempel kantor',
-      satuan: 'pcs',
-      stok: 2,
-      ambang_batas_kritis: 2,
-      status_aktif: true,
-    },
-  ];
+      foto: undefined,
+      kategori: kategoriList[i % kategoriList.length],
+    });
+  }
   const savedBarang = await barangRepo.save(barangRepo.create(barangList));
 
   // 3. Permintaan & Detail Permintaan
-  const bulanList = [
-    '2024-07',
-    '2024-08',
-    '2024-09',
-    '2024-10',
-    '2024-11',
-    '2024-12',
-    '2025-01',
-    '2025-02',
-    '2025-03',
-    '2025-04',
-    '2025-05',
-    '2025-06',
-  ];
-  let permintaanArr: Permintaan[] = [];
-  let detailArr: DetailPermintaan[] = [];
+  let permintaanArr: Partial<Permintaan>[] = []; // <-- tambahkan tipe Partial<Permintaan>
+  let detailArr: Partial<DetailPermintaan>[] = []; // <-- tambahkan tipe Partial<DetailPermintaan>
+  const statusArr: (
+    | 'Menunggu'
+    | 'Disetujui'
+    | 'Ditolak'
+    | 'Disetujui Sebagian'
+  )[] = ['Menunggu', 'Disetujui', 'Ditolak', 'Disetujui Sebagian'];
+  for (let i = 0; i < 100; i++) {
+    const user = savedUsers[i % savedUsers.length];
+    const status = statusArr[i % statusArr.length];
 
-  for (let i = 0; i < bulanList.length; i++) {
-    for (let j = 0; j < 2; j++) {
-      const user = savedUsers[(i + j) % savedUsers.length];
+    // Generate tanggal permintaan acak dalam 1 tahun terakhir (Agustus 2024 - Juli 2025)
+    const startDate = new Date('2024-08-01T00:00:00Z').getTime();
+    const endDate = new Date('2025-07-31T23:59:59Z').getTime();
+    const randomTime = startDate + Math.random() * (endDate - startDate);
+    const tanggal_permintaan = new Date(randomTime);
+
+    const permintaan: Partial<Permintaan> = {
+      id_user_pemohon: user.id,
+      tanggal_permintaan,
+      status,
+      catatan: status === 'Ditolak' ? 'Stok tidak cukup' : '',
+    };
+    permintaanArr.push(permintaan);
+  }
+  const savedPermintaan = await permintaanRepo.save(
+    permintaanRepo.create(permintaanArr),
+  );
+
+  // Detail permintaan (multi-item per permintaan)
+  for (let i = 0; i < savedPermintaan.length; i++) {
+    const permintaan = savedPermintaan[i];
+    const jumlahItem = Math.floor(Math.random() * 4) + 1;
+    for (let j = 0; j < jumlahItem; j++) {
       const barang = savedBarang[(i + j) % savedBarang.length];
-      const tanggal = `${bulanList[i]}-0${j + 1}T08:00:00.000Z`;
-
-      // Status harus sesuai enum di entity
-      const status =
-        j % 3 === 0 ? 'Menunggu' : j % 3 === 1 ? 'Disetujui' : 'Ditolak';
-
-      const permintaan = permintaanRepo.create({
-        id_user_pemohon: user.id,
-        tanggal_permintaan: tanggal,
-        status,
-        catatan: status === 'Ditolak' ? 'Stok tidak cukup' : '',
-      });
-      permintaanArr.push(permintaan);
+      const detail: Partial<DetailPermintaan> = {
+        id_permintaan: permintaan.id,
+        id_barang: barang.id,
+        jumlah_diminta: Math.floor(Math.random() * 5) + 1,
+        jumlah_disetujui:
+          permintaan.status === 'Disetujui'
+            ? Math.floor(Math.random() * 5) + 1
+            : 0,
+      };
+      detailArr.push(detail);
     }
   }
-  const savedPermintaan = await permintaanRepo.save(permintaanArr);
-
-  // Detail permintaan
-  for (let i = 0; i < savedPermintaan.length; i++) {
-    const barang = savedBarang[i % savedBarang.length];
-    const detail = detailPermintaanRepo.create({
-      id_permintaan: savedPermintaan[i].id,
-      id_barang: barang.id,
-      jumlah_diminta: 2 + (i % 2),
-      jumlah_disetujui: 0,
-    });
-    detailArr.push(detail);
-  }
-  await detailPermintaanRepo.save(detailArr);
+  await detailPermintaanRepo.save(detailPermintaanRepo.create(detailArr));
 
   await dataSource.destroy();
   console.log('Seeding selesai');
