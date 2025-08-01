@@ -162,7 +162,7 @@ export class PermintaanService {
       if (permintaan.status !== 'Menunggu')
         throw new BadRequestException('Permintaan sudah diverifikasi');
 
-      const allowed = ['setuju', 'setuju_sebagian', 'tolak'];
+      const allowed = ['setuju', 'sebagian', 'tolak'];
       if (!allowed.includes(dto.keputusan)) {
         throw new BadRequestException('Keputusan tidak valid');
       }
@@ -350,5 +350,31 @@ export class PermintaanService {
       pdfDoc.on('error', reject);
       pdfDoc.end();
     });
+  }
+
+  async getAllPermintaan({
+    status,
+    page = 1,
+    limit = 20,
+  }: {
+    status?: string;
+    page?: number;
+    limit?: number;
+  }) {
+    const qb = this.permintaanRepo
+      .createQueryBuilder('permintaan')
+      .leftJoinAndSelect('permintaan.details', 'details')
+      .leftJoinAndSelect('details.barang', 'barang')
+      .leftJoinAndSelect('permintaan.pemohon', 'pemohon')
+      .orderBy('permintaan.tanggal_permintaan', 'DESC');
+
+    if (status) {
+      qb.andWhere('permintaan.status = :status', { status });
+    }
+
+    qb.skip((page - 1) * limit).take(limit);
+
+    const [data, total] = await qb.getManyAndCount();
+    return { data, total, page, limit };
   }
 }

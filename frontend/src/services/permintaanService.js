@@ -29,3 +29,7 @@ export const getTrenPermintaanBulanan = () =>
 // 8. Cetak Bukti Permintaan ke PDF (pegawai/admin)
 export const getPermintaanPDF = (id, config = {}) =>
   api.get(`${API_URL}/${id}/pdf`, { responseType: "blob", ...config });
+
+// 9. Mendapatkan Semua Permintaan (admin)
+export const getAllPermintaan = (params = {}) =>
+  api.get("/permintaan/all", { params });

@@ -9,6 +9,8 @@ import {
   ForbiddenException,
   Patch,
   Res,
+  Query,
+  BadRequestException,
 } from '@nestjs/common';
 import { PermintaanService } from './permintaan.service';
 import { CreatePermintaanDto } from './dto/create-permintaan.dto';
@@ -60,27 +62,6 @@ export class PermintaanController {
       throw new ForbiddenException('Hanya admin yang dapat mengakses');
     }
     return this.permintaanService.getPermintaanMenunggu();
-  }
-
-  /**
-   * Mengambil detail permintaan berdasarkan ID.
-   * Hanya dapat diakses oleh pemilik permintaan (pegawai) atau admin.
-   * @param req Request yang berisi informasi user login.
-   * @param id ID permintaan.
-   * @returns Data permintaan yang diminta.
-   * @throws ForbiddenException Jika user tidak berhak mengakses data.
-   */
-  @UseGuards(JwtAuthGuard)
-  @Get(':id')
-  async findOne(@Req() req, @Param('id') id: number) {
-    const permintaan = await this.permintaanService.findOneById(Number(id));
-    if (
-      req.user.role === 'pegawai' &&
-      permintaan.id_user_pemohon !== req.user.userId
-    ) {
-      throw new ForbiddenException('Akses ditolak');
-    }
-    return permintaan;
   }
 
   /**
@@ -147,5 +128,40 @@ export class PermintaanController {
       'Content-Disposition': `attachment; filename="bukti_permintaan_${id}.pdf"`,
     });
     res.end(pdfBuffer);
+  }
+
+  /**
+   * Mengambil semua permintaan dengan opsi filter dan paginasi (hanya untuk admin).
+   * @param status Status permintaan yang akan difilter.
+   * @param page Halaman yang akan diambil (default: 1).
+   * @param limit Jumlah data per halaman (default: 20).
+   * @returns Daftar semua permintaan yang sesuai dengan filter.
+   */
+  @UseGuards(JwtAuthGuard)
+  @Roles('admin')
+  @Get('all')
+  async getAllPermintaan(
+    @Query('status') status?: string,
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 20,
+  ) {
+    return this.permintaanService.getAllPermintaan({ status, page, limit });
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get(':id')
+  async findOne(@Req() req, @Param('id') id: string) {
+    const idNum = Number(id);
+    if (!idNum || isNaN(idNum)) {
+      throw new BadRequestException('ID permintaan tidak valid');
+    }
+    const permintaan = await this.permintaanService.findOneById(idNum);
+    if (
+      req.user.role === 'pegawai' &&
+      permintaan.id_user_pemohon !== req.user.userId
+    ) {
+      throw new ForbiddenException('Akses ditolak');
+    }
+    return permintaan;
   }
 }

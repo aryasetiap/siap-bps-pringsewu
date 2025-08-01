@@ -19,21 +19,21 @@ api.interceptors.request.use(
 );
 
 // // Interceptor: Global error handling (contoh: token expired)
-// api.interceptors.response.use(
-//   (response) => response,
-//   (error) => {
-//     if (error.response) {
-//       // Jika 401/403, redirect ke login atau tampilkan notifikasi
-//       if (error.response.status === 401 || error.response.status === 403) {
-//         localStorage.removeItem("authToken"); // tambahkan baris ini
-//         localStorage.removeItem("token"); // opsional, jika pernah pakai key ini
-//         localStorage.removeItem("userRole");
-//         localStorage.removeItem("username");
-//         window.location.href = "/login";
-//       }
-//     }
-//     return Promise.reject(error);
-//   }
-// );
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response) {
+      // Jika 401/403, redirect ke login atau tampilkan notifikasi
+      if (error.response.status === 401 || error.response.status === 403) {
+        localStorage.removeItem("authToken");
+        localStorage.removeItem("token");
+        localStorage.removeItem("userRole");
+        localStorage.removeItem("username");
+        window.location.href = "/login";
+      }
+    }
+    return Promise.reject(error);
+  }
+);
 
 export default api;
