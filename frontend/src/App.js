@@ -20,6 +20,7 @@ import CetakBuktiPermintaan from "./pages/admin/CetakBuktiPermintaan";
 import ProfilePage from "./pages/ProfilePage";
 import Error404 from "./pages/Error404";
 import Forbidden from "./pages/Forbidden";
+import { ProfileProvider } from "./context/ProfileContext";
 
 function App() {
   const isAuthenticated = () => {
@@ -41,118 +42,120 @@ function App() {
   };
 
   return (
-    <Router>
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
+    <ProfileProvider>
+      <Router>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
 
-        {/* Rute untuk Admin */}
-        <Route
-          path="/admin/dashboard"
-          element={
-            <PrivateRoute roles={["admin"]}>
-              <DashboardLayout>
-                <AdminDashboard />
-              </DashboardLayout>
-            </PrivateRoute>
-          }
-        />
+          {/* Rute untuk Admin */}
+          <Route
+            path="/admin/dashboard"
+            element={
+              <PrivateRoute roles={["admin"]}>
+                <DashboardLayout>
+                  <AdminDashboard />
+                </DashboardLayout>
+              </PrivateRoute>
+            }
+          />
 
-        <Route
-          path="/admin/barang"
-          element={
-            <PrivateRoute roles={["admin"]}>
-              <DashboardLayout>
-                <ManajemenBarang />
-              </DashboardLayout>
-            </PrivateRoute>
-          }
-        />
+          <Route
+            path="/admin/barang"
+            element={
+              <PrivateRoute roles={["admin"]}>
+                <DashboardLayout>
+                  <ManajemenBarang />
+                </DashboardLayout>
+              </PrivateRoute>
+            }
+          />
 
-        <Route
-          path="/admin/pengguna"
-          element={
-            <PrivateRoute roles={["admin"]}>
-              <DashboardLayout>
-                <UserManagement />
-              </DashboardLayout>
-            </PrivateRoute>
-          }
-        />
+          <Route
+            path="/admin/pengguna"
+            element={
+              <PrivateRoute roles={["admin"]}>
+                <DashboardLayout>
+                  <UserManagement />
+                </DashboardLayout>
+              </PrivateRoute>
+            }
+          />
 
-        <Route
-          path="/admin/verifikasi"
-          element={
-            <PrivateRoute roles={["admin"]}>
-              <DashboardLayout>
-                <RequestVerification />
-              </DashboardLayout>
-            </PrivateRoute>
-          }
-        />
+          <Route
+            path="/admin/verifikasi"
+            element={
+              <PrivateRoute roles={["admin"]}>
+                <DashboardLayout>
+                  <RequestVerification />
+                </DashboardLayout>
+              </PrivateRoute>
+            }
+          />
 
-        <Route
-          path="/admin/laporan"
-          element={
-            <PrivateRoute roles={["admin"]}>
-              <DashboardLayout>
-                <LaporanPeriodik />
-              </DashboardLayout>
-            </PrivateRoute>
-          }
-        />
+          <Route
+            path="/admin/laporan"
+            element={
+              <PrivateRoute roles={["admin"]}>
+                <DashboardLayout>
+                  <LaporanPeriodik />
+                </DashboardLayout>
+              </PrivateRoute>
+            }
+          />
 
-        <Route
-          path="/admin/permintaan/:id/cetak"
-          element={
-            <PrivateRoute roles={["admin"]}>
-              <DashboardLayout>
-                <CetakBuktiPermintaan />
-              </DashboardLayout>
-            </PrivateRoute>
-          }
-        />
+          <Route
+            path="/admin/permintaan/:id/cetak"
+            element={
+              <PrivateRoute roles={["admin"]}>
+                <DashboardLayout>
+                  <CetakBuktiPermintaan />
+                </DashboardLayout>
+              </PrivateRoute>
+            }
+          />
 
-        {/* Rute untuk Pegawai */}
-        <Route
-          path="/pegawai/permintaan"
-          element={
-            <PrivateRoute roles={["pegawai"]}>
-              <DashboardLayout>
-                <EmployeeRequestPage />{" "}
-                {/* Ganti dengan komponen yang sesuai untuk pegawai */}
-              </DashboardLayout>
-            </PrivateRoute>
-          }
-        />
+          {/* Rute untuk Pegawai */}
+          <Route
+            path="/pegawai/permintaan"
+            element={
+              <PrivateRoute roles={["pegawai"]}>
+                <DashboardLayout>
+                  <EmployeeRequestPage />{" "}
+                  {/* Ganti dengan komponen yang sesuai untuk pegawai */}
+                </DashboardLayout>
+              </PrivateRoute>
+            }
+          />
 
-        <Route
-          path="/pegawai/riwayat"
-          element={
-            <PrivateRoute roles={["pegawai"]}>
-              <DashboardLayout>
-                <EmployeeHistory />
-              </DashboardLayout>
-            </PrivateRoute>
-          }
-        />
+          <Route
+            path="/pegawai/riwayat"
+            element={
+              <PrivateRoute roles={["pegawai"]}>
+                <DashboardLayout>
+                  <EmployeeHistory />
+                </DashboardLayout>
+              </PrivateRoute>
+            }
+          />
 
-        <Route
-          path="/profile"
-          element={
-            <PrivateRoute roles={["admin", "pegawai"]}>
-              <DashboardLayout>
-                <ProfilePage />
-              </DashboardLayout>
-            </PrivateRoute>
-          }
-        />
+          <Route
+            path="/profile"
+            element={
+              <PrivateRoute roles={["admin", "pegawai"]}>
+                <DashboardLayout>
+                  <ProfilePage />
+                </DashboardLayout>
+              </PrivateRoute>
+            }
+          />
 
-        <Route path="/forbidden" element={<Forbidden />} />
-        <Route path="*" element={<Error404 />} />
-        <Route path="/" element={<Navigate to="/login" replace />} />
-      </Routes>
-      <ToastContainer position="top-right" autoClose={3000} />
-    </Router>
+          <Route path="/forbidden" element={<Forbidden />} />
+          <Route path="*" element={<Error404 />} />
+          <Route path="/" element={<Navigate to="/login" replace />} />
+        </Routes>
+        <ToastContainer position="top-right" autoClose={3000} />
+      </Router>
+    </ProfileProvider>
   );
 }
 

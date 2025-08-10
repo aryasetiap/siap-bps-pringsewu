@@ -1,13 +1,16 @@
-import React from "react";
-import { useNavigate, Link } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Menu } from "@headlessui/react";
 import {
   Bars3Icon,
-  ChevronDownIcon,
   UserCircleIcon,
-  ArrowRightEndOnRectangleIcon,
+  ChevronDownIcon,
+  ArrowLeftOnRectangleIcon,
 } from "@heroicons/react/24/outline";
+import * as userService from "../services/userService";
+import { useProfile } from "../context/ProfileContext";
 
+// Fungsi untuk memformat className secara kondisional
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
 }
@@ -18,10 +21,33 @@ function Headbar({
   isSidebarCollapsed,
 }) {
   const navigate = useNavigate();
+  const [userPhoto, setUserPhoto] = useState(null);
 
-  // Ambil nama dan role user dari localStorage (atau context/auth jika sudah ada)
+  // Using constants instead of state since we don't update them in this component
   const username = localStorage.getItem("username") || "Pengguna";
   const userRole = localStorage.getItem("userRole") || "Tamu";
+
+  // Gunakan profile atau hapus deklarasinya
+  const { profile } = useProfile();
+
+  // Gunakan profile untuk mendapatkan foto (lebih baik daripada API call lagi)
+  useEffect(() => {
+    if (profile && profile.foto) {
+      setUserPhoto(profile.foto);
+    } else {
+      const fetchUserPhoto = async () => {
+        try {
+          const response = await userService.getProfile();
+          if (response.data && response.data.foto) {
+            setUserPhoto(response.data.foto);
+          }
+        } catch (error) {
+          console.error("Error fetching user photo:", error);
+        }
+      };
+      fetchUserPhoto();
+    }
+  }, [profile]); // Tambahkan profile sebagai dependency
 
   const handleLogout = () => {
     localStorage.removeItem("authToken");
@@ -62,11 +88,19 @@ function Headbar({
       <div className="flex items-center space-x-4">
         <Menu as="div" className="relative inline-block text-left">
           <div>
-            <Menu.Button className="inline-flex justify-center w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 focus:ring-blue-500">
-              <UserCircleIcon
-                className="h-5 w-5 mr-2 -ml-1 text-gray-400"
-                aria-hidden="true"
-              />
+            <Menu.Button className="inline-flex justify-center items-center w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 focus:ring-blue-500">
+              {userPhoto ? (
+                <img
+                  src={userPhoto}
+                  alt={username}
+                  className="h-6 w-6 rounded-full object-cover mr-2 -ml-1"
+                />
+              ) : (
+                <UserCircleIcon
+                  className="h-5 w-5 mr-2 -ml-1 text-gray-400"
+                  aria-hidden="true"
+                />
+              )}
               <span className="capitalize">
                 {username} ({userRole})
               </span>
@@ -105,11 +139,11 @@ function Headbar({
                       "block w-full text-left px-4 py-2 text-sm"
                     )}
                   >
-                    <ArrowRightEndOnRectangleIcon
+                    <ArrowLeftOnRectangleIcon
                       className="inline-block h-5 w-5 mr-2 -mt-0.5"
                       aria-hidden="true"
                     />
-                    Logout
+                    Keluar
                   </button>
                 )}
               </Menu.Item>
