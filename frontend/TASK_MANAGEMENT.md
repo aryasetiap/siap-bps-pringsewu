@@ -121,7 +121,7 @@ Dokumentasi tahapan kerja detail untuk monitoring dan catatan progres proyek.
   - [x] Refactor `LaporanPeriodik.jsx` untuk ambil dan ekspor laporan via API
   - [x] Refactor `EmployeeRequest.jsx` untuk submit permintaan via API
   - [x] Refactor `EmployeeHistory.jsx` untuk ambil riwayat permintaan via API
-  - [ ] Refactor `ProfilePage.jsx` untuk update profil via API
+  - [x] Refactor `ProfilePage.jsx` untuk update profil via API
   - [ ] Refactor `LoginPage.jsx` untuk login via API & error handling
   - [ ] Refactor `CetakBuktiPermintaan.jsx` untuk ambil detail & cetak PDF via API
   - [ ] Review `Error404.jsx` dan `Forbidden.jsx` untuk konsistensi akses/route
