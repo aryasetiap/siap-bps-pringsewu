@@ -8,6 +8,8 @@ import {
   ArrowPathIcon,
   ExclamationCircleIcon,
   ArrowLeftIcon,
+  PrinterIcon,
+  DocumentArrowDownIcon,
 } from "@heroicons/react/24/outline";
 
 const CetakBuktiPermintaan = () => {
@@ -56,11 +58,11 @@ const CetakBuktiPermintaan = () => {
     } finally {
       setLoading(false);
     }
-  }, [id]); // Add id as a dependency
+  }, [id]);
 
   useEffect(() => {
     fetchPermintaan();
-  }, [fetchPermintaan]); // Now include fetchPermintaan in the dependency array
+  }, [fetchPermintaan]);
 
   // Format status untuk tampilan yang lebih baik
   const formatStatus = (status) => {
@@ -92,7 +94,9 @@ const CetakBuktiPermintaan = () => {
       link.href = url;
       link.setAttribute(
         "download",
-        `Bukti_Permintaan_${id}_${new Date().toISOString().split("T")[0]}.pdf`
+        `Bukti_Permintaan_${permintaan?.nomorPermintaan || id}_${
+          new Date().toISOString().split("T")[0]
+        }.pdf`
       );
       document.body.appendChild(link);
       link.click();
@@ -118,32 +122,41 @@ const CetakBuktiPermintaan = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <DocumentIcon className="w-6 h-6 text-blue-600" />
-          <h1 className="text-2xl font-bold text-gray-800">
-            Cetak Bukti Permintaan
-          </h1>
+      <div className="mb-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <div className="bg-blue-100 text-blue-600 rounded-full p-3 shadow-md">
+              <DocumentIcon className="w-6 h-6" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">
+                Cetak Bukti Permintaan
+              </h1>
+              <p className="text-gray-600 mt-1">
+                Lihat dan unduh bukti permintaan barang dalam format PDF.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={handleBack}
+            className="flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 shadow-sm transition-colors"
+          >
+            <ArrowLeftIcon className="w-5 h-5 mr-2" />
+            Kembali
+          </button>
         </div>
-        <button
-          onClick={handleBack}
-          className="flex items-center px-4 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-        >
-          <ArrowLeftIcon className="w-4 h-4 mr-2" />
-          Kembali
-        </button>
       </div>
 
       {/* Loading State */}
       {loading ? (
-        <div className="flex flex-col items-center justify-center p-12 bg-white rounded-xl shadow-sm border border-gray-100">
+        <div className="flex flex-col items-center justify-center p-12 bg-white rounded-xl shadow-lg border border-gray-100 animate-fadeIn">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
           <p className="text-gray-600 font-medium">Memuat data permintaan...</p>
         </div>
       ) : error ? (
-        <div className="flex flex-col items-center justify-center p-12 bg-white rounded-xl shadow-sm border border-gray-100">
+        <div className="flex flex-col items-center justify-center p-12 bg-white rounded-xl shadow-lg border border-gray-100 animate-fadeIn">
           <div className="bg-red-100 p-3 rounded-full mb-4">
             <ExclamationCircleIcon className="w-8 h-8 text-red-600" />
           </div>
@@ -153,7 +166,7 @@ const CetakBuktiPermintaan = () => {
           <p className="text-gray-500 text-center mb-6 max-w-md">{error}</p>
           <button
             onClick={fetchPermintaan}
-            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition shadow-sm"
+            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition shadow-md"
           >
             <ArrowPathIcon className="w-4 h-4 mr-2" />
             Coba Lagi
@@ -162,24 +175,19 @@ const CetakBuktiPermintaan = () => {
       ) : permintaan ? (
         <div className="space-y-6">
           {/* Preview Bukti Permintaan */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="border-b border-gray-200 bg-gray-50 px-6 py-4">
-              <h2 className="text-lg font-medium text-gray-900">
-                Bukti Permintaan Barang
-              </h2>
-            </div>
-            <div className="p-6">
-              <BuktiPermintaanPreview permintaan={permintaan} />
-            </div>
+          <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+            <BuktiPermintaanPreview permintaan={permintaan} />
           </div>
 
-          {/* Action Button */}
-          <div className="flex justify-center">
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row justify-center gap-4">
             <button
               onClick={handleCetakPDF}
               disabled={pdfLoading}
-              className={`flex items-center px-6 py-3 bg-green-600 text-white font-medium rounded-lg shadow-sm hover:bg-green-700 transition ${
-                pdfLoading ? "opacity-70 cursor-not-allowed" : ""
+              className={`flex-1 sm:max-w-xs flex items-center justify-center px-6 py-3 bg-green-600 text-white font-medium rounded-xl shadow-md hover:bg-green-700 transition ${
+                pdfLoading
+                  ? "opacity-70 cursor-not-allowed"
+                  : "transform hover:-translate-y-0.5"
               }`}
             >
               {pdfLoading ? (
@@ -208,15 +216,22 @@ const CetakBuktiPermintaan = () => {
                 </>
               ) : (
                 <>
-                  <DocumentIcon className="w-5 h-5 mr-2" />
-                  Cetak PDF
+                  <DocumentArrowDownIcon className="w-5 h-5 mr-2" />
+                  Unduh PDF
                 </>
               )}
+            </button>
+            <button
+              onClick={() => window.print()}
+              className="flex-1 sm:max-w-xs flex items-center justify-center px-6 py-3 bg-blue-600 text-white font-medium rounded-xl shadow-md hover:bg-blue-700 transition transform hover:-translate-y-0.5"
+            >
+              <PrinterIcon className="w-5 h-5 mr-2" />
+              Print Halaman
             </button>
           </div>
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center p-12 bg-white rounded-xl shadow-sm border border-gray-100">
+        <div className="flex flex-col items-center justify-center p-12 bg-white rounded-xl shadow-lg border border-gray-100 animate-fadeIn">
           <div className="bg-gray-100 p-3 rounded-full mb-4">
             <ExclamationCircleIcon className="w-8 h-8 text-gray-600" />
           </div>
@@ -225,7 +240,7 @@ const CetakBuktiPermintaan = () => {
           </h3>
           <button
             onClick={handleBack}
-            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition shadow-sm"
+            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition shadow-md"
           >
             <ArrowLeftIcon className="w-4 h-4 mr-2" />
             Kembali
