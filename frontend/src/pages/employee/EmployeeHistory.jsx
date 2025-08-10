@@ -3,10 +3,12 @@ import { toast } from "react-toastify";
 import {
   ClockIcon,
   DocumentTextIcon,
-  FunnelIcon, // Changed from FilterIcon
-  ArrowPathIcon, // Changed from RefreshIcon
-  MagnifyingGlassIcon, // Changed from SearchIcon
-} from "@heroicons/react/24/outline"; // Note the '24/outline' instead of just 'outline'
+  FunnelIcon,
+  ArrowPathIcon,
+  MagnifyingGlassIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+} from "@heroicons/react/24/outline";
 import * as permintaanService from "../../services/permintaanService";
 import EmployeeRequestHistoryTable from "../../components/employee/EmployeeRequestHistoryTable";
 import EmployeeRequestDetailModal from "../../components/employee/EmployeeRequestDetailModal";
@@ -20,7 +22,7 @@ const statusOptions = [
 ];
 
 const EmployeeHistory = () => {
-  // State management
+  // State variables remain unchanged
   const [permintaan, setPermintaan] = useState([]);
   const [filtered, setFiltered] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -33,7 +35,7 @@ const EmployeeHistory = () => {
   const [limit, setLimit] = useState(10);
   const [pdfLoading, setPdfLoading] = useState(false);
 
-  // Fungsi untuk mengambil data dari API dengan pagination
+  // Existing callback and functions remain unchanged
   const fetchData = useCallback(
     async (page = 1) => {
       setLoading(true);
@@ -181,85 +183,114 @@ const EmployeeHistory = () => {
   };
 
   return (
-    <div className="p-8">
-      <div className="flex flex-wrap items-center justify-between mb-6">
-        <div className="flex items-center space-x-3 mb-3 lg:mb-0">
-          <ClockIcon className="h-8 w-8 text-blue-600" />
-          <h1 className="text-2xl font-bold text-gray-900">
-            Riwayat Permintaan Barang
-          </h1>
-        </div>
-        <button
-          onClick={handleRefresh}
-          className="flex items-center px-3 py-2 bg-white border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none"
-        >
-          <ArrowPathIcon className="h-4 w-4 mr-2" />
-          Refresh Data
-        </button>
-      </div>
-
-      {/* Filter and search */}
-      <div className="flex flex-wrap items-center gap-3 mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
-        <div className="relative flex-grow max-w-xs">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <MagnifyingGlassIcon className="h-4 w-4 text-gray-400" />
+    <div className="p-6">
+      {/* Header Section with Icon */}
+      <div className="mb-6">
+        <div className="flex items-center space-x-4">
+          <div className="bg-blue-100 text-blue-600 rounded-full p-3 shadow">
+            <ClockIcon className="w-6 h-6" />
           </div>
-          <input
-            type="text"
-            placeholder="Cari nomor atau nama barang..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm"
-          />
-        </div>
-
-        <div className="flex items-center">
-          <FunnelIcon className="h-4 w-4 mr-2 text-gray-400" />
-          <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="block w-full pl-3 pr-10 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm"
-          >
-            {statusOptions.map((s) => (
-              <option key={s.value} value={s.value}>
-                {s.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Add limit selector UI */}
-        <div className="flex items-center ml-2">
-          <span className="text-sm text-gray-500 mr-2">Tampilkan:</span>
-          <select
-            value={limit}
-            onChange={(e) => {
-              setLimit(Number(e.target.value));
-              fetchData(1); // Reset to first page when changing limit
-            }}
-            className="border border-gray-300 rounded-md px-2 py-1 text-sm"
-          >
-            <option value={5}>5</option>
-            <option value={10}>10</option>
-            <option value={25}>25</option>
-            <option value={50}>50</option>
-          </select>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">
+              Riwayat Permintaan
+            </h1>
+            <p className="text-gray-600 mt-1">
+              Lihat status dan detail permintaan barang yang pernah Anda ajukan.
+              {filtered.length > 0 && (
+                <span className="ml-2 bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs font-medium">
+                  {filtered.length} Permintaan
+                </span>
+              )}
+            </p>
+          </div>
         </div>
       </div>
 
+      {/* Filter and Controls Panel */}
+      <div className="bg-white rounded-xl shadow-lg mb-6 border border-gray-100 p-4">
+        <div className="flex flex-wrap items-center gap-4">
+          {/* Search Input */}
+          <div className="relative flex-grow max-w-md">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
+            </div>
+            <input
+              type="text"
+              placeholder="Cari nomor atau nama barang..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition-all text-sm"
+            />
+          </div>
+
+          {/* Status Filter */}
+          <div className="flex items-center">
+            <FunnelIcon className="h-5 w-5 text-gray-400 mr-2" />
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition-all text-sm"
+            >
+              {statusOptions.map((s) => (
+                <option key={s.value} value={s.value}>
+                  {s.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Items Per Page */}
+          <div className="flex items-center">
+            <span className="text-sm text-gray-600 mr-2">Tampilkan:</span>
+            <select
+              value={limit}
+              onChange={(e) => {
+                setLimit(Number(e.target.value));
+                fetchData(1);
+              }}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition-all text-sm"
+            >
+              <option value={5}>5</option>
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+            </select>
+          </div>
+
+          {/* Refresh Button */}
+          <button
+            onClick={handleRefresh}
+            className="ml-auto flex items-center px-3 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition text-sm font-medium text-gray-700 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+          >
+            <ArrowPathIcon className="h-4 w-4 mr-2" />
+            Refresh
+          </button>
+        </div>
+      </div>
+
+      {/* Content Section */}
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-12 bg-white rounded-lg shadow">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-3"></div>
-          <p className="text-gray-500">Memuat data riwayat permintaan...</p>
+        <div className="bg-white rounded-xl shadow-lg p-12 text-center border border-gray-100">
+          <div className="flex justify-center mb-4">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+          </div>
+          <p className="text-gray-500 font-medium">
+            Memuat data riwayat permintaan...
+          </p>
         </div>
       ) : permintaan.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-12 bg-white rounded-lg shadow">
-          <DocumentTextIcon className="h-16 w-16 text-gray-300 mb-3" />
-          <h3 className="text-lg font-medium text-gray-900 mb-1">
+        <div className="bg-white rounded-xl shadow-lg p-12 text-center border border-gray-100">
+          <div className="flex justify-center mb-4">
+            <div className="bg-gray-100 p-4 rounded-full">
+              <DocumentTextIcon className="h-16 w-16 text-gray-400" />
+            </div>
+          </div>
+          <h3 className="text-xl font-bold text-gray-800 mb-2">
             Belum Ada Riwayat Permintaan
           </h3>
-          <p className="text-gray-500">
-            Permintaan yang Anda ajukan akan muncul di sini
+          <p className="text-gray-500 max-w-md mx-auto">
+            Permintaan barang yang Anda ajukan akan muncul di sini. Mulai ajukan
+            permintaan dari halaman Pengajuan Permintaan.
           </p>
         </div>
       ) : (
@@ -276,46 +307,81 @@ const EmployeeHistory = () => {
             formatDate={formatDate}
           />
 
-          {/* Pagination */}
+          {/* Improved Pagination */}
           {totalPages > 1 && (
-            <div className="flex justify-center mt-4">
-              <nav className="flex items-center space-x-1">
+            <div className="mt-6 flex justify-center">
+              <nav
+                className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
+                aria-label="Pagination"
+              >
                 <button
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage === 1}
-                  className={`px-3 py-1 rounded-md ${
+                  className={`relative inline-flex items-center px-2 py-2 rounded-l-md border ${
                     currentPage === 1
-                      ? "text-gray-400 cursor-not-allowed"
-                      : "text-gray-700 hover:bg-gray-100"
+                      ? "border-gray-300 bg-gray-100 text-gray-400 cursor-not-allowed"
+                      : "border-gray-300 bg-white text-gray-500 hover:bg-gray-50"
                   }`}
                 >
-                  &laquo;
+                  <span className="sr-only">Previous</span>
+                  <ChevronLeftIcon className="h-5 w-5" aria-hidden="true" />
                 </button>
 
-                {[...Array(totalPages)].map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => handlePageChange(i + 1)}
-                    className={`px-3 py-1 rounded-md ${
-                      currentPage === i + 1
-                        ? "bg-blue-600 text-white"
-                        : "text-gray-700 hover:bg-gray-100"
-                    }`}
-                  >
-                    {i + 1}
-                  </button>
-                ))}
+                {/* Show first page, current range, and last page with ellipsis */}
+                {Array.from({ length: totalPages })
+                  .map((_, i) => {
+                    const page = i + 1;
+                    // Always show first and last page
+                    // For other pages, show only if they're within 1 of current page
+                    const show =
+                      page === 1 ||
+                      page === totalPages ||
+                      (page >= currentPage - 1 && page <= currentPage + 1);
+
+                    // Show ellipsis for gaps
+                    if (!show) {
+                      // Show ellipsis only once in each gap
+                      if (page === 2 || page === totalPages - 1) {
+                        return (
+                          <span
+                            key={`ellipsis-${page}`}
+                            className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-gray-700"
+                          >
+                            …
+                          </span>
+                        );
+                      }
+                      return null;
+                    }
+
+                    return (
+                      <button
+                        key={page}
+                        onClick={() => handlePageChange(page)}
+                        className={`relative inline-flex items-center px-4 py-2 border ${
+                          currentPage === page
+                            ? "bg-blue-600 text-white font-medium border-blue-600 z-10"
+                            : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+                        }`}
+                        aria-current={currentPage === page ? "page" : undefined}
+                      >
+                        {page}
+                      </button>
+                    );
+                  })
+                  .filter(Boolean)}
 
                 <button
                   onClick={() => handlePageChange(currentPage + 1)}
                   disabled={currentPage === totalPages}
-                  className={`px-3 py-1 rounded-md ${
+                  className={`relative inline-flex items-center px-2 py-2 rounded-r-md border ${
                     currentPage === totalPages
-                      ? "text-gray-400 cursor-not-allowed"
-                      : "text-gray-700 hover:bg-gray-100"
+                      ? "border-gray-300 bg-gray-100 text-gray-400 cursor-not-allowed"
+                      : "border-gray-300 bg-white text-gray-500 hover:bg-gray-50"
                   }`}
                 >
-                  &raquo;
+                  <span className="sr-only">Next</span>
+                  <ChevronRightIcon className="h-5 w-5" aria-hidden="true" />
                 </button>
               </nav>
             </div>
