@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -12,7 +12,7 @@ import EmployeeRequestPage from "./pages/employee/EmployeeRequest";
 import DashboardLayout from "./components/DashboardLayout";
 import UserManagement from "./pages/admin/UserManagement";
 import RequestVerification from "./pages/admin/RequestVerification";
-import { ToastContainer } from "react-toastify";
+import { ToastContainer, toast } from "react-toastify"; // Add toast import here
 import "react-toastify/dist/ReactToastify.css";
 import EmployeeHistory from "./pages/employee/EmployeeHistory";
 import LaporanPeriodik from "./pages/admin/LaporanPeriodik";
@@ -23,21 +23,69 @@ import Forbidden from "./pages/Forbidden";
 import { ProfileProvider } from "./context/ProfileContext";
 
 function App() {
-  const isAuthenticated = () => {
-    return localStorage.getItem("authToken") ? true : false;
-  };
+  // Remove these unused functions
+  // const isAuthenticated = () => {
+  //   return localStorage.getItem("authToken") ? true : false;
+  // };
+  
+  // const getUserRole = () => {
+  //   return localStorage.getItem("userRole");
+  // };
 
-  const getUserRole = () => {
-    return localStorage.getItem("userRole");
-  };
-
+  // Pastikan PrivateRoute menangani case expired token dengan benar
   const PrivateRoute = ({ children, roles }) => {
-    if (!isAuthenticated()) {
+    const [isAuthenticated, setIsAuthenticated] = useState(null);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+      const checkAuth = async () => {
+        const token = localStorage.getItem("authToken");
+        const userRole = localStorage.getItem("userRole");
+
+        if (!token) {
+          setIsAuthenticated(false);
+          setIsLoading(false);
+          return;
+        }
+
+        try {
+          // Verifikasi token di sini jika diperlukan
+          // await authService.verifyToken();
+
+          setIsAuthenticated(true);
+
+          // Cek role jika diperlukan
+          if (roles && !roles.includes(userRole)) {
+            toast.error("Anda tidak memiliki akses ke halaman ini");
+            setIsAuthenticated(false);
+          }
+        } catch (error) {
+          localStorage.removeItem("authToken");
+          localStorage.removeItem("userRole");
+          localStorage.removeItem("username");
+          setIsAuthenticated(false);
+          toast.error("Sesi login telah berakhir, silakan login kembali");
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      checkAuth();
+    }, [roles]);
+
+    if (isLoading) {
+      // Tampilkan loading spinner
+      return (
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
+      );
+    }
+
+    if (!isAuthenticated) {
       return <Navigate to="/login" replace />;
     }
-    if (roles && !roles.includes(getUserRole())) {
-      return <Navigate to="/forbidden" replace />; // Atau ke halaman default role mereka
-    }
+
     return children;
   };
 

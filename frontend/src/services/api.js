@@ -1,12 +1,16 @@
 import axios from "axios";
+import { toast } from "react-toastify";
 
-// Ganti baseURL sesuai environment (bisa pakai .env)
+// Buat axios instance dengan baseURL yang sesuai
 const api = axios.create({
   baseURL: "/api", // proxy ke http://localhost:3001/api
   timeout: 15000,
+  headers: {
+    "Content-Type": "application/json",
+  },
 });
 
-// Interceptor: Tambahkan Authorization header jika ada token
+// Request interceptor: tambahkan token ke header
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("authToken");
@@ -15,23 +19,49 @@ api.interceptors.request.use(
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => {
+    return Promise.reject(error);
+  }
 );
 
-// // Interceptor: Global error handling (contoh: token expired)
+// Response interceptor: global error handling
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Handle token expiration atau unauthorized
     if (error.response) {
-      // Jika 401/403, redirect ke login atau tampilkan notifikasi
-      if (error.response.status === 401 || error.response.status === 403) {
+      if (
+        error.response.status === 401 &&
+        window.location.pathname !== "/login"
+      ) {
+        // Clear local storage
         localStorage.removeItem("authToken");
-        localStorage.removeItem("token");
         localStorage.removeItem("userRole");
         localStorage.removeItem("username");
+
+        // Notify user
+        toast.error("Sesi login telah berakhir, silakan login kembali");
+
+        // Redirect ke halaman login
         window.location.href = "/login";
+      } else if (error.response.status === 403) {
+        toast.error("Anda tidak memiliki akses ke resource ini");
+
+        // Optional: redirect ke Forbidden page
+        if (window.location.pathname !== "/forbidden") {
+          window.location.href = "/forbidden";
+        }
+      } else if (error.response.status === 500) {
+        toast.error("Terjadi kesalahan pada server");
       }
+    } else if (error.request) {
+      // Request dilakukan tapi tidak ada response
+      toast.error("Tidak dapat terhubung ke server. Periksa koneksi Anda");
+    } else {
+      // Error lainnya
+      toast.error("Terjadi kesalahan saat memproses permintaan");
     }
+
     return Promise.reject(error);
   }
 );
