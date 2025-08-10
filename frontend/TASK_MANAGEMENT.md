@@ -109,26 +109,18 @@ Dokumentasi tahapan kerja detail untuk monitoring dan catatan progres proyek.
 
 ### 3. Integrasi dengan Backend
 
-- [ ] Ganti seluruh mock data dengan API call ke endpoint backend
-- [ ] Implementasi loading, error handling, dan notifikasi pada setiap aksi
-- [ ] Pastikan autentikasi JWT dan proteksi role berjalan pada setiap request
-  - [x] Buat dan konfigurasi `src/services/api.js` (axios instance + interceptor)
-  - [x] Update seluruh service di `services` untuk pakai axios instance
-  - [x] Refactor `AdminDashboard.jsx` untuk ambil data dari API
-  - [x] Refactor `ManajemenBarang.jsx` untuk CRUD barang via API
-  - [x] Refactor `UserManagement.jsx` untuk CRUD user via API
-  - [x] Refactor `RequestVerification.jsx` untuk ambil dan update permintaan via API
-  - [x] Refactor `LaporanPeriodik.jsx` untuk ambil dan ekspor laporan via API
-  - [x] Refactor `EmployeeRequest.jsx` untuk submit permintaan via API
-  - [x] Refactor `EmployeeHistory.jsx` untuk ambil riwayat permintaan via API
-  - [x] Refactor `ProfilePage.jsx` untuk update profil via API
-  - [x] Refactor `LoginPage.jsx` untuk login via API & error handling
-  - [x] Refactor `CetakBuktiPermintaan.jsx` untuk ambil detail & cetak PDF via API
-  - [x] Review `Error404.jsx` dan `Forbidden.jsx` untuk konsistensi akses/route
-  - [ ] Pastikan semua aksi ada loading & error handling
-  - [ ] Pastikan semua route terproteksi sesuai role & token
-  - [ ] Implementasi global error handling (token expired, dsb)
-  - [ ] Review dan refactor komponen agar logic & UI terpisah
+- [x] Buat dan konfigurasi `src/services/api.js` (axios instance + interceptor)
+- [x] Update seluruh service di `services` untuk pakai axios instance
+- [x] Refactor `AdminDashboard.jsx` untuk ambil data dari API
+- [x] Refactor `ManajemenBarang.jsx` untuk CRUD barang via API
+- [x] Refactor `UserManagement.jsx` untuk CRUD user via API
+- [x] Refactor `RequestVerification.jsx` untuk ambil dan update permintaan via API
+- [x] Refactor `LaporanPeriodik.jsx` untuk ambil dan ekspor laporan via API
+- [x] Refactor `EmployeeRequest.jsx` untuk submit permintaan via API
+- [x] Refactor `EmployeeHistory.jsx` untuk ambil riwayat permintaan via API
+- [x] Refactor `ProfilePage.jsx` untuk update profil via API
+- [x] Refactor `LoginPage.jsx` untuk login via API & error handling
+- [x] Refactor `CetakBuktiPermintaan.jsx` untuk ambil detail & cetak PDF via API
 
 ### 4. Testing & Polish
 
