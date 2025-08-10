@@ -26,6 +26,7 @@ const RequestTable = ({
   setPage,
   limit,
   totalData,
+  onLimitChange, // Tambahkan prop ini
 }) => (
   <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden transition-all duration-300">
     <div className="overflow-x-auto">
@@ -158,21 +159,39 @@ const RequestTable = ({
         Menampilkan {(page - 1) * limit + 1} -{" "}
         {Math.min(page * limit, totalData)} dari {totalData} permintaan
       </div>
-      <div className="flex gap-2">
-        <button
-          className="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 font-semibold shadow hover:bg-blue-100 transition disabled:opacity-50"
-          disabled={page === 1}
-          onClick={() => setPage(page - 1)}
-        >
-          Prev
-        </button>
-        <button
-          className="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 font-semibold shadow hover:bg-blue-100 transition disabled:opacity-50"
-          disabled={page * limit >= totalData}
-          onClick={() => setPage(page + 1)}
-        >
-          Next
-        </button>
+      <div className="flex items-center gap-4">
+        {/* Tambahkan dropdown untuk memilih limit */}
+        <div className="flex items-center">
+          <span className="text-sm text-gray-600 mr-2">Tampilkan:</span>
+          <select
+            value={limit}
+            onChange={(e) => onLimitChange(e.target.value)}
+            className="px-2 py-1 border border-gray-300 rounded-lg text-sm"
+          >
+            <option value="10">10</option>
+            <option value="20">20</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+          </select>
+        </div>
+
+        {/* Existing pagination buttons */}
+        <div className="flex gap-2">
+          <button
+            className="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 font-semibold shadow hover:bg-blue-100 transition disabled:opacity-50"
+            disabled={page === 1}
+            onClick={() => setPage(page - 1)}
+          >
+            Prev
+          </button>
+          <button
+            className="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 font-semibold shadow hover:bg-blue-100 transition disabled:opacity-50"
+            disabled={page * limit >= totalData}
+            onClick={() => setPage(page + 1)}
+          >
+            Next
+          </button>
+        </div>
       </div>
     </div>
   </div>

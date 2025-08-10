@@ -5,7 +5,6 @@ import {
   UsersIcon,
   ShieldCheckIcon,
   BuildingOfficeIcon,
-  CheckCircleIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
 import UserTable from "../../components/user/UserTable";

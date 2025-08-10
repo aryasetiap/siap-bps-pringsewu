@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import RequestTable from "../../components/permintaan/RequestTable";
 import RequestDetailModal from "../../components/permintaan/RequestDetailModal";
@@ -82,13 +82,8 @@ const RequestVerification = () => {
   const [limit, setLimit] = useState(20);
   const [totalData, setTotalData] = useState(0);
 
-  useEffect(() => {
-    fetchPermintaan();
-    fetchStatistik();
-    fetchTrenPermintaan();
-  }, [filterStatus, page, limit]);
-
-  const fetchPermintaan = async () => {
+  // Ubah fetchPermintaan menjadi useCallback agar bisa ditambahkan ke dependencies
+  const fetchPermintaan = useCallback(async () => {
     setLoading(true);
     try {
       // Validasi agar page dan limit selalu angka bulat positif
@@ -101,6 +96,7 @@ const RequestVerification = () => {
       if (filterStatus) {
         params.status = filterStatus;
       }
+
       const res = await permintaanService.getAllPermintaan(params);
       const mapped = (res.data.data || []).map((p) => ({
         ...p,
@@ -132,7 +128,7 @@ const RequestVerification = () => {
       );
     }
     setLoading(false);
-  };
+  }, [page, limit, filterStatus]); // Tambahkan dependencies
 
   const fetchStatistik = async () => {
     try {
@@ -146,6 +142,20 @@ const RequestVerification = () => {
       const res = await permintaanService.getTrenPermintaanBulanan();
       setTrenPermintaan(res.data);
     } catch (err) {}
+  };
+
+  useEffect(() => {
+    fetchPermintaan();
+    fetchStatistik();
+    fetchTrenPermintaan();
+  }, [fetchPermintaan]); // Tambahkan fetchPermintaan sebagai dependency
+
+  const handleLimitChange = (newLimit) => {
+    const limitValue = parseInt(newLimit);
+    if (Number.isInteger(limitValue) && limitValue > 0) {
+      setLimit(limitValue);
+      setPage(1);
+    }
   };
 
   useEffect(() => {
@@ -570,6 +580,7 @@ const RequestVerification = () => {
         setPage={setPage}
         limit={limit}
         totalData={totalData}
+        onLimitChange={handleLimitChange}
       />
       {/* Detail Modal */}
       <RequestDetailModal
