@@ -27,7 +27,7 @@ function App() {
   // const isAuthenticated = () => {
   //   return localStorage.getItem("authToken") ? true : false;
   // };
-  
+
   // const getUserRole = () => {
   //   return localStorage.getItem("userRole");
   // };
@@ -197,9 +197,9 @@ function App() {
             }
           />
 
+          {/* Rute khusus error */}
           <Route path="/forbidden" element={<Forbidden />} />
           <Route path="*" element={<Error404 />} />
-          <Route path="/" element={<Navigate to="/login" replace />} />
         </Routes>
         <ToastContainer position="top-right" autoClose={3000} />
       </Router>
