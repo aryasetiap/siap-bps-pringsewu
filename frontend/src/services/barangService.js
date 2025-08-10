@@ -40,3 +40,22 @@ export const getLaporanPenggunaan = (start, end, config = {}) =>
     params: { start, end },
     ...config,
   });
+
+// barangService.js
+// Gunakan endpoint yang tersedia untuk pegawai (jika ada)
+export const getAllBarangForEmployee = async (params) => {
+  const response = await api.get("/barang/available", { params });
+  // Transform data jika diperlukan
+  return {
+    ...response,
+    data: response.data.map((item) => ({
+      id: item.id,
+      kode: item.kode_barang,
+      nama: item.nama_barang,
+      kategori: item.kategori || "-",
+      stok: item.stok,
+      satuan: item.satuan,
+      stokMinimum: item.ambang_batas_kritis,
+    })),
+  };
+};

@@ -55,7 +55,7 @@ export class BarangController {
    * Mengambil daftar seluruh barang dengan opsi filter.
    * Hanya dapat diakses oleh admin.
    */
-  @Roles('admin')
+  @Roles('admin', 'pegawai')
   @Get()
   findAll(
     @Query('q') q?: string,
@@ -139,6 +139,19 @@ export class BarangController {
       'Content-Disposition': `attachment; filename="laporan_penggunaan_${start}_${end}.pdf"`,
     });
     res.end(pdfBuffer);
+  }
+
+  /**
+   * Mengambil daftar barang yang tersedia untuk permintaan pegawai.
+   * Hanya menampilkan barang dengan status aktif.
+   */
+  @Get('available')
+  @Roles('pegawai')
+  getAvailableBarang() {
+    // Filter untuk mendapatkan hanya barang yang aktif
+    return this.barangService.findAll({
+      status_aktif: true,
+    });
   }
 
   // --- RUTE DINAMIS (DEFINISIKAN SETELAH RUTE STATIS) ---

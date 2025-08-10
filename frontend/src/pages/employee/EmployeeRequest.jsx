@@ -23,7 +23,8 @@ const EmployeeRequestPage = () => {
   const fetchBarang = async () => {
     setLoading(true);
     try {
-      const res = await barangService.getAllBarang();
+      // Gunakan endpoint yang tersedia untuk pegawai
+      const res = await barangService.getAllBarangForEmployee();
       setBarang(res.data);
       // Generate kategori unik dari data barang
       const kategoriSet = new Set(
@@ -59,7 +60,18 @@ const EmployeeRequestPage = () => {
   // Handler tambah barang ke keranjang
   const handleAddItem = (item) => {
     if (keranjang.find((i) => i.id === item.id)) return;
-    setKeranjang((prev) => [...prev, { ...item, jumlah: 1 }]);
+    setKeranjang((prev) => [
+      ...prev,
+      {
+        id: item.id,
+        kode: item.kode,        // Pastikan field ini ada
+        nama: item.nama,        // Pastikan field ini ada
+        kategori: item.kategori,
+        stok: item.stok,
+        satuan: item.satuan,
+        jumlah: 1
+      }
+    ]);
   };
 
   // Handler ubah jumlah barang di keranjang
@@ -92,6 +104,8 @@ const EmployeeRequestPage = () => {
       toast.error("Pilih minimal satu barang!");
       return;
     }
+
+    // Validasi per item
     for (const item of keranjang) {
       if (item.jumlah < 1) {
         toast.error(`Jumlah untuk ${item.nama} harus minimal 1.`);
@@ -102,24 +116,70 @@ const EmployeeRequestPage = () => {
         return;
       }
     }
+
+    // Konfirmasi sebelum submit (opsional)
+    if (!window.confirm("Apakah Anda yakin ingin mengajukan permintaan ini?")) {
+      return;
+    }
+
     setLoading(true);
     try {
-      await employeeRequestService.createPermintaan({
+      const response = await employeeRequestService.createPermintaan({
         items: keranjang.map((item) => ({
           id_barang: item.id,
           jumlah: item.jumlah,
         })),
         catatan,
       });
+
+      // Reset form
       setKeranjang([]);
       setCatatan("");
-      toast.success("Permintaan berhasil diajukan!");
-    } catch (err) {
-      toast.error(
-        err?.response?.data?.message || "Gagal mengajukan permintaan."
+
+      // Notifikasi sukses dengan detail
+      toast.success(
+        `Permintaan berhasil diajukan dengan nomor: ${
+          response.data.nomor_permintaan || response.data.id
+        }!`
       );
+
+      // Refresh data barang
+      fetchBarang();
+    } catch (err) {
+      // Error handling spesifik
+      if (err.response) {
+        const status = err.response.status;
+        const message = err.response.data?.message;
+
+        if (status === 400) {
+          if (message.includes("stok")) {
+            toast.error(
+              "Stok tidak mencukupi untuk beberapa barang. Silakan periksa kembali."
+            );
+          } else if (message.includes("items")) {
+            toast.error("Data barang tidak valid. Silakan pilih barang lain.");
+          } else {
+            toast.error(
+              message || "Validasi gagal, periksa kembali data permintaan."
+            );
+          }
+        } else if (status === 401) {
+          toast.error("Sesi login telah berakhir. Silakan login kembali.");
+        } else if (status === 403) {
+          toast.error("Anda tidak memiliki izin untuk melakukan permintaan.");
+        } else {
+          toast.error(
+            "Terjadi kesalahan pada server. Silakan coba lagi nanti."
+          );
+        }
+      } else {
+        toast.error(
+          "Gagal terhubung ke server. Periksa koneksi internet Anda."
+        );
+      }
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
@@ -133,6 +193,8 @@ const EmployeeRequestPage = () => {
         onSearchChange={handleSearchChange}
         onFilterKategoriChange={handleFilterKategoriChange}
         onAddItem={handleAddItem}
+        keranjang={keranjang} // Tambahkan ini
+        loading={loading}
       />
       <EmployeeRequestForm
         items={keranjang}

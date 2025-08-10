@@ -11,4 +11,11 @@ export const getNotifKritis = () =>
   api.get("/barang/dashboard/notifikasi-stok-kritis");
 
 // Daftar permintaan terbaru (opsional, jika ada endpoint khusus)
-export const getRecentRequests = () => api.get("/permintaan/masuk");
+export const getRecentRequests = () => {
+  const role = localStorage.getItem("userRole");
+  if (role === "admin") {
+    return api.get("/permintaan/masuk"); // Untuk admin
+  } else {
+    return api.get("/permintaan/riwayat"); // Untuk pegawai
+  }
+};

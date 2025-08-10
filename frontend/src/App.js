@@ -118,7 +118,8 @@ function App() {
           element={
             <PrivateRoute roles={["pegawai"]}>
               <DashboardLayout>
-                <AdminDashboard />
+                <EmployeeRequestPage />{" "}
+                {/* Ganti dengan komponen yang sesuai untuk pegawai */}
               </DashboardLayout>
             </PrivateRoute>
           }
