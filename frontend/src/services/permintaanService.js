@@ -6,10 +6,12 @@ const API_URL = "/permintaan";
 export const createPermintaan = (data) => api.post(API_URL, data);
 
 // 2. Melihat Riwayat Permintaan (pegawai)
-export const getRiwayatPermintaan = (params) => api.get(`${API_URL}/riwayat`, { params });
+export const getRiwayatPermintaan = (params) =>
+  api.get(`${API_URL}/riwayat`, { params });
 
 // 3. Daftar Permintaan Masuk (admin)
-export const getPermintaanMasuk = (params) => api.get(`${API_URL}/masuk`, { params });
+export const getPermintaanMasuk = (params) =>
+  api.get(`${API_URL}/masuk`, { params });
 
 // 4. Detail Permintaan (pegawai/admin)
 export const getPermintaanById = (id) => api.get(`${API_URL}/${id}`);
