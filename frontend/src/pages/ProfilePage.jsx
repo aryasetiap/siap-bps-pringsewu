@@ -227,22 +227,29 @@ const ProfilePage = () => {
                     <div className="w-28 h-28 rounded-full bg-gray-200 flex items-center justify-center animate-pulse">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
                     </div>
-                  ) : profile.foto ? (
-                    <img
-                      src={profile.foto}
-                      alt={profile.nama}
-                      className="w-28 h-28 rounded-full object-cover border-4 border-white shadow-lg"
-                    />
                   ) : (
-                    <div className="w-28 h-28 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-3xl font-bold shadow-lg">
-                      {profile.nama
-                        ? profile.nama.charAt(0).toUpperCase()
-                        : "U"}
+                    <div className="w-28 h-28 rounded-full shadow-lg relative">
+                      {profile.foto ? (
+                        <img
+                          src={profile.foto}
+                          alt={profile.nama}
+                          className="w-full h-full object-cover rounded-full border-4 border-white"
+                        />
+                      ) : (
+                        <div className="w-full h-full rounded-full bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-center border-4 border-white">
+                          <span className="text-white text-3xl font-bold">
+                            {profile.nama
+                              ? profile.nama.charAt(0).toUpperCase()
+                              : "U"}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   )}
+
+                  {/* Tombol upload foto dengan posisi absolut yang lebih baik */}
                   <div className="absolute bottom-0 right-0">
-                    <label className="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white rounded-full p-2 shadow-md transition transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                      {/* Icon Camera yang lebih jelas */}
+                    <label className="flex cursor-pointer bg-blue-600 hover:bg-blue-700 text-white rounded-full p-2.5 shadow-lg transition transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         viewBox="0 0 24 24"
