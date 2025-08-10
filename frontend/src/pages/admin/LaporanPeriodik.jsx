@@ -1,8 +1,11 @@
 import React, { useState } from "react";
-import api from "../../services/api";
+import { toast } from "react-toastify";
+import {
+  getLaporanPenggunaan,
+  getLaporanPenggunaanPDF,
+} from "../../services/barangService";
 import LaporanFilterForm from "../../components/laporan/LaporanFilterForm";
 import LaporanTable from "../../components/laporan/LaporanTable";
-import { toast } from "react-toastify";
 
 const LaporanPeriodik = () => {
   const [startDate, setStartDate] = useState("");
@@ -17,9 +20,7 @@ const LaporanPeriodik = () => {
     }
     setLoading(true);
     try {
-      const res = await api.get(
-        `/laporan/penggunaan?start=${startDate}&end=${endDate}`
-      );
+      const res = await getLaporanPenggunaan(startDate, endDate);
       setData(res.data);
     } catch (err) {
       toast.error("Gagal memuat data laporan.");
@@ -33,10 +34,7 @@ const LaporanPeriodik = () => {
       return;
     }
     try {
-      const res = await api.get(
-        `/laporan/penggunaan/pdf?start=${startDate}&end=${endDate}`,
-        { responseType: "blob" }
-      );
+      const res = await getLaporanPenggunaanPDF(startDate, endDate);
       const url = window.URL.createObjectURL(new Blob([res.data]));
       const link = document.createElement("a");
       link.href = url;

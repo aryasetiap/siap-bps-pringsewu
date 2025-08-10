@@ -33,3 +33,10 @@ export const getLaporanPenggunaanPDF = (start, end, config = {}) =>
     responseType: "blob",
     ...config,
   });
+
+// Mendapatkan rekap penggunaan barang (data, bukan PDF)
+export const getLaporanPenggunaan = (start, end, config = {}) =>
+  api.get(`/barang/laporan-penggunaan`, {
+    params: { start, end },
+    ...config,
+  });

@@ -243,4 +243,32 @@ export class BarangService {
       pdfDoc.end();
     });
   }
+
+  /**
+   * Mengambil rekap penggunaan barang dalam format JSON untuk periode tertentu.
+   * @param start Tanggal awal periode (format: YYYY-MM-DD).
+   * @param end Tanggal akhir periode (format: YYYY-MM-DD).
+   * @returns Array rekap penggunaan barang.
+   */
+  async getLaporanPenggunaanJSON(
+    start: string,
+    end: string,
+  ): Promise<
+    { nama_barang: string; total_digunakan: number; satuan: string }[]
+  > {
+    const result = await this.barangRepo.query(
+      `
+      SELECT b.nama_barang, b.satuan, COALESCE(SUM(d.jumlah_disetujui),0) as total_digunakan
+      FROM detail_permintaan d
+      JOIN barang b ON d.id_barang = b.id
+      JOIN permintaan p ON d.id_permintaan = p.id
+      WHERE p.status IN ('Disetujui', 'Disetujui Sebagian')
+        AND p.tanggal_permintaan BETWEEN $1 AND $2
+      GROUP BY b.nama_barang, b.satuan
+      ORDER BY b.nama_barang
+      `,
+      [start, end],
+    );
+    return result;
+  }
 }

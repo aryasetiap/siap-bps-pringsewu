@@ -118,7 +118,7 @@ Dokumentasi tahapan kerja detail untuk monitoring dan catatan progres proyek.
   - [x] Refactor `ManajemenBarang.jsx` untuk CRUD barang via API
   - [x] Refactor `UserManagement.jsx` untuk CRUD user via API
   - [x] Refactor `RequestVerification.jsx` untuk ambil dan update permintaan via API
-  - [ ] Refactor `LaporanPeriodik.jsx` untuk ambil dan ekspor laporan via API
+  - [x] Refactor `LaporanPeriodik.jsx` untuk ambil dan ekspor laporan via API
   - [ ] Refactor `EmployeeRequest.jsx` untuk submit permintaan via API
   - [ ] Refactor `EmployeeHistory.jsx` untuk ambil riwayat permintaan via API
   - [ ] Refactor `ProfilePage.jsx` untuk update profil via API
