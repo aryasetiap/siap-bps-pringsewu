@@ -120,7 +120,7 @@ describe('AuthService', () => {
   });
 
   /**
-   * Menguji proses logout dengan menambahkan token ke blacklist.
+   * Menguji logout dengan menambahkan token ke blacklist.
    * Token yang di-blacklist tidak dapat digunakan untuk akses selanjutnya.
    *
    * Parameter: Tidak ada.
@@ -129,6 +129,21 @@ describe('AuthService', () => {
   it('should add token to blacklist on logout', () => {
     service.logout('sometoken');
     expect(service.isTokenBlacklisted('sometoken')).toBe(true);
+  });
+
+  /**
+   * Menguji isTokenBlacklisted mengembalikan false jika token belum di-blacklist.
+   */
+  it('should return false if token not blacklisted', () => {
+    expect(service.isTokenBlacklisted('notblacklisted')).toBe(false);
+  });
+
+  /**
+   * Menguji logout mengembalikan pesan sesuai implementasi.
+   */
+  it('should return logout message', () => {
+    const result = service.logout('token123');
+    expect(result.message).toMatch(/Logout berhasil/);
   });
 
   /**
@@ -162,5 +177,16 @@ describe('AuthService', () => {
     const result = await service.validateUser('nouser', 'pass');
 
     expect(result).toBeNull();
+  });
+
+  /**
+   * Menguji validateUser tidak mengembalikan field password.
+   */
+  it('should not return password field in validateUser result', async () => {
+    mockUserService.findByUsername.mockResolvedValue(mockUser);
+    jest.spyOn(bcrypt, 'compare').mockResolvedValue(true);
+
+    const result = await service.validateUser('admin', 'admin123');
+    expect(result).not.toHaveProperty('password');
   });
 });

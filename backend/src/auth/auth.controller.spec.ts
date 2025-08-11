@@ -1,7 +1,7 @@
 /**
  * File ini berisi pengujian unit untuk AuthController pada aplikasi SIAP.
  * Pengujian meliputi proses login dan logout pengguna, serta validasi token.
- * 
+ *
  * Konteks bisnis: Digunakan untuk mengelola autentikasi pengguna dalam sistem pengelolaan barang, permintaan, dan verifikasi SIAP.
  */
 
@@ -23,7 +23,7 @@ describe('AuthController', () => {
 
   /**
    * Membuat instance AuthController sebelum setiap pengujian.
-   * 
+   *
    * Tujuan:
    * - Menyiapkan modul pengujian dengan controller dan service yang sudah dimock.
    * - Memastikan setiap pengujian berjalan dengan dependensi yang konsisten.
@@ -39,10 +39,10 @@ describe('AuthController', () => {
 
   /**
    * Menguji apakah AuthController berhasil didefinisikan.
-   * 
+   *
    * Tujuan:
    * - Memastikan instance controller berhasil dibuat.
-   * 
+   *
    * Return:
    * - void
    */
@@ -52,14 +52,14 @@ describe('AuthController', () => {
 
   /**
    * Menguji fungsi login pada AuthController.
-   * 
+   *
    * Tujuan:
    * - Memastikan fungsi login memanggil AuthService.login dengan parameter yang benar.
    * - Memastikan token dikembalikan sesuai hasil dari AuthService.
-   * 
+   *
    * Parameter:
    * - req (object): Berisi body dengan username dan password.
-   * 
+   *
    * Return:
    * - Promise<{ access_token: string }>
    */
@@ -75,14 +75,14 @@ describe('AuthController', () => {
 
   /**
    * Menguji fungsi logout pada AuthController dengan token yang valid.
-   * 
+   *
    * Tujuan:
    * - Memastikan fungsi logout memanggil AuthService.logout dengan token yang benar.
    * - Memastikan pesan sukses dikembalikan jika token valid.
-   * 
+   *
    * Parameter:
    * - authHeader (string): Header otorisasi berisi token.
-   * 
+   *
    * Return:
    * - Promise<{ message: string }>
    */
@@ -100,18 +100,37 @@ describe('AuthController', () => {
 
   /**
    * Menguji fungsi logout pada AuthController tanpa token.
-   * 
+   *
    * Tujuan:
    * - Memastikan fungsi logout mengembalikan pesan jika token tidak diberikan.
-   * 
+   *
    * Parameter:
    * - authHeader (string): Header otorisasi kosong.
-   * 
+   *
    * Return:
    * - Promise<{ message: string }>
    */
   it('should return message if no token on logout', async () => {
     const result = await authController.logout('');
     expect(result.message).toBe('No token provided');
+  });
+
+  /**
+   * Menguji error handling pada login jika service melempar error.
+   */
+  it('should handle error on login', async () => {
+    mockAuthService.login.mockRejectedValue(new Error('Login error'));
+    const req = { body: { username: 'admin', password: 'wrong' } };
+    await expect(authController.login(req)).rejects.toThrow('Login error');
+  });
+
+  /**
+   * Menguji error handling pada logout jika service melempar error.
+   */
+  it('should handle error on logout', async () => {
+    mockAuthService.logout.mockRejectedValue(new Error('Logout error'));
+    await expect(authController.logout('Bearer sometoken')).rejects.toThrow(
+      'Logout error',
+    );
   });
 });
