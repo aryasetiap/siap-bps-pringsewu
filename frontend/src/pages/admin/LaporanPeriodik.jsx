@@ -95,10 +95,36 @@ const LaporanPeriodik = () => {
 
     try {
       const queryParams = buildQueryParams(startDate, endDate, unitKerja);
+
+      // Add loading indicator
+      toast.info("Sedang mengunduh PDF...", {
+        autoClose: false,
+        toastId: "pdf-loading",
+      });
+
       const res = await getLaporanPenggunaanPDF(queryParams);
 
-      // Membuat link download file PDF
-      const url = window.URL.createObjectURL(new Blob([res.data]));
+      // Dismiss loading toast
+      toast.dismiss("pdf-loading");
+
+      // Check if response is valid - ensure proper blob type and size
+      if (!res.data || !(res.data instanceof Blob)) {
+        throw new Error("PDF data tidak valid");
+      }
+
+      // If the blob is empty or too small, it might be an error response
+      if (res.data.size < 100) {
+        // Try to read the blob as text to check for error messages
+        const text = await res.data.text();
+        if (text && (text.includes("error") || text.includes("tidak"))) {
+          throw new Error(text || "PDF data tidak valid");
+        }
+      }
+
+      // Create download link
+      const url = window.URL.createObjectURL(
+        new Blob([res.data], { type: "application/pdf" })
+      );
       const link = document.createElement("a");
       link.href = url;
       link.setAttribute(
@@ -108,10 +134,47 @@ const LaporanPeriodik = () => {
         }.pdf`
       );
       document.body.appendChild(link);
-      link.click();
-      link.remove();
+
+      // For IDM compatibility, add a small delay
+      setTimeout(() => {
+        link.click();
+
+        // Add a flag to detect if download manager is being used
+        let downloadIntercepted = false;
+        setTimeout(() => {
+          // If URL wasn't revoked, assume download manager took over
+          try {
+            // Try to access the URL - if it's still valid, a download manager likely intercepted it
+            const testAccess = new XMLHttpRequest();
+            testAccess.open("HEAD", url, false);
+            testAccess.send();
+            if (testAccess.status === 200) {
+              downloadIntercepted = true;
+            }
+          } catch (e) {
+            // Error means URL was properly revoked, normal browser download happened
+          }
+
+          // Always show success if we got this far
+          toast.success(
+            downloadIntercepted
+              ? "PDF diunduh oleh download manager"
+              : "PDF berhasil diunduh"
+          );
+
+          // Clean up
+          window.URL.revokeObjectURL(url);
+          link.remove();
+        }, 500);
+      }, 100);
     } catch (err) {
-      toast.error("Gagal mengunduh PDF.");
+      console.error("PDF download error:", err);
+      toast.dismiss("pdf-loading");
+      toast.error(
+        err?.response?.data?.message ||
+          err.message ||
+          "Gagal mengunduh PDF. Silakan coba lagi."
+      );
     }
   };
 

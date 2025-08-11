@@ -237,245 +237,253 @@ export class BarangService {
     end: string,
     unitKerja?: string,
   ): Promise<Buffer> {
-    const penggunaan = await this.getLaporanPenggunaanJSON(
-      start,
-      end,
-      unitKerja,
-    );
+    try {
+      const penggunaan = await this.getLaporanPenggunaanJSON(
+        start,
+        end,
+        unitKerja,
+      );
 
-    /**
-     * Fungsi untuk memformat tanggal ke format Indonesia.
-     */
-    const formatDate = (dateStr: string): string => {
-      const date = new Date(dateStr);
-      const namaBulan = [
-        'Januari',
-        'Februari',
-        'Maret',
-        'April',
-        'Mei',
-        'Juni',
-        'Juli',
-        'Agustus',
-        'September',
-        'Oktober',
-        'November',
-        'Desember',
-      ];
-      const day = String(date.getDate()).padStart(2, '0');
-      const month = date.getMonth();
-      const year = date.getFullYear();
-      return `${day} ${namaBulan[month]} ${year}`;
-    };
+      /**
+       * Fungsi untuk memformat tanggal ke format Indonesia.
+       */
+      const formatDate = (dateStr: string): string => {
+        const date = new Date(dateStr);
+        const namaBulan = [
+          'Januari',
+          'Februari',
+          'Maret',
+          'April',
+          'Mei',
+          'Juni',
+          'Juli',
+          'Agustus',
+          'September',
+          'Oktober',
+          'November',
+          'Desember',
+        ];
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = date.getMonth();
+        const year = date.getFullYear();
+        return `${day} ${namaBulan[month]} ${year}`;
+      };
 
-    const today = new Date();
-    const currentDateString = formatDate(today.toISOString().split('T')[0]);
-    const startFormatted = formatDate(start);
-    const endFormatted = formatDate(end);
+      const today = new Date();
+      const currentDateString = formatDate(today.toISOString().split('T')[0]);
+      const startFormatted = formatDate(start);
+      const endFormatted = formatDate(end);
 
-    // Konfigurasi font untuk PDF
-    const fonts = {
-      Roboto: {
-        normal: path.join(__dirname, '../assets/fonts/Roboto-Regular.ttf'),
-        bold: path.join(__dirname, '../assets/fonts/Roboto-Bold.ttf'),
-        italics: path.join(__dirname, '../assets/fonts/Roboto-Italic.ttf'),
-        bolditalics: path.join(
-          __dirname,
-          '../assets/fonts/Roboto-BoldItalic.ttf',
-        ),
-      },
-    };
-    const printer = new PdfPrinter(fonts);
-
-    // Path logo BPS
-    const logoPath = path.join(
-      __dirname,
-      '../assets/images/logo-bps-pringsewu.png',
-    );
-
-    // Siapkan data untuk tabel laporan
-    const bodyRows =
-      penggunaan.length > 0
-        ? penggunaan.map((row, index) => [
-            { text: index + 1, alignment: 'center' },
-            row.nama_barang,
-            { text: row.kode_barang, alignment: 'center' },
-            { text: row.total_digunakan, alignment: 'center' },
-            row.satuan,
-            '-', // Keterangan default kosong
-          ])
-        : [
-            [
-              {
-                text: 'Tidak ada data penggunaan barang dalam periode ini',
-                colSpan: 6,
-                alignment: 'center',
-              },
-              {},
-              {},
-              {},
-              {},
-              {},
-            ],
-          ];
-
-    // Definisi dokumen PDF
-    const docDefinition = {
-      pageSize: 'A4',
-      pageMargins: [40, 60, 40, 60],
-      content: [
-        {
-          columns: [
-            { width: 170, image: logoPath, fit: [170, 85] },
-            { width: '*', text: '' },
-          ],
+      // Konfigurasi font untuk PDF
+      const fonts = {
+        Roboto: {
+          normal: path.join(__dirname, '../assets/fonts/Roboto-Regular.ttf'),
+          bold: path.join(__dirname, '../assets/fonts/Roboto-Bold.ttf'),
+          italics: path.join(__dirname, '../assets/fonts/Roboto-Italic.ttf'),
+          bolditalics: path.join(
+            __dirname,
+            '../assets/fonts/Roboto-BoldItalic.ttf',
+          ),
         },
-        {
-          text: 'Laporan Penggunaan',
-          style: 'header',
-          alignment: 'center',
-          margin: [0, 10, 0, 0],
-        },
-        {
-          text: 'Barang Persediaan',
-          style: 'header',
-          alignment: 'center',
-          margin: [0, 0, 0, 15],
-        },
-        unitKerja
-          ? {
-              text: unitKerja,
-              style: 'unitKerja',
-              margin: [0, 0, 0, 20],
-            }
-          : {},
-        {
-          columns: [
-            {
-              width: '100%',
-              text: [
-                { text: 'Periode: ', style: 'labelInfo' },
-                {
-                  text: `${startFormatted} s/d ${endFormatted}`,
-                  style: 'valueInfo',
-                },
-              ],
-              alignment: 'center',
-            },
-          ],
-          margin: [0, 0, 0, 20],
-        },
-        {
-          table: {
-            headerRows: 1,
-            widths: [30, '*', 70, 60, 50, 80],
-            body: [
+      };
+      const printer = new PdfPrinter(fonts);
+
+      // Path logo BPS
+      const logoPath = path.join(
+        __dirname,
+        '../assets/images/logo-bps-pringsewu.png',
+      );
+
+      // Siapkan data untuk tabel laporan
+      const bodyRows =
+        penggunaan.length > 0
+          ? penggunaan.map((row, index) => [
+              { text: index + 1, alignment: 'center' },
+              row.nama_barang,
+              { text: row.kode_barang, alignment: 'center' },
+              { text: row.total_digunakan, alignment: 'center' },
+              row.satuan,
+              '-', // Keterangan default kosong
+            ])
+          : [
               [
-                { text: 'No', style: 'tableHeader' },
-                { text: 'Nama Barang', style: 'tableHeader' },
-                { text: 'Kode Barang', style: 'tableHeader' },
-                { text: 'Jumlah', style: 'tableHeader' },
-                { text: 'Satuan', style: 'tableHeader' },
-                { text: 'Keterangan', style: 'tableHeader' },
+                {
+                  text: 'Tidak ada data penggunaan barang dalam periode ini',
+                  colSpan: 6,
+                  alignment: 'center',
+                },
+                {},
+                {},
+                {},
+                {},
+                {},
               ],
-              ...bodyRows,
+            ];
+
+      // Definisi dokumen PDF
+      const docDefinition = {
+        pageSize: 'A4',
+        pageMargins: [40, 60, 40, 60],
+        content: [
+          {
+            columns: [
+              { width: 170, image: logoPath, fit: [170, 85] },
+              { width: '*', text: '' },
             ],
           },
-          layout: {
-            hLineWidth: (i, node) =>
-              i === 0 || i === 1 || i === node.table.body.length ? 1 : 0.5,
-            vLineWidth: () => 0.5,
-            hLineColor: (i, node) =>
-              i === 0 || i === 1 || i === node.table.body.length
-                ? '#aaaaaa'
-                : '#dddddd',
-            vLineColor: () => '#aaaaaa',
-            paddingLeft: () => 8,
-            paddingRight: () => 8,
-            paddingTop: () => 8,
-            paddingBottom: () => 8,
-          },
-        },
-        {
-          columns: [
-            {
-              width: '50%',
-              stack: [
-                {
-                  text: `\n\nDi Bukukan: ${currentDateString}`,
-                  margin: [0, 20, 0, 15],
-                },
-                { text: 'Kasubag Umum', margin: [0, 0, 0, 40] },
-                { text: 'Singgih Adiwijaya, S.E, M.M', fontSize: 12 },
-              ],
-              alignment: 'left',
-            },
-            {
-              width: '50%',
-              stack: [
-                {
-                  text: `\n\nPringsewu, ${currentDateString}`,
-                  margin: [0, 20, 0, 15],
-                },
-                { text: 'Kepala BPS Pringsewu', margin: [0, 0, 0, 40] },
-                { text: 'Dr. Budi Pranoto, M.Si', fontSize: 12 },
-              ],
-              alignment: 'left',
-            },
-          ],
-        },
-      ],
-      styles: {
-        header: {
-          fontSize: 16,
-          bold: true,
-          color: '#000000',
-        },
-        unitKerja: {
-          fontSize: 12,
-          bold: true,
-          color: '#000000',
-        },
-        tableHeader: {
-          bold: true,
-          fontSize: 10,
-          fillColor: '#f1f5f9',
-          color: '#000000',
-          alignment: 'center',
-          margin: [0, 4],
-        },
-        labelInfo: {
-          fontSize: 10,
-          color: '#000000',
-        },
-        valueInfo: {
-          fontSize: 10,
-          bold: true,
-          color: '#000000',
-        },
-      },
-      footer: {
-        columns: [
           {
-            text: 'SIAP BPS Pringsewu',
+            text: 'Laporan Penggunaan',
+            style: 'header',
             alignment: 'center',
-            fontSize: 8,
-            color: '#000000',
             margin: [0, 10, 0, 0],
           },
+          {
+            text: 'Barang Persediaan',
+            style: 'header',
+            alignment: 'center',
+            margin: [0, 0, 0, 15],
+          },
+          unitKerja
+            ? {
+                text: unitKerja,
+                style: 'unitKerja',
+                margin: [0, 0, 0, 20],
+              }
+            : {},
+          {
+            columns: [
+              {
+                width: '100%',
+                text: [
+                  { text: 'Periode: ', style: 'labelInfo' },
+                  {
+                    text: `${startFormatted} s/d ${endFormatted}`,
+                    style: 'valueInfo',
+                  },
+                ],
+                alignment: 'center',
+              },
+            ],
+            margin: [0, 0, 0, 20],
+          },
+          {
+            table: {
+              headerRows: 1,
+              widths: [30, '*', 70, 60, 50, 80],
+              body: [
+                [
+                  { text: 'No', style: 'tableHeader' },
+                  { text: 'Nama Barang', style: 'tableHeader' },
+                  { text: 'Kode Barang', style: 'tableHeader' },
+                  { text: 'Jumlah', style: 'tableHeader' },
+                  { text: 'Satuan', style: 'tableHeader' },
+                  { text: 'Keterangan', style: 'tableHeader' },
+                ],
+                ...bodyRows,
+              ],
+            },
+            layout: {
+              hLineWidth: (i, node) =>
+                i === 0 || i === 1 || i === node.table.body.length ? 1 : 0.5,
+              vLineWidth: () => 0.5,
+              hLineColor: (i, node) =>
+                i === 0 || i === 1 || i === node.table.body.length
+                  ? '#aaaaaa'
+                  : '#dddddd',
+              vLineColor: () => '#aaaaaa',
+              paddingLeft: () => 8,
+              paddingRight: () => 8,
+              paddingTop: () => 8,
+              paddingBottom: () => 8,
+            },
+          },
+          {
+            columns: [
+              {
+                width: '50%',
+                stack: [
+                  {
+                    text: `\n\nDi Bukukan: ${currentDateString}`,
+                    margin: [0, 20, 0, 15],
+                  },
+                  { text: 'Kasubag Umum', margin: [0, 0, 0, 40] },
+                  { text: 'Singgih Adiwijaya, S.E, M.M', fontSize: 12 },
+                ],
+                alignment: 'left',
+              },
+              {
+                width: '50%',
+                stack: [
+                  {
+                    text: `\n\nPringsewu, ${currentDateString}`,
+                    margin: [0, 20, 0, 15],
+                  },
+                  { text: 'Kepala BPS Pringsewu', margin: [0, 0, 0, 40] },
+                  { text: 'Dr. Budi Pranoto, M.Si', fontSize: 12 },
+                ],
+                alignment: 'left',
+              },
+            ],
+          },
         ],
-      },
-    };
+        styles: {
+          header: {
+            fontSize: 16,
+            bold: true,
+            color: '#000000',
+          },
+          unitKerja: {
+            fontSize: 12,
+            bold: true,
+            color: '#000000',
+          },
+          tableHeader: {
+            bold: true,
+            fontSize: 10,
+            fillColor: '#f1f5f9',
+            color: '#000000',
+            alignment: 'center',
+            margin: [0, 4],
+          },
+          labelInfo: {
+            fontSize: 10,
+            color: '#000000',
+          },
+          valueInfo: {
+            fontSize: 10,
+            bold: true,
+            color: '#000000',
+          },
+        },
+        footer: {
+          columns: [
+            {
+              text: 'SIAP BPS Pringsewu',
+              alignment: 'center',
+              fontSize: 8,
+              color: '#000000',
+              margin: [0, 10, 0, 0],
+            },
+          ],
+        },
+      };
 
-    // Proses pembuatan PDF dan pengembalian buffer
-    const pdfDoc = printer.createPdfKitDocument(docDefinition);
-    const chunks: Buffer[] = [];
-    return new Promise<Buffer>((resolve, reject) => {
-      pdfDoc.on('data', (chunk) => chunks.push(chunk));
-      pdfDoc.on('end', () => resolve(Buffer.concat(chunks)));
-      pdfDoc.on('error', reject);
-      pdfDoc.end();
-    });
+      // Proses pembuatan PDF dan pengembalian buffer
+      const pdfDoc = printer.createPdfKitDocument(docDefinition);
+      const chunks: Buffer[] = [];
+      return new Promise<Buffer>((resolve, reject) => {
+        pdfDoc.on('data', (chunk) => chunks.push(chunk));
+        pdfDoc.on('end', () => resolve(Buffer.concat(chunks)));
+        pdfDoc.on('error', (err) => {
+          console.error('PDF generation error:', err);
+          reject(err);
+        });
+        pdfDoc.end();
+      });
+    } catch (error) {
+      console.error('Error in PDF generation:', error);
+      throw error;
+    }
   }
 
   /**
