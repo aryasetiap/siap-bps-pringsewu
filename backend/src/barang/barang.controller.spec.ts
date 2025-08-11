@@ -278,4 +278,68 @@ describe('BarangController', () => {
       'Barang tidak ditemukan',
     );
   });
+
+  /**
+   * Menguji pemanggilan service.findAll pada endpoint getAvailableBarang.
+   */
+  it('should call service.findAll with status_aktif true on getAvailableBarang', async () => {
+    const mockService = { findAll: jest.fn().mockResolvedValue([{ id: 1 }]) };
+    const module: TestingModule = await Test.createTestingModule({
+      controllers: [BarangController],
+      providers: [{ provide: BarangService, useValue: mockService }],
+    }).compile();
+    const controller = module.get<BarangController>(BarangController);
+
+    await controller.getAvailableBarang();
+    expect(mockService.findAll).toHaveBeenCalledWith({ status_aktif: true });
+  });
+
+  /**
+   * Menguji pemanggilan service.getBarangKritis pada endpoint getNotifikasiStokKritis.
+   */
+  it('should call service.getBarangKritis on getNotifikasiStokKritis', async () => {
+    const mockService = {
+      getBarangKritis: jest.fn().mockResolvedValue([{ id: 1 }]),
+    };
+    const module: TestingModule = await Test.createTestingModule({
+      controllers: [BarangController],
+      providers: [{ provide: BarangService, useValue: mockService }],
+    }).compile();
+    const controller = module.get<BarangController>(BarangController);
+
+    await controller.getNotifikasiStokKritis();
+    expect(mockService.getBarangKritis).toHaveBeenCalled();
+  });
+
+  /**
+   * Menguji validasi format tanggal pada endpoint getLaporanPenggunaanJSON.
+   */
+  it('should throw BadRequestException if start date format invalid', async () => {
+    const mockService = { getLaporanPenggunaanJSON: jest.fn() };
+    const module: TestingModule = await Test.createTestingModule({
+      controllers: [BarangController],
+      providers: [{ provide: BarangService, useValue: mockService }],
+    }).compile();
+    const controller = module.get<BarangController>(BarangController);
+
+    await expect(
+      controller.getLaporanPenggunaanJSON('2024-7-01', '2024-07-31', ''),
+    ).rejects.toThrow('Format tanggal harus YYYY-MM-DD');
+  });
+
+  /**
+   * Menguji validasi urutan tanggal pada endpoint getLaporanPenggunaanJSON.
+   */
+  it('should throw BadRequestException if start date > end date', async () => {
+    const mockService = { getLaporanPenggunaanJSON: jest.fn() };
+    const module: TestingModule = await Test.createTestingModule({
+      controllers: [BarangController],
+      providers: [{ provide: BarangService, useValue: mockService }],
+    }).compile();
+    const controller = module.get<BarangController>(BarangController);
+
+    await expect(
+      controller.getLaporanPenggunaanJSON('2024-08-01', '2024-07-31', ''),
+    ).rejects.toThrow('Tanggal mulai harus <= tanggal akhir');
+  });
 });

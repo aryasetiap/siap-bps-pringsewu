@@ -426,6 +426,51 @@ describe('BarangService', () => {
     );
     expect(Buffer.isBuffer(buffer)).toBe(true);
   });
+
+  /**
+   * Menguji penghapusan barang secara permanen.
+   */
+  it('should remove barang permanently', async () => {
+    (repo.findOne as jest.Mock).mockResolvedValue(mockBarang);
+    (repo.remove as jest.Mock).mockResolvedValue(undefined);
+    await expect(service.remove(1)).resolves.toBeUndefined();
+    expect(repo.remove).toHaveBeenCalledWith(mockBarang);
+  });
+
+  /**
+   * Menguji pengambilan barang kritis terurut.
+   */
+  it('should return sorted barang kritis', async () => {
+    const kritisBarang = {
+      ...mockBarang,
+      stok: 5,
+      ambang_batas_kritis: 10,
+      status_aktif: true,
+    };
+    const qb = {
+      where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      orderBy: jest.fn().mockReturnThis(),
+      getMany: jest.fn().mockResolvedValue([kritisBarang]),
+    };
+    repo.createQueryBuilder = jest.fn().mockReturnValue(qb);
+    const result = await service.getBarangKritis();
+    expect(qb.orderBy).toHaveBeenCalledWith('barang.stok', 'ASC');
+    expect(result).toEqual([kritisBarang]);
+  });
+
+  /**
+   * Menguji validasi DTO AddStokDto dengan jumlah < 1.
+   */
+  it('should fail AddStokDto validation if jumlah < 1', async () => {
+    const { AddStokDto } = require('./dto/add-stok.dto');
+    const dto = new AddStokDto();
+    dto.jumlah = 0;
+    const { validate } = require('class-validator');
+    const errors = await validate(dto);
+    expect(errors.length).toBeGreaterThan(0);
+    expect(errors[0].constraints?.min).toBeDefined();
+  });
 });
 
 /**
