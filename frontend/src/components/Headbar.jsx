@@ -1,7 +1,20 @@
-import React, { useEffect, useState } from "react";
+/**
+ * Komponen Headbar untuk aplikasi SIAP BPS Pringsewu.
+ * Menampilkan header yang berisi tombol sidebar, judul aplikasi, notifikasi, dan menu user.
+ * Digunakan pada halaman utama untuk pengelolaan barang, permintaan, dan verifikasi.
+ *
+ * Parameter:
+ * - onToggleSidebarMobile (function): Fungsi untuk toggle sidebar pada mode mobile.
+ * - onToggleSidebarCollapse (function): Fungsi untuk collapse/expand sidebar pada desktop.
+ * - isSidebarCollapsed (boolean): Status collapse sidebar.
+ *
+ * Return:
+ * - JSX: Komponen header yang interaktif.
+ */
+
+import React, { useEffect, useState, Fragment } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Menu, Transition } from "@headlessui/react";
-import { Fragment } from "react";
 import {
   Bars3Icon,
   UserCircleIcon,
@@ -12,11 +25,31 @@ import {
 import * as userService from "../services/userService";
 import { useProfile } from "../context/ProfileContext";
 
-// Fungsi untuk memformat className secara kondisional
+/**
+ * Fungsi utilitas untuk menggabungkan className secara kondisional.
+ *
+ * Parameter:
+ * - ...classes (array): Daftar className yang ingin digabungkan.
+ *
+ * Return:
+ * - string: ClassName yang sudah difilter dan digabung.
+ */
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
 }
 
+/**
+ * Komponen utama Headbar.
+ * Menampilkan header aplikasi SIAP BPS Pringsewu, termasuk tombol sidebar, notifikasi, dan menu user.
+ *
+ * Parameter:
+ * - onToggleSidebarMobile (function): Handler toggle sidebar mobile.
+ * - onToggleSidebarCollapse (function): Handler collapse sidebar desktop.
+ * - isSidebarCollapsed (boolean): Status collapse sidebar.
+ *
+ * Return:
+ * - JSX: Komponen header.
+ */
 function Headbar({
   onToggleSidebarMobile,
   onToggleSidebarCollapse,
@@ -24,17 +57,20 @@ function Headbar({
 }) {
   const navigate = useNavigate();
   const [userPhoto, setUserPhoto] = useState(null);
-  // Keep notifications state but remove the setter from destructuring to avoid warning
+  // State notifikasi, dapat dikembangkan untuk pengelolaan permintaan/verifikasi barang
   const [notifications] = useState([]);
 
-  // Using constants instead of state since we don't update them in this component
+  // Ambil username dan role dari localStorage, default jika belum login
   const username = localStorage.getItem("username") || "Pengguna";
   const userRole = localStorage.getItem("userRole") || "Tamu";
 
-  // Gunakan profile atau hapus deklarasinya
+  // Ambil profile dari context untuk efisiensi akses data user
   const { profile } = useProfile();
 
-  // Gunakan profile untuk mendapatkan foto (lebih baik daripada API call lagi)
+  /**
+   * Efek untuk mengambil foto user dari context profile.
+   * Jika tidak ada, fallback ke API userService.
+   */
   useEffect(() => {
     if (profile && profile.foto) {
       setUserPhoto(profile.foto);
@@ -51,8 +87,12 @@ function Headbar({
       };
       fetchUserPhoto();
     }
-  }, [profile]); // Tambahkan profile sebagai dependency
+  }, [profile]);
 
+  /**
+   * Fungsi untuk logout user dari aplikasi SIAP.
+   * Menghapus data autentikasi dan mengarahkan ke halaman login.
+   */
   const handleLogout = () => {
     localStorage.removeItem("authToken");
     localStorage.removeItem("userRole");
@@ -90,7 +130,7 @@ function Headbar({
 
       {/* Bagian Kanan Headbar: Info User & Logout */}
       <div className="flex items-center space-x-3">
-        {/* Notifications */}
+        {/* Menu Notifikasi: Untuk pengelolaan permintaan/verifikasi barang */}
         <Menu as="div" className="relative inline-block text-left">
           <div>
             <Menu.Button className="p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
@@ -116,7 +156,7 @@ function Headbar({
                   notifications.map((notif, index) => (
                     <Menu.Item key={index}>
                       {({ active }) => (
-                        // Change anchor tag to button to fix accessibility warning
+                        // Gunakan button untuk aksesibilitas
                         <button
                           type="button"
                           className={classNames(
@@ -139,7 +179,7 @@ function Headbar({
           </Transition>
         </Menu>
 
-        {/* User Menu */}
+        {/* Menu User: Menampilkan info user dan aksi logout */}
         <Menu as="div" className="relative inline-block text-left">
           <div>
             <Menu.Button className="inline-flex justify-center items-center rounded-lg border border-gray-200 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 focus:ring-blue-500 transition">

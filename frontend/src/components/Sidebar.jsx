@@ -1,3 +1,25 @@
+/**
+ * Sidebar.jsx
+ *
+ * Komponen Sidebar untuk aplikasi SIAP BPS Pringsewu.
+ * Sidebar ini digunakan untuk navigasi utama aplikasi, baik untuk admin maupun pegawai.
+ * Mendukung tampilan mobile dan desktop, serta fitur collapse pada desktop.
+ *
+ * Fitur bisnis yang didukung:
+ * - Pengelolaan barang
+ * - Pengajuan dan verifikasi permintaan
+ * - Manajemen pengguna
+ * - Laporan periodik
+ *
+ * Parameter:
+ * - isOpenMobile (boolean): Status apakah sidebar mobile terbuka.
+ * - onCloseMobile (function): Fungsi untuk menutup sidebar mobile.
+ * - isCollapsed (boolean): Status apakah sidebar desktop dalam mode collapse.
+ *
+ * Return:
+ * - React Element: Komponen Sidebar yang siap digunakan.
+ */
+
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Transition, Dialog } from "@headlessui/react";
@@ -13,11 +35,27 @@ import {
   UserCircleIcon,
 } from "@heroicons/react/24/outline";
 
+/**
+ * Fungsi untuk menggabungkan beberapa kelas CSS menjadi satu string.
+ *
+ * Parameter:
+ * - classes (...string): Daftar kelas CSS yang ingin digabungkan.
+ *
+ * Return:
+ * - string: Gabungan kelas CSS yang valid.
+ */
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
 }
 
-const navigationItems = {
+/**
+ * Objek navigasi berdasarkan peran pengguna.
+ *
+ * Struktur:
+ * - admin: Navigasi untuk admin (manajemen barang, pengguna, verifikasi, laporan).
+ * - pegawai: Navigasi untuk pegawai (pengajuan dan riwayat permintaan).
+ */
+const NAVIGATION_ITEMS = {
   admin: [
     { name: "Dashboard", href: "/admin/dashboard", icon: HomeIcon },
     { name: "Manajemen Barang", href: "/admin/barang", icon: ArchiveBoxIcon },
@@ -47,11 +85,117 @@ const navigationItems = {
   ],
 };
 
+/**
+ * Komponen Sidebar utama untuk aplikasi SIAP.
+ *
+ * Parameter:
+ * - isOpenMobile (boolean): Status sidebar mobile.
+ * - onCloseMobile (function): Handler untuk menutup sidebar mobile.
+ * - isCollapsed (boolean): Status collapse sidebar desktop.
+ *
+ * Return:
+ * - React Element: Sidebar dengan navigasi sesuai peran pengguna.
+ */
 function Sidebar({ isOpenMobile, onCloseMobile, isCollapsed }) {
   const location = useLocation();
+
+  // Ambil peran dan nama pengguna dari localStorage
   const userRole = localStorage.getItem("userRole") || "pegawai";
   const username = localStorage.getItem("username") || "Pengguna";
-  const currentNav = navigationItems[userRole] || [];
+  const currentNav = NAVIGATION_ITEMS[userRole] || [];
+
+  /**
+   * Komponen Logo dan Header aplikasi SIAP.
+   * Ditampilkan pada sidebar mobile dan desktop.
+   */
+  const LogoHeader = ({ collapsed }) => (
+    <div className="flex flex-shrink-0 items-center justify-center px-4 mb-4">
+      {!collapsed ? (
+        <div className="flex flex-col items-center">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10 backdrop-blur-sm mb-3 shadow-lg">
+            <h2 className="text-2xl font-extrabold text-white">S</h2>
+          </div>
+          <h2 className="text-2xl font-bold text-white mb-1">SIAP</h2>
+          <p className="text-xs text-blue-200">BPS Pringsewu</p>
+        </div>
+      ) : (
+        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10 backdrop-blur-sm shadow-lg">
+          <h2 className="text-2xl font-extrabold text-white">S</h2>
+        </div>
+      )}
+    </div>
+  );
+
+  /**
+   * Komponen User Profile.
+   * Menampilkan nama dan peran pengguna.
+   * Hanya tampil jika sidebar tidak collapse.
+   */
+  const UserProfile = ({ collapsed }) =>
+    !collapsed && (
+      <div className="mx-3 mb-6 rounded-lg bg-blue-700/40 p-3">
+        <div className="flex items-center">
+          <div className="mr-3 rounded-full bg-blue-800 p-2">
+            <UserCircleIcon
+              className="h-6 w-6 text-blue-200"
+              aria-hidden="true"
+            />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-white">{username}</p>
+            <p className="text-xs text-blue-200 capitalize">{userRole}</p>
+          </div>
+        </div>
+      </div>
+    );
+
+  /**
+   * Komponen Navigasi Sidebar.
+   * Menampilkan daftar menu sesuai peran pengguna.
+   *
+   * Parameter:
+   * - navItems (array): Daftar item navigasi.
+   * - collapsed (boolean): Status collapse sidebar.
+   * - onItemClick (function): Handler klik menu (opsional, untuk mobile).
+   */
+  const SidebarNav = ({ navItems, collapsed, onItemClick }) => (
+    <nav className={collapsed ? "space-y-1" : "flex-1 space-y-1"}>
+      {navItems.map((item) => (
+        <Link
+          key={item.name}
+          to={item.href}
+          onClick={onItemClick}
+          className={classNames(
+            location.pathname === item.href
+              ? "bg-blue-600 text-white shadow-md"
+              : "text-blue-100 hover:bg-blue-700/50",
+            "group flex items-center px-3 py-2.5",
+            collapsed
+              ? "justify-center text-sm font-medium rounded-lg transition duration-150"
+              : "text-base font-medium rounded-lg transition duration-150"
+          )}
+        >
+          <item.icon
+            className={classNames(
+              location.pathname === item.href
+                ? "text-white"
+                : "text-blue-300 group-hover:text-white",
+              collapsed ? "mx-auto" : "mr-4",
+              "flex-shrink-0 h-6 w-6 transition duration-150"
+            )}
+            aria-hidden="true"
+          />
+          {!collapsed && <span className="flex-1">{item.name}</span>}
+          {/* Tooltip ketika sidebar collapse */}
+          {collapsed && (
+            <span className="sr-only group-hover:not-sr-only group-hover:absolute group-hover:left-20 group-hover:px-3 group-hover:py-2 group-hover:rounded-md group-hover:bg-gray-800 group-hover:text-white group-hover:whitespace-nowrap group-hover:shadow-lg z-50">
+              {item.name}
+            </span>
+          )}
+        </Link>
+      ))}
+    </nav>
+  );
 
   return (
     <>
@@ -97,8 +241,7 @@ function Sidebar({ isOpenMobile, onCloseMobile, isCollapsed }) {
                     />
                   </button>
                 </div>
-
-                {/* Logo and header */}
+                {/* Logo dan header aplikasi */}
                 <div className="flex flex-col items-center px-4">
                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10 backdrop-blur-sm mb-3 shadow-lg">
                     <h2 className="text-2xl font-extrabold text-white">S</h2>
@@ -106,7 +249,6 @@ function Sidebar({ isOpenMobile, onCloseMobile, isCollapsed }) {
                   <h2 className="text-2xl font-bold text-white mb-1">SIAP</h2>
                   <p className="text-xs text-blue-200 mb-4">BPS Pringsewu</p>
                 </div>
-
                 {/* User profile section */}
                 <div className="mx-3 mb-6 rounded-lg bg-blue-700/40 p-3">
                   <div className="flex items-center">
@@ -126,35 +268,13 @@ function Sidebar({ isOpenMobile, onCloseMobile, isCollapsed }) {
                     </div>
                   </div>
                 </div>
-
-                {/* Navigation */}
+                {/* Navigasi menu */}
                 <div className="mt-2 flex-1 overflow-y-auto px-3">
-                  <nav className="space-y-1">
-                    {currentNav.map((item) => (
-                      <Link
-                        key={item.name}
-                        to={item.href}
-                        onClick={onCloseMobile}
-                        className={classNames(
-                          location.pathname === item.href
-                            ? "bg-blue-600 text-white shadow-md"
-                            : "text-blue-100 hover:bg-blue-700/50",
-                          "group flex items-center px-3 py-2.5 text-base font-medium rounded-lg transition duration-150"
-                        )}
-                      >
-                        <item.icon
-                          className={classNames(
-                            location.pathname === item.href
-                              ? "text-white"
-                              : "text-blue-300 group-hover:text-white",
-                            "mr-4 flex-shrink-0 h-6 w-6 transition duration-150"
-                          )}
-                          aria-hidden="true"
-                        />
-                        {item.name}
-                      </Link>
-                    ))}
-                  </nav>
+                  <SidebarNav
+                    navItems={currentNav}
+                    collapsed={false}
+                    onItemClick={onCloseMobile}
+                  />
                 </div>
               </Dialog.Panel>
             </Transition.Child>
@@ -170,75 +290,12 @@ function Sidebar({ isOpenMobile, onCloseMobile, isCollapsed }) {
         )}
       >
         {/* Logo Section */}
-        <div className="flex flex-shrink-0 items-center justify-center px-4 mb-4">
-          {!isCollapsed ? (
-            <div className="flex flex-col items-center">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10 backdrop-blur-sm mb-3 shadow-lg">
-                <h2 className="text-2xl font-extrabold text-white">S</h2>
-              </div>
-              <h2 className="text-2xl font-bold text-white mb-1">SIAP</h2>
-              <p className="text-xs text-blue-200">BPS Pringsewu</p>
-            </div>
-          ) : (
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10 backdrop-blur-sm shadow-lg">
-              <h2 className="text-2xl font-extrabold text-white">S</h2>
-            </div>
-          )}
-        </div>
-
-        {/* User Profile Section - Only show when not collapsed */}
-        {!isCollapsed && (
-          <div className="mx-3 mb-6 rounded-lg bg-blue-700/40 p-3">
-            <div className="flex items-center">
-              <div className="mr-3 rounded-full bg-blue-800 p-2">
-                <UserCircleIcon
-                  className="h-6 w-6 text-blue-200"
-                  aria-hidden="true"
-                />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-white">{username}</p>
-                <p className="text-xs text-blue-200 capitalize">{userRole}</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Navigation */}
+        <LogoHeader collapsed={isCollapsed} />
+        {/* User Profile Section */}
+        <UserProfile collapsed={isCollapsed} />
+        {/* Navigasi menu */}
         <div className="flex-1 flex flex-col overflow-y-auto px-3">
-          <nav className="flex-1 space-y-1">
-            {currentNav.map((item) => (
-              <Link
-                key={item.name}
-                to={item.href}
-                className={classNames(
-                  location.pathname === item.href
-                    ? "bg-blue-600 text-white shadow-md"
-                    : "text-blue-100 hover:bg-blue-700/50",
-                  "group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition duration-150",
-                  isCollapsed ? "justify-center" : ""
-                )}
-              >
-                <item.icon
-                  className={classNames(
-                    location.pathname === item.href
-                      ? "text-white"
-                      : "text-blue-300 group-hover:text-white",
-                    isCollapsed ? "mx-auto" : "mr-3",
-                    "flex-shrink-0 h-6 w-6 transition duration-150"
-                  )}
-                  aria-hidden="true"
-                />
-                {!isCollapsed && <span className="flex-1">{item.name}</span>}
-                {/* Tooltip when collapsed */}
-                {isCollapsed && (
-                  <span className="sr-only group-hover:not-sr-only group-hover:absolute group-hover:left-20 group-hover:px-3 group-hover:py-2 group-hover:rounded-md group-hover:bg-gray-800 group-hover:text-white group-hover:whitespace-nowrap group-hover:shadow-lg z-50">
-                    {item.name}
-                  </span>
-                )}
-              </Link>
-            ))}
-          </nav>
+          <SidebarNav navItems={currentNav} collapsed={isCollapsed} />
         </div>
       </div>
     </>
