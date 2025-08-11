@@ -1,17 +1,62 @@
+/**
+ * authService.js
+ *
+ * Modul ini menyediakan service untuk autentikasi dan manajemen user pada aplikasi SIAP.
+ * Digunakan untuk login, logout, verifikasi token, dan mengambil data user yang sedang login.
+ *
+ * Konteks bisnis: Digunakan dalam pengelolaan barang, permintaan, dan verifikasi user pada aplikasi SIAP BPS Pringsewu.
+ */
+
 import api from "./api";
 
 /**
- * Service untuk autentikasi dan manajemen user
+ * Melakukan login user ke aplikasi SIAP.
+ *
+ * Parameter:
+ * - credentials (Object): Berisi data login user, seperti username dan password.
+ *
+ * Return:
+ * - Promise: Berisi response dari server yang memuat token autentikasi dan informasi user.
  */
+export const login = (credentials) => {
+  return api.post("/auth/login", credentials);
+};
 
-// Login user dan dapatkan token & info
-export const login = (credentials) => api.post("/auth/login", credentials);
+/**
+ * Melakukan logout user dari aplikasi SIAP.
+ *
+ * Parameter:
+ * - Tidak ada.
+ *
+ * Return:
+ * - Promise: Berisi response dari server setelah token user diinvalidasi.
+ */
+export const logout = () => {
+  return api.post("/auth/logout");
+};
 
-// Logout user (invalidasi token di server)
-export const logout = () => api.post("/auth/logout");
+/**
+ * Memverifikasi apakah token autentikasi user masih valid.
+ *
+ * Parameter:
+ * - Tidak ada.
+ *
+ * Return:
+ * - Promise: Berisi status validitas token dari server.
+ */
+export const verifyToken = () => {
+  return api.get("/auth/verify");
+};
 
-// Verifikasi token masih valid
-export const verifyToken = () => api.get("/auth/verify");
-
-// Ambil data user yang sedang login
-export const getCurrentUser = () => api.get("/auth/me");
+/**
+ * Mengambil data user yang sedang login di aplikasi SIAP.
+ *
+ * Parameter:
+ * - Tidak ada.
+ *
+ * Return:
+ * - Promise: Berisi data user yang sedang login, seperti nama, peran, dan hak akses.
+ */
+export const getCurrentUser = () => {
+  return api.get("/auth/me");
+};

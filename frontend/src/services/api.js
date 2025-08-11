@@ -1,16 +1,38 @@
+/**
+ * File ini berisi konfigurasi dan utilitas untuk komunikasi dengan API backend SIAP.
+ * Digunakan untuk pengelolaan barang, permintaan, dan verifikasi pada aplikasi SIAP.
+ *
+ * Semua request menggunakan axios dengan interceptors untuk penanganan token dan error global.
+ */
+
 import axios from "axios";
 import { toast } from "react-toastify";
 
-// Buat instance axios dengan konfigurasi default
+/**
+ * Membuat instance axios dengan konfigurasi default untuk komunikasi API SIAP.
+ *
+ * Parameter: Tidak ada
+ *
+ * Return:
+ * - axios instance: Instance axios yang sudah dikonfigurasi
+ */
 const api = axios.create({
-  baseURL: "/api", // Sesuaikan dengan base URL API Anda
+  baseURL: "/api", // Base URL API SIAP
   timeout: 15000,
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-// Request Interceptor - Menambahkan token ke setiap request
+/**
+ * Interceptor request untuk menambahkan token autentikasi ke setiap request.
+ *
+ * Parameter:
+ * - config (object): Konfigurasi request axios
+ *
+ * Return:
+ * - object: Konfigurasi request yang sudah ditambahkan header Authorization jika token tersedia
+ */
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("authToken");
@@ -19,89 +41,87 @@ api.interceptors.request.use(
     }
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
-// Response Interceptor - Handling global error
+/**
+ * Interceptor response untuk penanganan error global pada aplikasi SIAP.
+ * Menampilkan notifikasi error dan melakukan redirect sesuai status error.
+ *
+ * Parameter:
+ * - response (object): Response dari server
+ * - error (object): Error dari server atau jaringan
+ *
+ * Return:
+ * - object: Response jika sukses, atau Promise.reject(error) jika gagal
+ */
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Persiapkan default error message
+    // Pesan error default
     let errorMessage = "Terjadi kesalahan. Silakan coba lagi.";
 
-    // Cek jika ada response dari server
+    // Jika ada response dari server
     if (error.response) {
       const { status, data } = error.response;
 
+      /**
+       * Penanganan error berdasarkan status kode HTTP.
+       * - 400: Validasi input barang/permintaan/verifikasi gagal
+       * - 401: Token tidak valid/expired, sesi login berakhir
+       * - 403: User tidak punya akses ke fitur tertentu
+       * - 404: Data barang/permintaan/verifikasi tidak ditemukan
+       * - 422: Validasi data gagal
+       * - 429: Terlalu banyak permintaan ke server
+       * - 500: Error server
+       */
       switch (status) {
         case 400:
-          // Bad Request - Validasi Error
+        case 422:
           errorMessage =
             data?.message || "Data tidak valid. Periksa kembali input Anda.";
           break;
-
         case 401:
-          // Unauthorized - Token invalid atau expired
           errorMessage = "Sesi login telah berakhir. Silakan login kembali.";
-
-          // Clear authentication data
+          // Hapus data autentikasi dari localStorage
           localStorage.removeItem("authToken");
           localStorage.removeItem("userRole");
           localStorage.removeItem("username");
-
-          // Redirect ke halaman login jika bukan di halaman login
+          // Redirect ke halaman login jika belum di halaman login
           if (window.location.pathname !== "/login") {
             setTimeout(() => {
               window.location.href = "/login";
             }, 1500);
           }
           break;
-
         case 403:
-          // Forbidden - Tidak punya akses
           errorMessage = "Anda tidak memiliki akses untuk operasi ini.";
-
-          // Redirect ke halaman forbidden jika bukan di halaman forbidden
+          // Redirect ke halaman forbidden jika belum di halaman forbidden
           if (window.location.pathname !== "/forbidden") {
             setTimeout(() => {
               window.location.href = "/forbidden";
             }, 1500);
           }
           break;
-
         case 404:
-          // Not Found
           errorMessage = "Data tidak ditemukan.";
           break;
-
-        case 422:
-          // Unprocessable Entity - Validasi Error
-          errorMessage =
-            data?.message || "Data tidak valid. Periksa kembali input Anda.";
-          break;
-
         case 429:
-          // Too Many Requests
           errorMessage = "Terlalu banyak permintaan. Coba lagi nanti.";
           break;
-
         case 500:
-          // Server Error
           errorMessage =
             "Terjadi kesalahan pada server. Silakan hubungi administrator.";
           break;
-
         default:
           errorMessage = data?.message || errorMessage;
       }
     } else if (error.request) {
-      // Request dibuat tapi tidak ada respon (network issue)
+      // Jika request tidak mendapatkan respon (misal: masalah jaringan)
       errorMessage = "Tidak dapat terhubung ke server. Periksa koneksi Anda.";
     }
 
-    // Tampilkan toast notification untuk error
+    // Tampilkan notifikasi error menggunakan toast
     toast.error(errorMessage);
 
     return Promise.reject(error);
