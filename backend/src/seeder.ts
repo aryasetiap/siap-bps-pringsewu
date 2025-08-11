@@ -1,3 +1,12 @@
+/**
+ * File seeder.ts
+ *
+ * Digunakan untuk melakukan proses seeding data awal pada aplikasi SIAP (Sistem Informasi Administrasi Pengelolaan Barang).
+ * Proses ini meliputi pengosongan tabel, penambahan data user, barang, permintaan, dan detail permintaan.
+ *
+ * Tujuan utama: Memudahkan pengujian dan pengembangan aplikasi dengan data dummy yang merepresentasikan proses bisnis SIAP.
+ */
+
 import { DataSource } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 import * as dotenv from 'dotenv';
@@ -10,36 +19,73 @@ import ormconfig from '../ormconfig';
 dotenv.config();
 
 /**
- * Melakukan proses seeding data awal ke database.
+ * Fungsi utama untuk melakukan proses seeding data pada database SIAP.
  *
- * Fungsi ini akan:
- * 1. Menginisialisasi koneksi database.
- * 2. Mengosongkan tabel detail_permintaan, permintaan, barang, dan users.
- * 3. Menambahkan data user (admin dan pegawai).
- * 4. Menambahkan data barang.
- * 5. Menutup koneksi database setelah selesai.
+ * Proses yang dilakukan:
+ * 1. Inisialisasi koneksi database.
+ * 2. Pengosongan seluruh data pada tabel terkait (detail_permintaan, permintaan, barang, users).
+ * 3. Penambahan data user (admin dan pegawai).
+ * 4. Penambahan data barang.
+ * 5. Penambahan data permintaan dan detail permintaan.
+ * 6. Penutupan koneksi database.
  *
- * @returns {Promise<void>} Tidak mengembalikan nilai apapun.
+ * Parameter: Tidak ada.
+ *
+ * Return:
+ * - Promise<void>: Tidak mengembalikan nilai, hanya menjalankan proses seeding.
  */
 async function seed(): Promise<void> {
   const dataSource = await ormconfig.initialize();
 
+  // Pengosongan seluruh data pada tabel utama, termasuk reset auto increment
+  await truncateTables(dataSource);
+
+  // Proses seeding data user
+  const savedUsers = await seedUsers(dataSource);
+
+  // Proses seeding data barang
+  const savedBarang = await seedBarang(dataSource);
+
+  // Proses seeding data permintaan dan detail permintaan
+  await seedPermintaanDanDetail(dataSource, savedUsers, savedBarang);
+
+  await dataSource.destroy();
+  console.log('Seeding selesai');
+}
+
+/**
+ * Fungsi untuk mengosongkan tabel utama pada database SIAP.
+ *
+ * Parameter:
+ * - dataSource (DataSource): Koneksi database yang sudah diinisialisasi.
+ *
+ * Return:
+ * - Promise<void>: Tidak mengembalikan nilai.
+ */
+async function truncateTables(dataSource: DataSource): Promise<void> {
   await dataSource.query(`
     TRUNCATE TABLE "detail_permintaan", "permintaan", "barang", "users" RESTART IDENTITY CASCADE
   `);
+}
 
+/**
+ * Fungsi untuk melakukan seeding data user (admin dan pegawai).
+ *
+ * Parameter:
+ * - dataSource (DataSource): Koneksi database yang sudah diinisialisasi.
+ *
+ * Return:
+ * - Promise<User[]>: Array user yang sudah tersimpan di database.
+ */
+async function seedUsers(dataSource: DataSource): Promise<User[]> {
   const userRepo = dataSource.getRepository(User);
-  const barangRepo = dataSource.getRepository(Barang);
-  const permintaanRepo = dataSource.getRepository(Permintaan);
-  const detailPermintaanRepo = dataSource.getRepository(DetailPermintaan);
 
-  // 1. User
-  const users = [
+  const users: Partial<User>[] = [
     {
       nama: 'Admin SIAP',
       username: 'admin',
       password: await bcrypt.hash('admin123', 10),
-      role: 'admin' as const,
+      role: 'admin',
       unit_kerja: 'Kepala Kantor',
       status_aktif: true,
       foto: 'https://ui-avatars.com/api/?name=Admin+SIAP',
@@ -48,7 +94,7 @@ async function seed(): Promise<void> {
       nama: 'Budi Santoso',
       username: 'budi',
       password: await bcrypt.hash('budi123', 10),
-      role: 'pegawai' as const,
+      role: 'pegawai',
       unit_kerja: 'Statistik Produksi',
       status_aktif: true,
       foto: 'https://ui-avatars.com/api/?name=Budi+Santoso',
@@ -57,7 +103,7 @@ async function seed(): Promise<void> {
       nama: 'Siti Aminah',
       username: 'siti',
       password: await bcrypt.hash('siti123', 10),
-      role: 'pegawai' as const,
+      role: 'pegawai',
       unit_kerja: 'Statistik Sosial',
       status_aktif: true,
       foto: 'https://ui-avatars.com/api/?name=Siti+Aminah',
@@ -66,7 +112,7 @@ async function seed(): Promise<void> {
       nama: 'Rudi Hartono',
       username: 'rudi',
       password: await bcrypt.hash('rudi123', 10),
-      role: 'pegawai' as const,
+      role: 'pegawai',
       unit_kerja: 'Bagian Umum',
       status_aktif: true,
       foto: 'https://ui-avatars.com/api/?name=Rudi+Hartono',
@@ -75,23 +121,40 @@ async function seed(): Promise<void> {
       nama: 'Dewi Lestari',
       username: 'dewi',
       password: await bcrypt.hash('dewi123', 10),
-      role: 'pegawai' as const,
+      role: 'pegawai',
       unit_kerja: 'Statistik Distribusi',
       status_aktif: true,
       foto: 'https://ui-avatars.com/api/?name=Dewi+Lestari',
     },
   ];
-  const savedUsers = await userRepo.save(userRepo.create(users));
 
-  // 2. Barang
+  return await userRepo.save(userRepo.create(users));
+}
+
+/**
+ * Fungsi untuk melakukan seeding data barang pada aplikasi SIAP.
+ *
+ * Barang yang diinputkan merepresentasikan berbagai kategori barang yang dikelola oleh kantor.
+ *
+ * Parameter:
+ * - dataSource (DataSource): Koneksi database yang sudah diinisialisasi.
+ *
+ * Return:
+ * - Promise<Barang[]>: Array barang yang sudah tersimpan di database.
+ */
+async function seedBarang(dataSource: DataSource): Promise<Barang[]> {
+  const barangRepo = dataSource.getRepository(Barang);
+
   const kategoriList = ['ATK', 'Elektronik', 'Konsumsi', 'Dokumen', 'Lainnya'];
-  const barangList: Partial<Barang>[] = []; // <-- tambahkan tipe Partial<Barang>
+  const satuanList = ['pcs', 'box', 'pak', 'rim', 'unit'];
+  const barangList: Partial<Barang>[] = [];
+
   for (let i = 1; i <= 50; i++) {
     barangList.push({
       kode_barang: `BRG${i.toString().padStart(3, '0')}`,
       nama_barang: `Barang Contoh ${i}`,
       deskripsi: `Deskripsi barang contoh ke-${i}`,
-      satuan: ['pcs', 'box', 'pak', 'rim', 'unit'][i % 5],
+      satuan: satuanList[i % satuanList.length],
       stok: Math.floor(Math.random() * 100),
       ambang_batas_kritis: Math.floor(Math.random() * 10) + 1,
       status_aktif: true,
@@ -99,19 +162,42 @@ async function seed(): Promise<void> {
       kategori: kategoriList[i % kategoriList.length],
     });
   }
-  const savedBarang = await barangRepo.save(barangRepo.create(barangList));
 
-  // 3. Permintaan & Detail Permintaan
-  let permintaanArr: Partial<Permintaan>[] = []; // <-- tambahkan tipe Partial<Permintaan>
-  let detailArr: Partial<DetailPermintaan>[] = []; // <-- tambahkan tipe Partial<DetailPermintaan>
+  return await barangRepo.save(barangRepo.create(barangList));
+}
+
+/**
+ * Fungsi untuk melakukan seeding data permintaan dan detail permintaan barang.
+ *
+ * Permintaan merepresentasikan proses pengajuan barang oleh pegawai, sedangkan detail permintaan berisi daftar barang yang diminta.
+ *
+ * Parameter:
+ * - dataSource (DataSource): Koneksi database yang sudah diinisialisasi.
+ * - users (User[]): Array user yang sudah tersimpan di database.
+ * - barangs (Barang[]): Array barang yang sudah tersimpan di database.
+ *
+ * Return:
+ * - Promise<void>: Tidak mengembalikan nilai.
+ */
+async function seedPermintaanDanDetail(
+  dataSource: DataSource,
+  users: User[],
+  barangs: Barang[],
+): Promise<void> {
+  const permintaanRepo = dataSource.getRepository(Permintaan);
+  const detailPermintaanRepo = dataSource.getRepository(DetailPermintaan);
+
   const statusArr: (
     | 'Menunggu'
     | 'Disetujui'
     | 'Ditolak'
     | 'Disetujui Sebagian'
   )[] = ['Menunggu', 'Disetujui', 'Ditolak', 'Disetujui Sebagian'];
+  const permintaanArr: Partial<Permintaan>[] = [];
+
+  // Membuat 100 permintaan barang secara acak
   for (let i = 0; i < 100; i++) {
-    const user = savedUsers[i % savedUsers.length];
+    const user = users[i % users.length];
     const status = statusArr[i % statusArr.length];
 
     // Generate tanggal permintaan acak dalam 1 tahun terakhir (Agustus 2024 - Juli 2025)
@@ -120,25 +206,27 @@ async function seed(): Promise<void> {
     const randomTime = startDate + Math.random() * (endDate - startDate);
     const tanggal_permintaan = new Date(randomTime);
 
-    const permintaan: Partial<Permintaan> = {
+    permintaanArr.push({
       id_user_pemohon: user.id,
       tanggal_permintaan,
       status,
       catatan: status === 'Ditolak' ? 'Stok tidak cukup' : '',
-    };
-    permintaanArr.push(permintaan);
+    });
   }
+
   const savedPermintaan = await permintaanRepo.save(
     permintaanRepo.create(permintaanArr),
   );
 
-  // Detail permintaan (multi-item per permintaan)
+  // Membuat detail permintaan untuk setiap permintaan (multi-item)
+  const detailArr: Partial<DetailPermintaan>[] = [];
   for (let i = 0; i < savedPermintaan.length; i++) {
     const permintaan = savedPermintaan[i];
-    const jumlahItem = Math.floor(Math.random() * 4) + 1;
+    const jumlahItem = Math.floor(Math.random() * 4) + 1; // 1-4 barang per permintaan
+
     for (let j = 0; j < jumlahItem; j++) {
-      const barang = savedBarang[(i + j) % savedBarang.length];
-      const detail: Partial<DetailPermintaan> = {
+      const barang = barangs[(i + j) % barangs.length];
+      detailArr.push({
         id_permintaan: permintaan.id,
         id_barang: barang.id,
         jumlah_diminta: Math.floor(Math.random() * 5) + 1,
@@ -146,20 +234,20 @@ async function seed(): Promise<void> {
           permintaan.status === 'Disetujui'
             ? Math.floor(Math.random() * 5) + 1
             : 0,
-      };
-      detailArr.push(detail);
+      });
     }
   }
-  await detailPermintaanRepo.save(detailPermintaanRepo.create(detailArr));
 
-  await dataSource.destroy();
-  console.log('Seeding selesai');
+  await detailPermintaanRepo.save(detailPermintaanRepo.create(detailArr));
 }
 
 /**
- * Menjalankan fungsi seed dan menangani error jika terjadi.
+ * Fungsi utama untuk menjalankan proses seeding dan menangani error jika terjadi.
  *
- * @returns {void}
+ * Parameter: Tidak ada.
+ *
+ * Return:
+ * - void: Proses akan keluar dengan kode 1 jika terjadi error.
  */
 seed().catch((err) => {
   console.error('Seeding gagal:', err);

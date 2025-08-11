@@ -1,45 +1,64 @@
+/**
+ * File pengujian unit untuk AppController pada aplikasi SIAP.
+ *
+ * Tujuan:
+ * - Memastikan AppController dapat diinisialisasi dengan benar.
+ * - Memastikan fungsi getHello() mengembalikan nilai yang diharapkan.
+ *
+ * Konteks bisnis:
+ * Pada aplikasi SIAP (Sistem Informasi Administrasi Pengelolaan Barang),
+ * AppController bertanggung jawab sebagai entry point untuk permintaan utama,
+ * seperti pengecekan status layanan.
+ */
+
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
 /**
- * Pengujian unit untuk AppController.
+ * Kelas pengujian unit untuk AppController.
  *
  * Tujuan:
- * - Memastikan AppController dapat diinisialisasi dengan benar.
- * - Memastikan fungsi getHello() mengembalikan nilai yang diharapkan.
+ * - Melakukan inisialisasi modul pengujian.
+ * - Menguji fungsi utama pada AppController.
  */
 describe('AppController', () => {
   let appController: AppController;
 
   /**
-   * Inisialisasi modul pengujian dan instance AppController sebelum setiap pengujian dijalankan.
+   * Fungsi inisialisasi sebelum setiap pengujian.
    *
-   * Tidak menerima parameter.
-   * Tidak mengembalikan nilai.
+   * Parameter: Tidak ada.
+   *
+   * Return: Promise<void>
+   * - Melakukan setup modul pengujian dan mendapatkan instance AppController.
    */
-  beforeEach(async () => {
-    const app: TestingModule = await Test.createTestingModule({
+  beforeEach(async (): Promise<void> => {
+    const testingModule: TestingModule = await Test.createTestingModule({
       controllers: [AppController],
       providers: [AppService],
     }).compile();
 
-    appController = app.get<AppController>(AppController);
+    appController = testingModule.get<AppController>(AppController);
   });
 
   /**
-   * Pengujian untuk fungsi root (getHello).
+   * Pengujian fungsi root pada AppController.
    *
-   * Memastikan bahwa fungsi getHello() mengembalikan string "Hello World!".
+   * Konteks bisnis:
+   * Fungsi getHello() digunakan untuk memastikan layanan SIAP berjalan
+   * dan dapat menerima permintaan dasar.
    */
   describe('root', () => {
     /**
-     * Pengujian nilai kembalian dari fungsi getHello().
+     * Fungsi pengujian untuk memastikan getHello() mengembalikan string yang diharapkan.
      *
-     * Tidak menerima parameter.
-     * Tidak mengembalikan nilai.
+     * Parameter: Tidak ada.
+     *
+     * Return: void
+     * - Melakukan assertion terhadap output fungsi getHello().
      */
-    it('should return "Hello World!"', () => {
+    it('should return "Hello World!"', (): void => {
       expect(appController.getHello()).toBe('Hello World!');
     });
   });

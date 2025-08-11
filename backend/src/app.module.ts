@@ -1,3 +1,14 @@
+/**
+ * File: app.module.ts
+ *
+ * Modul utama aplikasi SIAP-BPS Pringsewu.
+ *
+ * Modul ini bertanggung jawab untuk menginisialisasi seluruh modul fitur,
+ * konfigurasi environment, serta koneksi database PostgreSQL.
+ *
+ * Aplikasi SIAP digunakan untuk pengelolaan barang, permintaan barang, dan verifikasi pengguna.
+ */
+
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -9,23 +20,37 @@ import { BarangModule } from './barang/barang.module';
 import { PermintaanModule } from './permintaan/permintaan.module';
 
 /**
- * AppModule adalah modul utama aplikasi.
+ * Kelas AppModule merupakan modul utama aplikasi SIAP.
  *
- * Modul ini bertanggung jawab untuk menginisialisasi dan mengatur seluruh modul lain,
- * konfigurasi environment, serta koneksi database.
- *
- * @module AppModule
+ * Kelas ini mengatur inisialisasi modul konfigurasi, koneksi database,
+ * serta mengimpor seluruh modul fitur aplikasi seperti autentikasi, user,
+ * barang, dan permintaan.
  */
 @Module({
   imports: [
     /**
-     * Menginisialisasi modul konfigurasi global.
+     * Inisialisasi modul konfigurasi global.
+     *
+     * Parameter:
+     * - isGlobal (boolean): Menjadikan konfigurasi tersedia di seluruh aplikasi.
      */
     ConfigModule.forRoot({ isGlobal: true }),
 
     /**
-     * Mengatur koneksi ke database PostgreSQL menggunakan TypeORM.
-     * Parameter diambil dari environment variable.
+     * Inisialisasi koneksi database PostgreSQL menggunakan TypeORM.
+     *
+     * Parameter:
+     * - type (string): Jenis database yang digunakan.
+     * - host (string): Host database.
+     * - port (number): Port database.
+     * - username (string): Username database.
+     * - password (string): Password database.
+     * - database (string): Nama database.
+     * - autoLoadEntities (boolean): Otomatis memuat entitas.
+     * - synchronize (boolean): Sinkronisasi skema database (false di production).
+     *
+     * Return:
+     * - TypeOrmModule: Modul koneksi database.
      */
     TypeOrmModule.forRoot({
       type: 'postgres',
@@ -39,7 +64,11 @@ import { PermintaanModule } from './permintaan/permintaan.module';
     }),
 
     /**
-     * Modul-modul fitur aplikasi.
+     * Modul-modul fitur aplikasi SIAP:
+     * - AuthModule: Modul autentikasi dan otorisasi pengguna.
+     * - UserModule: Modul pengelolaan data pengguna.
+     * - BarangModule: Modul pengelolaan data barang.
+     * - PermintaanModule: Modul pengelolaan permintaan barang.
      */
     AuthModule,
     UserModule,
@@ -49,4 +78,13 @@ import { PermintaanModule } from './permintaan/permintaan.module';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule {
+  /**
+   * Konstruktor AppModule.
+   *
+   * Fungsi ini digunakan untuk menginisialisasi modul utama aplikasi SIAP.
+   *
+   * Tidak menerima parameter dan tidak mengembalikan nilai.
+   */
+  constructor() {}
+}
