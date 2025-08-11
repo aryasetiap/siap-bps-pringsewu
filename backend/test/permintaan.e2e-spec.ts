@@ -2,26 +2,14 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from '../src/app.module';
-import { execSync } from 'child_process';
 
-/**
- * Pengujian End-to-End untuk fitur Permintaan Barang.
- * Meliputi pengajuan, verifikasi, akses riwayat, dan dashboard statistik permintaan.
- */
 describe('Permintaan E2E', () => {
   let app: INestApplication;
   let pegawaiToken: string;
   let adminToken: string;
   let createdPermintaanId: number;
 
-  /**
-   * Inisialisasi aplikasi dan autentikasi pengguna sebelum seluruh pengujian dijalankan.
-   * Melakukan seed database dan login sebagai pegawai serta admin.
-   * @returns {Promise<void>}
-   */
   beforeAll(async () => {
-    execSync('npm run seed', { stdio: 'inherit' });
-
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
@@ -29,29 +17,23 @@ describe('Permintaan E2E', () => {
     app = moduleFixture.createNestApplication();
     await app.init();
 
+    // Login pegawai
     const pegawaiRes = await request(app.getHttpServer())
       .post('/auth/login')
       .send({ username: 'budi', password: 'budi123' });
     pegawaiToken = pegawaiRes.body.access_token;
 
+    // Login admin
     const adminRes = await request(app.getHttpServer())
       .post('/auth/login')
       .send({ username: 'admin', password: 'admin123' });
     adminToken = adminRes.body.access_token;
   });
 
-  /**
-   * Menutup aplikasi setelah seluruh pengujian selesai.
-   * @returns {Promise<void>}
-   */
   afterAll(async () => {
     await app.close();
   });
 
-  /**
-   * Menguji apakah pegawai dapat mengajukan permintaan barang.
-   * @returns {Promise<void>}
-   */
   it('Pegawai dapat mengajukan permintaan barang', async () => {
     const res = await request(app.getHttpServer())
       .post('/permintaan')
@@ -69,10 +51,6 @@ describe('Permintaan E2E', () => {
     createdPermintaanId = res.body.id;
   });
 
-  /**
-   * Menguji apakah pegawai dapat melihat riwayat permintaan miliknya.
-   * @returns {Promise<void>}
-   */
   it('Pegawai dapat melihat riwayat permintaan miliknya', async () => {
     const res = await request(app.getHttpServer())
       .get('/permintaan/riwayat')
@@ -82,10 +60,6 @@ describe('Permintaan E2E', () => {
     expect(res.body[0]).toHaveProperty('items');
   });
 
-  /**
-   * Menguji apakah pegawai dapat melihat detail permintaan miliknya.
-   * @returns {Promise<void>}
-   */
   it('Pegawai dapat melihat detail permintaan miliknya', async () => {
     const res = await request(app.getHttpServer())
       .get(`/permintaan/${createdPermintaanId}`)
@@ -95,10 +69,6 @@ describe('Permintaan E2E', () => {
     expect(res.body.items.length).toBeGreaterThan(0);
   });
 
-  /**
-   * Menguji bahwa pegawai tidak dapat melihat permintaan milik user lain.
-   * @returns {Promise<void>}
-   */
   it('Pegawai TIDAK BISA melihat permintaan milik user lain', async () => {
     const pegawaiRes = await request(app.getHttpServer())
       .post('/auth/login')
@@ -111,10 +81,6 @@ describe('Permintaan E2E', () => {
     expect(res.status).toBe(403);
   });
 
-  /**
-   * Menguji apakah admin dapat melihat daftar permintaan masuk dengan status 'Menunggu'.
-   * @returns {Promise<void>}
-   */
   it('Admin dapat melihat daftar permintaan masuk (Menunggu)', async () => {
     const res = await request(app.getHttpServer())
       .get('/permintaan/masuk')
@@ -124,10 +90,6 @@ describe('Permintaan E2E', () => {
     expect(res.body[0]).toHaveProperty('status', 'Menunggu');
   });
 
-  /**
-   * Menguji bahwa non-admin tidak dapat mengakses daftar permintaan masuk.
-   * @returns {Promise<void>}
-   */
   it('Non-admin TIDAK BISA akses daftar permintaan masuk', async () => {
     const res = await request(app.getHttpServer())
       .get('/permintaan/masuk')
@@ -135,10 +97,6 @@ describe('Permintaan E2E', () => {
     expect(res.status).toBe(403);
   });
 
-  /**
-   * Menguji bahwa permintaan barang dengan stok kurang akan gagal.
-   * @returns {Promise<void>}
-   */
   it('Tidak bisa mengajukan permintaan barang dengan stok kurang', async () => {
     const res = await request(app.getHttpServer())
       .post('/permintaan')
@@ -151,10 +109,6 @@ describe('Permintaan E2E', () => {
     expect(res.body.message).toMatch(/Stok barang/);
   });
 
-  /**
-   * Menguji apakah admin dapat memverifikasi permintaan dan menyetujui seluruh item.
-   * @returns {Promise<void>}
-   */
   it('Admin dapat memverifikasi permintaan (setuju semua)', async () => {
     const detailRes = await request(app.getHttpServer())
       .get(`/permintaan/${createdPermintaanId}`)
@@ -178,10 +132,133 @@ describe('Permintaan E2E', () => {
     expect(res.body.catatan).toBe('Disetujui penuh oleh admin');
   });
 
-  /**
-   * Menguji endpoint statistik dashboard permintaan.
-   * @returns {Promise<void>}
-   */
+  it('Admin dapat memverifikasi permintaan (sebagian)', async () => {
+    const detailRes = await request(app.getHttpServer())
+      .get(`/permintaan/${createdPermintaanId}`)
+      .set('Authorization', `Bearer ${adminToken}`);
+    const items = detailRes.body.items.map((item) => ({
+      id_detail: item.id,
+      jumlah_disetujui: Math.max(1, item.jumlah_diminta - 1),
+    }));
+
+    const res = await request(app.getHttpServer())
+      .patch(`/permintaan/${createdPermintaanId}/verifikasi`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({
+        keputusan: 'sebagian',
+        items,
+        catatan_verifikasi: 'Disetujui sebagian',
+      });
+    expect(res.status).toBe(200);
+    expect(res.body.status).toBe('Disetujui Sebagian');
+  });
+
+  it('Admin dapat memverifikasi permintaan (tolak)', async () => {
+    const detailRes = await request(app.getHttpServer())
+      .get(`/permintaan/${createdPermintaanId}`)
+      .set('Authorization', `Bearer ${adminToken}`);
+    const items = detailRes.body.items.map((item) => ({
+      id_detail: item.id,
+      jumlah_disetujui: 0,
+    }));
+
+    const res = await request(app.getHttpServer())
+      .patch(`/permintaan/${createdPermintaanId}/verifikasi`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({
+        keputusan: 'tolak',
+        items,
+        catatan_verifikasi: 'Ditolak',
+      });
+    expect(res.status).toBe(200);
+    expect(res.body.status).toBe('Ditolak');
+  });
+
+  it('Verifikasi gagal jika jumlah_disetujui > jumlah_diminta', async () => {
+    const detailRes = await request(app.getHttpServer())
+      .get(`/permintaan/${createdPermintaanId}`)
+      .set('Authorization', `Bearer ${adminToken}`);
+    const item = detailRes.body.items[0];
+    const res = await request(app.getHttpServer())
+      .patch(`/permintaan/${createdPermintaanId}/verifikasi`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({
+        keputusan: 'setuju',
+        items: [
+          { id_detail: item.id, jumlah_disetujui: item.jumlah_diminta + 1 },
+        ],
+      });
+    expect(res.status).toBe(400);
+    expect(res.body.message).toMatch(/jumlah diminta/);
+  });
+
+  it('Verifikasi gagal jika jumlah_disetujui > stok barang', async () => {
+    // Asumsikan stok barang sudah habis setelah verifikasi sebelumnya
+    const detailRes = await request(app.getHttpServer())
+      .get(`/permintaan/${createdPermintaanId}`)
+      .set('Authorization', `Bearer ${adminToken}`);
+    const item = detailRes.body.items[0];
+    const res = await request(app.getHttpServer())
+      .patch(`/permintaan/${createdPermintaanId}/verifikasi`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({
+        keputusan: 'setuju',
+        items: [{ id_detail: item.id, jumlah_disetujui: 999 }],
+      });
+    expect(res.status).toBe(400);
+    expect(res.body.message).toMatch(/stok/i);
+  });
+
+  it('Verifikasi gagal jika permintaan sudah diverifikasi', async () => {
+    // Verifikasi permintaan yang sudah diverifikasi
+    const detailRes = await request(app.getHttpServer())
+      .get(`/permintaan/${createdPermintaanId}`)
+      .set('Authorization', `Bearer ${adminToken}`);
+    const items = detailRes.body.items.map((item) => ({
+      id_detail: item.id,
+      jumlah_disetujui: item.jumlah_diminta,
+    }));
+
+    // Verifikasi pertama
+    await request(app.getHttpServer())
+      .patch(`/permintaan/${createdPermintaanId}/verifikasi`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({
+        keputusan: 'setuju',
+        items,
+      });
+
+    // Verifikasi kedua (harus gagal)
+    const res = await request(app.getHttpServer())
+      .patch(`/permintaan/${createdPermintaanId}/verifikasi`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({
+        keputusan: 'setuju',
+        items,
+      });
+    expect(res.status).toBe(400);
+    expect(res.body.message).toMatch(/sudah diverifikasi/);
+  });
+
+  it('GET /permintaan/:id/pdf forbidden untuk pegawai bukan pemilik', async () => {
+    const pegawaiRes = await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({ username: 'siti', password: 'siti123' });
+    const tokenSiti = pegawaiRes.body.access_token;
+
+    const res = await request(app.getHttpServer())
+      .get(`/permintaan/${createdPermintaanId}/pdf`)
+      .set('Authorization', `Bearer ${tokenSiti}`);
+    expect(res.status).toBe(403);
+  });
+
+  it('GET /permintaan/:id not found', async () => {
+    const res = await request(app.getHttpServer())
+      .get('/permintaan/999999')
+      .set('Authorization', `Bearer ${adminToken}`);
+    expect(res.status).toBe(404);
+  });
+
   it('GET /permintaan/dashboard/statistik returns dashboard stats', async () => {
     const res = await request(app.getHttpServer())
       .get('/permintaan/dashboard/statistik')
@@ -190,12 +267,9 @@ describe('Permintaan E2E', () => {
     expect(res.body).toHaveProperty('totalBarang');
     expect(res.body).toHaveProperty('totalPermintaanTertunda');
     expect(res.body).toHaveProperty('totalBarangKritis');
+    expect(res.body).toHaveProperty('totalUser');
   });
 
-  /**
-   * Menguji endpoint tren permintaan pada dashboard.
-   * @returns {Promise<void>}
-   */
   it('GET /permintaan/dashboard/tren-permintaan returns trend data', async () => {
     const res = await request(app.getHttpServer())
       .get('/permintaan/dashboard/tren-permintaan')
@@ -206,11 +280,7 @@ describe('Permintaan E2E', () => {
     expect(res.body[0]).toHaveProperty('jumlah');
   });
 
-  /**
-   * Menguji endpoint untuk mengunduh PDF permintaan.
-   * @returns {Promise<void>}
-   */
-  it('GET /permintaan/:id/pdf returns PDF', async () => {
+  it('GET /permintaan/:id/pdf returns PDF for admin', async () => {
     const res = await request(app.getHttpServer())
       .get(`/permintaan/${createdPermintaanId}/pdf`)
       .set('Authorization', `Bearer ${adminToken}`);
@@ -218,5 +288,26 @@ describe('Permintaan E2E', () => {
     expect(res.header['content-type']).toBe('application/pdf');
     expect(res.header['content-disposition']).toMatch(/attachment/);
     expect(res.body).toBeInstanceOf(Buffer);
+  });
+
+  it('GET /permintaan/:id/pdf returns PDF for pegawai pemilik', async () => {
+    const res = await request(app.getHttpServer())
+      .get(`/permintaan/${createdPermintaanId}/pdf`)
+      .set('Authorization', `Bearer ${pegawaiToken}`);
+    expect(res.status).toBe(200);
+    expect(res.header['content-type']).toBe('application/pdf');
+    expect(res.header['content-disposition']).toMatch(/attachment/);
+    expect(res.body).toBeInstanceOf(Buffer);
+  });
+
+  it('GET /permintaan/all returns paginated data', async () => {
+    const res = await request(app.getHttpServer())
+      .get('/permintaan/all?status=Menunggu&page=1&limit=10')
+      .set('Authorization', `Bearer ${adminToken}`);
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveProperty('data');
+    expect(res.body).toHaveProperty('total');
+    expect(res.body).toHaveProperty('page');
+    expect(res.body).toHaveProperty('limit');
   });
 });
