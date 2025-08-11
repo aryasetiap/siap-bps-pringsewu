@@ -25,6 +25,7 @@ const createMockPermintaanService = () => ({
   generateBuktiPermintaanPDF: jest.fn(),
   getDashboardStatistik: jest.fn(),
   getTrenPermintaanBulanan: jest.fn(),
+  getAllPermintaan: jest.fn(),
 });
 
 describe('PermintaanController', () => {
@@ -182,6 +183,17 @@ describe('PermintaanController', () => {
 
       expect(result).toEqual(permintaan);
     });
+
+    /**
+     * Menguji jika id tidak valid, maka akan melempar BadRequestException.
+     */
+    it('should throw BadRequestException if id is invalid', async () => {
+      const req = { user: { userId: 1, role: 'admin' } };
+
+      await expect(controller.findOne(req as any, 'abc')).rejects.toThrow(
+        'ID permintaan tidak valid',
+      );
+    });
   });
 
   /**
@@ -302,6 +314,49 @@ describe('PermintaanController', () => {
 
       expect(service.getTrenPermintaanBulanan).toHaveBeenCalled();
       expect(result).toEqual([{ bulan: '2024-07', jumlah: 2 }]);
+    });
+  });
+
+  /**
+   * Pengujian pengambilan semua permintaan dengan filter, halaman, dan limit.
+   */
+  describe('getAllPermintaan', () => {
+    /**
+     * Menguji pemanggilan service.getAllPermintaan dengan parameter yang benar.
+     */
+    it('should call service.getAllPermintaan with correct params', async () => {
+      service.getAllPermintaan = jest.fn().mockResolvedValue({
+        data: [{ id: 1 }],
+        total: 1,
+        page: 1,
+        limit: 20,
+      });
+      const result = await controller.getAllPermintaan('Menunggu', 1, 20);
+
+      expect(service.getAllPermintaan).toHaveBeenCalledWith({
+        status: 'Menunggu',
+        page: 1,
+        limit: 20,
+      });
+      expect(result).toEqual({
+        data: [{ id: 1 }],
+        total: 1,
+        page: 1,
+        limit: 20,
+      });
+    });
+
+    /**
+     * Menguji penanganan error pada proses pengambilan semua permintaan.
+     */
+    it('should handle error on getAllPermintaan', async () => {
+      service.getAllPermintaan = jest
+        .fn()
+        .mockRejectedValue(new Error('Get error'));
+
+      await expect(
+        controller.getAllPermintaan('Menunggu', 1, 20),
+      ).rejects.toThrow('Get error');
     });
   });
 });

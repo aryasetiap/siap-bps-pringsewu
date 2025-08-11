@@ -623,4 +623,38 @@ describe('PermintaanService', () => {
       expect(Buffer.isBuffer(buffer)).toBe(true);
     });
   });
+
+  /**
+   * Pengujian pengambilan semua permintaan dengan paginasi dan filter.
+   */
+  describe('getAllPermintaan', () => {
+    it('should return paginated and filtered permintaan', async () => {
+      const qb = {
+        leftJoinAndSelect: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(),
+        take: jest.fn().mockReturnThis(),
+        getManyAndCount: jest.fn().mockResolvedValue([[{ id: 1 }], 1]),
+      };
+      permintaanRepo.createQueryBuilder.mockReturnValue(qb);
+
+      const result = await service.getAllPermintaan({
+        status: 'Menunggu',
+        page: 2,
+        limit: 10,
+      });
+      expect(qb.andWhere).toHaveBeenCalledWith('permintaan.status = :status', {
+        status: 'Menunggu',
+      });
+      expect(qb.skip).toHaveBeenCalledWith(10);
+      expect(qb.take).toHaveBeenCalledWith(10);
+      expect(result).toEqual({
+        data: [{ id: 1 }],
+        total: 1,
+        page: 2,
+        limit: 10,
+      });
+    });
+  });
 });
