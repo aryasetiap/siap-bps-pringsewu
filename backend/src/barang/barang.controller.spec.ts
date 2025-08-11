@@ -149,12 +149,14 @@ describe('BarangController', () => {
     await controller.generateLaporanPenggunaanPDF(
       '2024-07-01',
       '2024-07-31',
+      '', // tambahkan unitKerja (bisa string kosong jika tidak perlu)
       res,
     );
 
     expect(mockService.generateLaporanPenggunaanPDF).toHaveBeenCalledWith(
       '2024-07-01',
       '2024-07-31',
+      '', // tambahkan argumen unitKerja sesuai pemanggilan controller
     );
     expect(res.set).toHaveBeenCalledWith(
       expect.objectContaining({

@@ -13,6 +13,7 @@ import { Repository } from 'typeorm';
 import { validate } from 'class-validator';
 import { plainToInstance } from 'class-transformer';
 import { CreateBarangDto } from './dto/create-barang.dto';
+import { DataSource } from 'typeorm';
 
 // Data mock barang untuk pengujian
 const mockBarang = {
@@ -50,6 +51,22 @@ describe('BarangService', () => {
             query: jest.fn(),
           },
         },
+        {
+          provide: DataSource,
+          useValue: {
+            createQueryBuilder: jest.fn(() => ({
+              select: jest.fn().mockReturnThis(),
+              from: jest.fn().mockReturnThis(),
+              innerJoin: jest.fn().mockReturnThis(),
+              where: jest.fn().mockReturnThis(),
+              andWhere: jest.fn().mockReturnThis(),
+              groupBy: jest.fn().mockReturnThis(),
+              addGroupBy: jest.fn().mockReturnThis(),
+              orderBy: jest.fn().mockReturnThis(),
+              getRawMany: jest.fn().mockResolvedValue([]),
+            })),
+          },
+        },
       ],
     }).compile();
 
@@ -76,12 +93,12 @@ describe('BarangService', () => {
    * Return:
    * - Barang dengan stok tetap.
    */
-  it('should not change stok if addStok called with jumlah 0', async () => {
+  it('should throw BadRequestException if addStok called with jumlah 0', async () => {
     const barang = { ...mockBarang, stok: 10, status_aktif: true };
     (repo.findOne as jest.Mock).mockResolvedValue(barang);
-    (repo.save as jest.Mock).mockResolvedValue({ ...barang, stok: 10 });
-    const result = await service.addStok(1, { jumlah: 0 });
-    expect(result.stok).toBe(10);
+    await expect(service.addStok(1, { jumlah: 0 })).rejects.toThrow(
+      'Jumlah penambahan stok minimal 1',
+    );
   });
 
   /**
