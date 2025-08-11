@@ -25,7 +25,7 @@ describe('RolesGuard', () => {
    * Return: Tidak ada
    */
   beforeEach(() => {
-    reflector = { getAllAndOverride: jest.fn() } as Reflector;
+    reflector = { getAllAndOverride: jest.fn() } as unknown as Reflector;
     guard = new RolesGuard(reflector);
   });
 

@@ -80,7 +80,7 @@ describe('AuthService', () => {
    */
   it('should login successfully', async () => {
     mockUserService.findByUsername.mockResolvedValue(mockUser);
-    jest.spyOn(bcrypt, 'compare').mockResolvedValue(true);
+    (jest.spyOn(bcrypt, 'compare') as jest.Mock).mockResolvedValue(true);
 
     const result = await service.login('admin', 'admin123');
 
@@ -112,7 +112,7 @@ describe('AuthService', () => {
    */
   it('should throw if password invalid', async () => {
     mockUserService.findByUsername.mockResolvedValue(mockUser);
-    jest.spyOn(bcrypt, 'compare').mockResolvedValue(false);
+    (jest.spyOn(bcrypt, 'compare') as jest.Mock).mockResolvedValue(false);
 
     await expect(service.login('admin', 'wrongpass')).rejects.toThrow(
       'Invalid password',
@@ -155,7 +155,7 @@ describe('AuthService', () => {
    */
   it('should validate user with correct password', async () => {
     mockUserService.findByUsername.mockResolvedValue(mockUser);
-    jest.spyOn(bcrypt, 'compare').mockResolvedValue(true);
+    (jest.spyOn(bcrypt, 'compare') as jest.Mock).mockResolvedValue(true);
 
     const result = await service.validateUser('admin', 'admin123');
 
@@ -184,7 +184,7 @@ describe('AuthService', () => {
    */
   it('should not return password field in validateUser result', async () => {
     mockUserService.findByUsername.mockResolvedValue(mockUser);
-    jest.spyOn(bcrypt, 'compare').mockResolvedValue(true);
+    (jest.spyOn(bcrypt, 'compare') as jest.Mock).mockResolvedValue(true);
 
     const result = await service.validateUser('admin', 'admin123');
     expect(result).not.toHaveProperty('password');
