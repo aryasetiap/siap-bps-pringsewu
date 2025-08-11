@@ -1,3 +1,10 @@
+/**
+ * File ini berisi pengujian unit untuk BarangService pada aplikasi SIAP.
+ * Pengujian meliputi validasi, CRUD, filter, dan pembuatan laporan PDF terkait pengelolaan barang.
+ *
+ * Konteks bisnis: Barang adalah entitas utama dalam pengelolaan stok, permintaan, dan verifikasi di SIAP.
+ */
+
 import { Test, TestingModule } from '@nestjs/testing';
 import { BarangService } from './barang.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
@@ -7,6 +14,7 @@ import { validate } from 'class-validator';
 import { plainToInstance } from 'class-transformer';
 import { CreateBarangDto } from './dto/create-barang.dto';
 
+// Data mock barang untuk pengujian
 const mockBarang = {
   id: 1,
   kode_barang: 'BRG001',
@@ -17,6 +25,9 @@ const mockBarang = {
   status_aktif: true,
 };
 
+/**
+ * Kumpulan pengujian unit untuk BarangService.
+ */
 describe('BarangService', () => {
   let service: BarangService;
   let repo: Repository<Barang>;
@@ -48,7 +59,9 @@ describe('BarangService', () => {
 
   /**
    * Menguji validasi update stok negatif.
-   * @returns Error jika stok bernilai negatif.
+   *
+   * Return:
+   * - Error jika stok bernilai negatif.
    */
   it('should throw BadRequestException if update called with negative stok', async () => {
     (repo.findOne as jest.Mock).mockResolvedValue(mockBarang);
@@ -59,7 +72,9 @@ describe('BarangService', () => {
 
   /**
    * Menguji penambahan stok dengan jumlah 0 tidak mengubah stok.
-   * @returns Barang dengan stok tetap.
+   *
+   * Return:
+   * - Barang dengan stok tetap.
    */
   it('should not change stok if addStok called with jumlah 0', async () => {
     const barang = { ...mockBarang, stok: 10, status_aktif: true };
@@ -71,7 +86,9 @@ describe('BarangService', () => {
 
   /**
    * Menguji pengambilan semua barang tanpa query filter.
-   * @returns Daftar seluruh barang.
+   *
+   * Return:
+   * - Daftar seluruh barang.
    */
   it('should return all barang if no query is provided', async () => {
     const qb = {
@@ -92,7 +109,12 @@ describe('BarangService', () => {
 
   /**
    * Menguji pembuatan barang baru.
-   * @returns Barang yang berhasil dibuat.
+   *
+   * Parameter:
+   * - dto (CreateBarangDto): Data barang yang akan dibuat.
+   *
+   * Return:
+   * - Barang yang berhasil dibuat.
    */
   it('should create barang', async () => {
     (repo.findOne as jest.Mock).mockResolvedValue(undefined);
@@ -112,7 +134,9 @@ describe('BarangService', () => {
 
   /**
    * Menguji validasi kode_barang yang sudah terdaftar.
-   * @returns Error jika kode_barang sudah ada.
+   *
+   * Return:
+   * - Error jika kode_barang sudah ada.
    */
   it('should throw BadRequestException if kode_barang exists', async () => {
     (repo.findOne as jest.Mock).mockResolvedValue(mockBarang);
@@ -124,7 +148,13 @@ describe('BarangService', () => {
 
   /**
    * Menguji update data barang.
-   * @returns Barang yang sudah diperbarui.
+   *
+   * Parameter:
+   * - id (number): ID barang yang akan diupdate.
+   * - dto (Partial<Barang>): Data perubahan barang.
+   *
+   * Return:
+   * - Barang yang sudah diperbarui.
    */
   it('should update barang', async () => {
     const updated = { ...mockBarang, nama_barang: 'Updated' };
@@ -139,7 +169,9 @@ describe('BarangService', () => {
 
   /**
    * Menguji error jika barang yang akan diupdate tidak ditemukan.
-   * @returns Error NotFoundException.
+   *
+   * Return:
+   * - Error NotFoundException.
    */
   it('should throw NotFoundException if barang to update not found', async () => {
     (repo.findOne as jest.Mock).mockResolvedValue(undefined);
@@ -150,7 +182,9 @@ describe('BarangService', () => {
 
   /**
    * Menguji validasi stok negatif saat update.
-   * @returns Error jika stok negatif.
+   *
+   * Return:
+   * - Error jika stok negatif.
    */
   it('should throw error if update called with invalid stok', async () => {
     (repo.findOne as jest.Mock).mockResolvedValue(mockBarang);
@@ -159,7 +193,12 @@ describe('BarangService', () => {
 
   /**
    * Menguji soft delete barang.
-   * @returns Barang dengan status_aktif false.
+   *
+   * Parameter:
+   * - id (number): ID barang yang akan dihapus.
+   *
+   * Return:
+   * - Barang dengan status_aktif false.
    */
   it('should soft delete barang', async () => {
     const softDeleted = { ...mockBarang, status_aktif: false };
@@ -172,7 +211,9 @@ describe('BarangService', () => {
 
   /**
    * Menguji error jika barang yang akan dihapus tidak ditemukan.
-   * @returns Error NotFoundException.
+   *
+   * Return:
+   * - Error NotFoundException.
    */
   it('should throw NotFoundException if barang to delete not found', async () => {
     (repo.findOne as jest.Mock).mockResolvedValue(undefined);
@@ -183,7 +224,9 @@ describe('BarangService', () => {
 
   /**
    * Menguji pengambilan seluruh barang.
-   * @returns Daftar barang.
+   *
+   * Return:
+   * - Daftar barang.
    */
   it('should find all barang', async () => {
     const qb = {
@@ -199,7 +242,12 @@ describe('BarangService', () => {
 
   /**
    * Menguji pencarian barang berdasarkan id.
-   * @returns Barang yang ditemukan.
+   *
+   * Parameter:
+   * - id (number): ID barang yang dicari.
+   *
+   * Return:
+   * - Barang yang ditemukan.
    */
   it('should find one barang by id', async () => {
     (repo.findOne as jest.Mock).mockResolvedValue(mockBarang);
@@ -210,7 +258,9 @@ describe('BarangService', () => {
 
   /**
    * Menguji error jika barang tidak ditemukan berdasarkan id.
-   * @returns Error NotFoundException.
+   *
+   * Return:
+   * - Error NotFoundException.
    */
   it('should throw NotFoundException if barang not found', async () => {
     (repo.findOne as jest.Mock).mockResolvedValue(undefined);
@@ -221,7 +271,13 @@ describe('BarangService', () => {
 
   /**
    * Menguji penambahan stok pada barang aktif.
-   * @returns Barang dengan stok bertambah.
+   *
+   * Parameter:
+   * - id (number): ID barang.
+   * - dto ({ jumlah: number }): Jumlah stok yang akan ditambah.
+   *
+   * Return:
+   * - Barang dengan stok bertambah.
    */
   it('should add stok to active barang', async () => {
     const barangAktif = { ...mockBarang, stok: 10, status_aktif: true };
@@ -235,7 +291,9 @@ describe('BarangService', () => {
 
   /**
    * Menguji error jika barang tidak aktif saat menambah stok.
-   * @returns Error jika barang tidak aktif.
+   *
+   * Return:
+   * - Error jika barang tidak aktif.
    */
   it('should throw error if barang not active', async () => {
     const barangNonAktif = { ...mockBarang, status_aktif: false };
@@ -248,7 +306,9 @@ describe('BarangService', () => {
 
   /**
    * Menguji error jika barang tidak ditemukan saat menambah stok.
-   * @returns Error NotFoundException.
+   *
+   * Return:
+   * - Error NotFoundException.
    */
   it('should throw NotFoundException if barang to add stok not found', async () => {
     (repo.findOne as jest.Mock).mockResolvedValue(undefined);
@@ -259,7 +319,9 @@ describe('BarangService', () => {
 
   /**
    * Menguji validasi jumlah negatif saat menambah stok.
-   * @returns Error jika jumlah negatif.
+   *
+   * Return:
+   * - Error jika jumlah negatif.
    */
   it('should throw error if addStok called with negative jumlah', async () => {
     (repo.findOne as jest.Mock).mockResolvedValue(mockBarang);
@@ -268,7 +330,12 @@ describe('BarangService', () => {
 
   /**
    * Menguji filter barang berdasarkan query string.
-   * @returns Daftar barang yang sesuai filter q.
+   *
+   * Parameter:
+   * - query ({ q: string }): Kata kunci pencarian barang.
+   *
+   * Return:
+   * - Daftar barang yang sesuai filter q.
    */
   it('should filter barang by q', async () => {
     const qb = {
@@ -288,7 +355,12 @@ describe('BarangService', () => {
 
   /**
    * Menguji filter barang berdasarkan status_aktif.
-   * @returns Daftar barang dengan status_aktif tertentu.
+   *
+   * Parameter:
+   * - query ({ status_aktif: boolean }): Status aktif barang.
+   *
+   * Return:
+   * - Daftar barang dengan status_aktif tertentu.
    */
   it('should filter barang by status_aktif', async () => {
     const qb = {
@@ -307,7 +379,9 @@ describe('BarangService', () => {
 
   /**
    * Menguji pengambilan barang dengan stok kritis.
-   * @returns Daftar barang dengan stok di bawah ambang batas kritis.
+   *
+   * Return:
+   * - Daftar barang dengan stok di bawah ambang batas kritis.
    */
   it('should return barang with stok kritis', async () => {
     const kritisBarang = {
@@ -334,9 +408,13 @@ describe('BarangService', () => {
 
   /**
    * Menguji pembuatan buffer PDF untuk laporan penggunaan barang.
-   * @param tanggal_awal Tanggal awal periode laporan
-   * @param tanggal_akhir Tanggal akhir periode laporan
-   * @returns Buffer PDF laporan penggunaan
+   *
+   * Parameter:
+   * - tanggal_awal (string): Tanggal awal periode laporan.
+   * - tanggal_akhir (string): Tanggal akhir periode laporan.
+   *
+   * Return:
+   * - Buffer PDF laporan penggunaan.
    */
   it('should generate PDF buffer for laporan penggunaan', async () => {
     (repo.query as jest.Mock).mockResolvedValue([
@@ -350,10 +428,15 @@ describe('BarangService', () => {
   });
 });
 
+/**
+ * Pengujian validasi DTO Barang pada aplikasi SIAP.
+ */
 describe('Barang DTO Validation', () => {
   /**
    * Menguji validasi kode_barang dengan karakter tidak valid.
-   * @returns Error validasi pada kode_barang.
+   *
+   * Return:
+   * - Error validasi pada kode_barang.
    */
   it('should fail if kode_barang contains invalid chars', async () => {
     const dto = plainToInstance(CreateBarangDto, {
@@ -368,7 +451,9 @@ describe('Barang DTO Validation', () => {
 
   /**
    * Menguji validasi stok negatif pada DTO.
-   * @returns Error validasi pada stok.
+   *
+   * Return:
+   * - Error validasi pada stok.
    */
   it('should fail if stok is negative', async () => {
     const dto = plainToInstance(CreateBarangDto, {
@@ -384,7 +469,9 @@ describe('Barang DTO Validation', () => {
 
   /**
    * Menguji validasi DTO dengan data yang valid.
-   * @returns Tidak ada error validasi.
+   *
+   * Return:
+   * - Tidak ada error validasi.
    */
   it('should pass with valid data', async () => {
     const dto = plainToInstance(CreateBarangDto, {

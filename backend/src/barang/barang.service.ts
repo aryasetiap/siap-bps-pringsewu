@@ -1,3 +1,9 @@
+/**
+ * File: barang.service.ts
+ * Service untuk pengelolaan data barang persediaan pada aplikasi SIAP BPS Pringsewu.
+ * Meliputi pembuatan, pembaruan, penghapusan, penambahan stok, serta pembuatan laporan penggunaan barang.
+ */
+
 import {
   Injectable,
   NotFoundException,
@@ -5,48 +11,70 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Barang } from '../entities/barang.entity';
-import { Repository, DataSource } from 'typeorm'; // Importa DataSource
+import { Repository, DataSource } from 'typeorm';
 import { CreateBarangDto } from './dto/create-barang.dto';
 import { UpdateBarangDto } from './dto/update-barang.dto';
 import { AddStokDto } from './dto/add-stok.dto';
 import * as PdfPrinter from 'pdfmake';
 import * as path from 'path';
 
+/**
+ * Kelas service untuk pengelolaan barang persediaan.
+ * Menyediakan fungsi CRUD, penambahan stok, dan pembuatan laporan penggunaan barang.
+ */
 @Injectable()
 export class BarangService {
+  /**
+   * Konstruktor BarangService.
+   *
+   * Parameter:
+   * - barangRepo (Repository<Barang>): Repository untuk entitas Barang.
+   * - dataSource (DataSource): DataSource TypeORM untuk query custom.
+   */
   constructor(
     @InjectRepository(Barang)
     private barangRepo: Repository<Barang>,
-    private dataSource: DataSource, // Añade la inyección de DataSource
+    private dataSource: DataSource,
   ) {}
 
   /**
    * Membuat data barang baru.
-   * @param dto Data barang yang akan dibuat.
-   * @returns Barang yang berhasil dibuat.
-   * @throws BadRequestException jika kode barang sudah terdaftar.
+   *
+   * Parameter:
+   * - dto (CreateBarangDto): Data barang yang akan dibuat.
+   *
+   * Return:
+   * - Promise<Barang>: Barang yang berhasil dibuat.
+   *
+   * Exception:
+   * - BadRequestException: Jika kode barang sudah terdaftar.
    */
   async create(dto: CreateBarangDto): Promise<Barang> {
-    const exist = await this.barangRepo.findOne({
+    const barangSudahAda = await this.barangRepo.findOne({
       where: { kode_barang: dto.kode_barang },
     });
-    if (exist) throw new BadRequestException('Kode barang sudah terdaftar');
-    const barang = this.barangRepo.create({ ...dto, status_aktif: true });
-    return this.barangRepo.save(barang);
+    if (barangSudahAda) {
+      throw new BadRequestException('Kode barang sudah terdaftar');
+    }
+    const barangBaru = this.barangRepo.create({ ...dto, status_aktif: true });
+    return this.barangRepo.save(barangBaru);
   }
 
   /**
-   * Mengambil daftar barang dengan filter pencarian, status aktif, dan stok kritis.
-   * @param query Opsi pencarian: q (nama/kode), status_aktif, stok_kritis.
-   * @returns Daftar barang sesuai filter.
+   * Mengambil daftar barang berdasarkan filter pencarian, status aktif, dan stok kritis.
+   *
+   * Parameter:
+   * - query (object): Opsi pencarian (q, status_aktif, stok_kritis).
+   *
+   * Return:
+   * - Promise<Barang[]>: Daftar barang sesuai filter.
    */
   async findAll(query?: {
     q?: string;
     status_aktif?: boolean;
     stok_kritis?: boolean;
   }): Promise<Barang[]> {
-    const repo = this.barangRepo;
-    const qb = repo.createQueryBuilder('barang');
+    const qb = this.barangRepo.createQueryBuilder('barang');
 
     if (query?.q) {
       qb.andWhere(
@@ -70,22 +98,36 @@ export class BarangService {
 
   /**
    * Mengambil detail barang berdasarkan ID.
-   * @param id ID barang.
-   * @returns Barang yang ditemukan.
-   * @throws NotFoundException jika barang tidak ditemukan.
+   *
+   * Parameter:
+   * - id (number): ID barang.
+   *
+   * Return:
+   * - Promise<Barang>: Barang yang ditemukan.
+   *
+   * Exception:
+   * - NotFoundException: Jika barang tidak ditemukan.
    */
   async findOne(id: number): Promise<Barang> {
     const barang = await this.barangRepo.findOne({ where: { id } });
-    if (!barang) throw new NotFoundException('Barang tidak ditemukan');
+    if (!barang) {
+      throw new NotFoundException('Barang tidak ditemukan');
+    }
     return barang;
   }
 
   /**
    * Memperbarui data barang berdasarkan ID.
-   * @param id ID barang.
-   * @param dto Data yang akan diperbarui.
-   * @returns Barang yang telah diperbarui.
-   * @throws BadRequestException jika stok negatif.
+   *
+   * Parameter:
+   * - id (number): ID barang.
+   * - dto (UpdateBarangDto): Data yang akan diperbarui.
+   *
+   * Return:
+   * - Promise<Barang>: Barang yang telah diperbarui.
+   *
+   * Exception:
+   * - BadRequestException: Jika stok negatif.
    */
   async update(id: number, dto: UpdateBarangDto): Promise<Barang> {
     if (dto.stok !== undefined && dto.stok < 0) {
@@ -98,8 +140,12 @@ export class BarangService {
 
   /**
    * Melakukan soft delete pada barang (mengubah status_aktif menjadi false).
-   * @param id ID barang.
-   * @returns Barang yang telah di-nonaktifkan.
+   *
+   * Parameter:
+   * - id (number): ID barang.
+   *
+   * Return:
+   * - Promise<Barang>: Barang yang telah di-nonaktifkan.
    */
   async softDelete(id: number): Promise<Barang> {
     const barang = await this.findOne(id);
@@ -109,8 +155,12 @@ export class BarangService {
 
   /**
    * Menghapus barang secara permanen dari database.
-   * @param id ID barang.
-   * @returns void
+   *
+   * Parameter:
+   * - id (number): ID barang.
+   *
+   * Return:
+   * - Promise<void>
    */
   async remove(id: number): Promise<void> {
     const barang = await this.findOne(id);
@@ -119,22 +169,31 @@ export class BarangService {
 
   /**
    * Menambah stok barang berdasarkan ID.
-   * @param id ID barang.
-   * @param dto Data penambahan stok.
-   * @returns Barang dengan stok yang telah diperbarui.
-   * @throws BadRequestException jika barang tidak aktif.
+   *
+   * Parameter:
+   * - id (number): ID barang.
+   * - dto (AddStokDto): Data penambahan stok.
+   *
+   * Return:
+   * - Promise<Barang>: Barang dengan stok yang telah diperbarui.
+   *
+   * Exception:
+   * - BadRequestException: Jika barang tidak aktif.
    */
   async addStok(id: number, dto: AddStokDto): Promise<Barang> {
     const barang = await this.findOne(id);
-    if (!barang.status_aktif)
+    if (!barang.status_aktif) {
       throw new BadRequestException('Barang tidak aktif');
+    }
     barang.stok = (barang.stok ?? 0) + dto.jumlah;
     return this.barangRepo.save(barang);
   }
 
   /**
    * Mengambil daftar barang yang stoknya kritis dan masih aktif.
-   * @returns Daftar barang dengan stok kritis.
+   *
+   * Return:
+   * - Promise<Barang[]>: Daftar barang dengan stok kritis.
    */
   async getStokKritis(): Promise<Barang[]> {
     return this.barangRepo
@@ -146,7 +205,9 @@ export class BarangService {
 
   /**
    * Mengambil daftar barang kritis (stok di bawah ambang batas) dan mengurutkan berdasarkan stok.
-   * @returns Daftar barang kritis terurut.
+   *
+   * Return:
+   * - Promise<Barang[]>: Daftar barang kritis terurut.
    */
   async getBarangKritis(): Promise<Barang[]> {
     return this.barangRepo
@@ -159,10 +220,14 @@ export class BarangService {
 
   /**
    * Menghasilkan laporan penggunaan barang dalam format PDF untuk periode tertentu.
-   * @param start Tanggal awal periode (format: YYYY-MM-DD).
-   * @param end Tanggal akhir periode (format: YYYY-MM-DD).
-   * @param unitKerja Unit kerja yang akan difilter (opsional).
-   * @returns Buffer PDF laporan penggunaan barang.
+   *
+   * Parameter:
+   * - start (string): Tanggal awal periode (format: YYYY-MM-DD).
+   * - end (string): Tanggal akhir periode (format: YYYY-MM-DD).
+   * - unitKerja (string, optional): Unit kerja yang akan difilter.
+   *
+   * Return:
+   * - Promise<Buffer>: Buffer PDF laporan penggunaan barang.
    */
   async generateLaporanPenggunaanPDF(
     start: string,
@@ -175,11 +240,11 @@ export class BarangService {
       unitKerja,
     );
 
-    // Format tanggal untuk tampilan
+    /**
+     * Fungsi untuk memformat tanggal ke format Indonesia.
+     */
     const formatDate = (dateStr: string): string => {
       const date = new Date(dateStr);
-
-      // Daftar nama bulan dalam bahasa Indonesia
       const namaBulan = [
         'Januari',
         'Februari',
@@ -194,22 +259,18 @@ export class BarangService {
         'November',
         'Desember',
       ];
-
       const day = String(date.getDate()).padStart(2, '0');
-      const month = date.getMonth(); // 0-11
+      const month = date.getMonth();
       const year = date.getFullYear();
-
       return `${day} ${namaBulan[month]} ${year}`;
     };
 
     const today = new Date();
     const currentDateString = formatDate(today.toISOString().split('T')[0]);
-
-    // Format tanggal periode
     const startFormatted = formatDate(start);
     const endFormatted = formatDate(end);
 
-    // Konfigurasi font
+    // Konfigurasi font untuk PDF
     const fonts = {
       Roboto: {
         normal: path.join(__dirname, '../assets/fonts/Roboto-Regular.ttf'),
@@ -223,13 +284,13 @@ export class BarangService {
     };
     const printer = new PdfPrinter(fonts);
 
-    // Logo BPS
+    // Path logo BPS
     const logoPath = path.join(
       __dirname,
       '../assets/images/logo-bps-pringsewu.png',
     );
 
-    // Siapkan data untuk tabel - Quitamos unit_kerja y añadimos keterangan (comentario vacío por defecto)
+    // Siapkan data untuk tabel laporan
     const bodyRows =
       penggunaan.length > 0
         ? penggunaan.map((row, index) => [
@@ -238,7 +299,7 @@ export class BarangService {
             { text: row.kode_barang, alignment: 'center' },
             { text: row.total_digunakan, alignment: 'center' },
             row.satuan,
-            '-', // Keterangan (defaultnya kosong)
+            '-', // Keterangan default kosong
           ])
         : [
             [
@@ -255,28 +316,17 @@ export class BarangService {
             ],
           ];
 
-    // Definisi dokumen PDF yang lebih modern
+    // Definisi dokumen PDF
     const docDefinition = {
       pageSize: 'A4',
       pageMargins: [40, 60, 40, 60],
-
       content: [
-        // Header dengan logo dan judul
         {
           columns: [
-            {
-              width: 170,
-              image: logoPath,
-              fit: [170, 85],
-            },
-            {
-              width: '*',
-              text: '',
-            },
+            { width: 170, image: logoPath, fit: [170, 85] },
+            { width: '*', text: '' },
           ],
         },
-
-        // Judul dokumen
         {
           text: 'Laporan Penggunaan',
           style: 'header',
@@ -289,8 +339,6 @@ export class BarangService {
           alignment: 'center',
           margin: [0, 0, 0, 15],
         },
-
-        // Unit kerja yang difilter (jika ada)
         unitKerja
           ? {
               text: unitKerja,
@@ -298,8 +346,6 @@ export class BarangService {
               margin: [0, 0, 0, 20],
             }
           : {},
-
-        // Informasi periode laporan
         {
           columns: [
             {
@@ -316,9 +362,6 @@ export class BarangService {
           ],
           margin: [0, 0, 0, 20],
         },
-
-        // Tabel data penggunaan barang dengan styling modern
-        // Cambiamos widths y cabeceras para reemplazar "Unit Kerja" por "Keterangan"
         {
           table: {
             headerRows: 1,
@@ -336,38 +379,20 @@ export class BarangService {
             ],
           },
           layout: {
-            hLineWidth: function (i, node) {
-              return i === 0 || i === 1 || i === node.table.body.length
-                ? 1
-                : 0.5;
-            },
-            vLineWidth: function (i, node) {
-              return 0.5;
-            },
-            hLineColor: function (i, node) {
-              return i === 0 || i === 1 || i === node.table.body.length
+            hLineWidth: (i, node) =>
+              i === 0 || i === 1 || i === node.table.body.length ? 1 : 0.5,
+            vLineWidth: () => 0.5,
+            hLineColor: (i, node) =>
+              i === 0 || i === 1 || i === node.table.body.length
                 ? '#aaaaaa'
-                : '#dddddd';
-            },
-            vLineColor: function (i, node) {
-              return '#aaaaaa';
-            },
-            paddingLeft: function (i, node) {
-              return 8;
-            },
-            paddingRight: function (i, node) {
-              return 8;
-            },
-            paddingTop: function (i, node) {
-              return 8;
-            },
-            paddingBottom: function (i, node) {
-              return 8;
-            },
+                : '#dddddd',
+            vLineColor: () => '#aaaaaa',
+            paddingLeft: () => 8,
+            paddingRight: () => 8,
+            paddingTop: () => 8,
+            paddingBottom: () => 8,
           },
         },
-
-        // Footer dengan tanggal dan tanda tangan
         {
           columns: [
             {
@@ -397,8 +422,6 @@ export class BarangService {
           ],
         },
       ],
-
-      // Definisi styles untuk tampilan modern
       styles: {
         header: {
           fontSize: 16,
@@ -428,8 +451,6 @@ export class BarangService {
           color: '#000000',
         },
       },
-
-      // Footer halaman
       footer: {
         columns: [
           {
@@ -443,9 +464,9 @@ export class BarangService {
       },
     };
 
+    // Proses pembuatan PDF dan pengembalian buffer
     const pdfDoc = printer.createPdfKitDocument(docDefinition);
     const chunks: Buffer[] = [];
-
     return new Promise<Buffer>((resolve, reject) => {
       pdfDoc.on('data', (chunk) => chunks.push(chunk));
       pdfDoc.on('end', () => resolve(Buffer.concat(chunks)));
@@ -456,22 +477,23 @@ export class BarangService {
 
   /**
    * Mengambil rekap penggunaan barang dalam format JSON untuk periode tertentu.
-   * @param start Tanggal awal periode (format: YYYY-MM-DD).
-   * @param end Tanggal akhir periode (format: YYYY-MM-DD).
-   * @returns Array rekap penggunaan barang.
-   */
-  /**
-   * Menghasilkan data JSON laporan penggunaan barang untuk periode tertentu.
-   * @param start Tanggal awal periode (format: YYYY-MM-DD).
-   * @param end Tanggal akhir periode (format: YYYY-MM-DD).
-   * @param unitKerja Unit kerja yang akan difilter (opsional).
-   * @returns Array data penggunaan barang.
+   *
+   * Parameter:
+   * - start (string): Tanggal awal periode (format: YYYY-MM-DD).
+   * - end (string): Tanggal akhir periode (format: YYYY-MM-DD).
+   * - unitKerja (string, optional): Unit kerja yang akan difilter.
+   *
+   * Return:
+   * - Promise<any[]>: Array rekap penggunaan barang.
+   *
+   * Exception:
+   * - BadRequestException: Jika format tanggal salah atau rentang tidak valid.
    */
   async getLaporanPenggunaanJSON(
     start: string,
     end: string,
     unitKerja?: string,
-  ) {
+  ): Promise<any[]> {
     // Validasi format tanggal
     if (
       !/^\d{4}-\d{2}-\d{2}$/.test(start) ||
@@ -485,6 +507,7 @@ export class BarangService {
       throw new BadRequestException('Tanggal mulai harus <= tanggal akhir');
     }
 
+    // Query rekap penggunaan barang berdasarkan permintaan yang sudah diverifikasi
     const qb = this.dataSource
       .createQueryBuilder()
       .select([
@@ -510,12 +533,11 @@ export class BarangService {
       .addGroupBy('u.unit_kerja')
       .orderBy('b.nama_barang', 'ASC');
 
-    // Tambahkan filter unit kerja jika ada
+    // Filter unit kerja jika diberikan
     if (unitKerja) {
       qb.andWhere('u.unit_kerja = :unitKerja', { unitKerja });
     }
 
-    const result = await qb.getRawMany();
-    return result;
+    return qb.getRawMany();
   }
 }

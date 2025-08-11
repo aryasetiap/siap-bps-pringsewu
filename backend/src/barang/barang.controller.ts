@@ -1,3 +1,11 @@
+/**
+ * File: barang.controller.ts
+ *
+ * Controller untuk manajemen data barang pada aplikasi SIAP.
+ * Mengatur endpoint terkait CRUD barang, stok, notifikasi, dan laporan.
+ * Seluruh endpoint telah dilindungi oleh mekanisme autentikasi dan otorisasi.
+ */
+
 import {
   Controller,
   Get,
@@ -24,17 +32,35 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Response } from 'express';
 
 /**
- * Controller untuk manajemen data barang.
- * Mengatur endpoint terkait CRUD barang, stok, notifikasi, dan laporan.
+ * Controller utama untuk pengelolaan data barang.
+ *
+ * Endpoint yang tersedia:
+ * - CRUD barang
+ * - Penambahan stok
+ * - Notifikasi stok kritis
+ * - Laporan penggunaan barang (JSON & PDF)
+ * - Daftar barang aktif untuk permintaan pegawai
  */
 @Controller('barang')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 export class BarangController {
+  /**
+   * Konstruktor controller barang.
+   *
+   * Parameter:
+   * - barangService (BarangService): Service untuk logika bisnis barang.
+   */
   constructor(private readonly barangService: BarangService) {}
 
   /**
    * Membuat data barang baru.
    * Hanya dapat diakses oleh admin.
+   *
+   * Parameter:
+   * - dto (CreateBarangDto): Data barang yang akan dibuat.
+   *
+   * Return:
+   * - Promise<object>: Data barang yang berhasil dibuat.
    */
   @Roles('admin')
   @Post()
@@ -53,7 +79,16 @@ export class BarangController {
 
   /**
    * Mengambil daftar seluruh barang dengan opsi filter.
-   * Hanya dapat diakses oleh admin.
+   * Bisa difilter berdasarkan status aktif dan stok kritis.
+   * Hanya dapat diakses oleh admin dan pegawai.
+   *
+   * Parameter:
+   * - q (string, opsional): Kata kunci pencarian barang.
+   * - status_aktif (string, opsional): Filter status aktif barang.
+   * - stok_kritis (string, opsional): Filter barang dengan stok kritis.
+   *
+   * Return:
+   * - Promise<object[]>: Daftar barang sesuai filter.
    */
   @Roles('admin', 'pegawai')
   @Get()
@@ -70,10 +105,12 @@ export class BarangController {
     });
   }
 
-  // --- RUTE STATIS (DEFINISIKAN SEBELUM RUTE DINAMIS) ---
-
   /**
    * Mengambil daftar barang yang memiliki stok kritis.
+   * Digunakan untuk monitoring stok barang yang perlu segera ditambah.
+   *
+   * Return:
+   * - Promise<object[]>: Daftar barang dengan stok kritis.
    */
   @Roles('admin')
   @Get('stok-kritis')
@@ -83,6 +120,10 @@ export class BarangController {
 
   /**
    * Mengambil notifikasi barang dengan stok kritis untuk dashboard.
+   * Hanya dapat diakses oleh user yang sudah login.
+   *
+   * Return:
+   * - Promise<object[]>: Daftar notifikasi barang kritis.
    */
   @UseGuards(JwtAuthGuard)
   @Get('dashboard/notifikasi-stok-kritis')
@@ -92,6 +133,15 @@ export class BarangController {
 
   /**
    * Mengambil rekap penggunaan barang dalam format JSON untuk periode tertentu.
+   * Validasi format tanggal dan urutan tanggal dilakukan sebelum pemrosesan.
+   *
+   * Parameter:
+   * - start (string): Tanggal mulai (format YYYY-MM-DD).
+   * - end (string): Tanggal akhir (format YYYY-MM-DD).
+   * - unitKerja (string): Unit kerja terkait laporan.
+   *
+   * Return:
+   * - Promise<object[]>: Rekap penggunaan barang dalam periode tertentu.
    */
   @Get('laporan-penggunaan')
   @UseGuards(JwtAuthGuard)
@@ -118,6 +168,16 @@ export class BarangController {
 
   /**
    * Menghasilkan laporan penggunaan barang dalam format PDF.
+   * Validasi format tanggal dan urutan tanggal dilakukan sebelum pemrosesan.
+   *
+   * Parameter:
+   * - start (string): Tanggal mulai (format YYYY-MM-DD).
+   * - end (string): Tanggal akhir (format YYYY-MM-DD).
+   * - unitKerja (string): Unit kerja terkait laporan.
+   * - res (Response): Response object untuk mengirim file PDF.
+   *
+   * Return:
+   * - void: File PDF dikirim sebagai response.
    */
   @Get('laporan-penggunaan/pdf')
   @UseGuards(JwtAuthGuard)
@@ -153,20 +213,27 @@ export class BarangController {
   /**
    * Mengambil daftar barang yang tersedia untuk permintaan pegawai.
    * Hanya menampilkan barang dengan status aktif.
+   *
+   * Return:
+   * - Promise<object[]>: Daftar barang aktif yang dapat diminta pegawai.
    */
   @Get('available')
   @Roles('pegawai')
   getAvailableBarang() {
-    // Filter untuk mendapatkan hanya barang yang aktif
     return this.barangService.findAll({
       status_aktif: true,
     });
   }
 
-  // --- RUTE DINAMIS (DEFINISIKAN SETELAH RUTE STATIS) ---
-
   /**
    * Mengambil detail barang berdasarkan ID.
+   * Hanya dapat diakses oleh admin.
+   *
+   * Parameter:
+   * - id (number): ID barang yang ingin diambil.
+   *
+   * Return:
+   * - Promise<object>: Detail barang.
    */
   @Roles('admin')
   @Get(':id')
@@ -176,6 +243,14 @@ export class BarangController {
 
   /**
    * Memperbarui data barang berdasarkan ID.
+   * Hanya dapat diakses oleh admin.
+   *
+   * Parameter:
+   * - id (number): ID barang yang ingin diperbarui.
+   * - dto (UpdateBarangDto): Data barang yang akan diperbarui.
+   *
+   * Return:
+   * - Promise<object>: Data barang yang telah diperbarui.
    */
   @Roles('admin')
   @Patch(':id')
@@ -185,6 +260,14 @@ export class BarangController {
 
   /**
    * Menambah stok pada barang tertentu.
+   * Hanya dapat diakses oleh admin.
+   *
+   * Parameter:
+   * - id (number): ID barang yang akan ditambah stoknya.
+   * - dto (AddStokDto): Data penambahan stok.
+   *
+   * Return:
+   * - Promise<object>: Data barang setelah penambahan stok.
    */
   @Roles('admin')
   @Patch(':id/add-stok')
@@ -194,6 +277,14 @@ export class BarangController {
 
   /**
    * Melakukan soft delete pada barang berdasarkan ID.
+   * Barang tidak dihapus permanen, hanya status aktif diubah.
+   * Hanya dapat diakses oleh admin.
+   *
+   * Parameter:
+   * - id (number): ID barang yang akan dihapus.
+   *
+   * Return:
+   * - Promise<object>: Data barang setelah dihapus (soft delete).
    */
   @Roles('admin')
   @Delete(':id')
