@@ -23,26 +23,8 @@ Modul Permintaan menyediakan endpoint untuk pengajuan permintaan barang oleh peg
   }
   ```
 - **Response:**
-  - **201 Created**
-    ```json
-    {
-      "id": 10,
-      "id_user_pemohon": 3,
-      "catatan": "Untuk keperluan rapat bulanan",
-      "status": "Menunggu",
-      "tanggal_permintaan": "2024-07-24T10:00:00.000Z",
-      "items": [
-        {
-          "id": 100,
-          "id_barang": 1,
-          "jumlah_diminta": 2,
-          "jumlah_disetujui": 0
-        },
-        ...
-      ]
-    }
-    ```
-  - **400 Bad Request**: Jika stok tidak cukup, barang tidak ditemukan, atau items kosong.
+  - **201 Created**: Data permintaan beserta detail barang
+  - **400 Bad Request**: Jika stok tidak cukup, barang tidak ditemukan, atau items kosong
 
 ---
 
@@ -53,30 +35,7 @@ Modul Permintaan menyediakan endpoint untuk pengajuan permintaan barang oleh peg
 - **Role:** pegawai
 - **Auth:** JWT
 - **Response:**
-  - **200 OK**
-    ```json
-    [
-      {
-        "id": 10,
-        "status": "Menunggu",
-        "tanggal_permintaan": "2024-07-24T10:00:00.000Z",
-        "catatan": "Untuk keperluan rapat bulanan",
-        "items": [
-          {
-            "id": 100,
-            "id_barang": 1,
-            "jumlah_diminta": 2,
-            "jumlah_disetujui": 0,
-            "barang": {
-              "id": 1,
-              "nama_barang": "Kertas A4",
-              "satuan": "rim"
-            }
-          }
-        ]
-      }
-    ]
-    ```
+  - **200 OK**: Array riwayat permintaan user
 
 ---
 
@@ -151,7 +110,7 @@ Modul Permintaan menyediakan endpoint untuk pengajuan permintaan barang oleh peg
     }
     ```
   - **Deskripsi:**  
-    Mengembalikan statistik total barang, permintaan tertunda, barang kritis, **dan total user aktif** untuk dashboard admin.
+    Mengembalikan statistik total barang, permintaan tertunda, barang kritis, dan total user aktif untuk dashboard admin.
 
 ---
 
@@ -184,6 +143,30 @@ Modul Permintaan menyediakan endpoint untuk pengajuan permintaan barang oleh peg
 
 ---
 
+### 9. Mendapatkan Semua Permintaan (Admin, untuk dashboard/tabel)
+
+- **URL:** `/permintaan/all`
+- **Method:** `GET`
+- **Role:** admin
+- **Auth:** JWT
+- **Query Params:**
+  - `status`: Filter status permintaan (opsional)
+  - `page`: Nomor halaman (default: 1)
+  - `limit`: Jumlah data per halaman (default: 20)
+- **Response:**
+  - **200 OK**: Data permintaan beserta info paginasi
+
+---
+
+## Proteksi Endpoint
+
+- Semua endpoint diproteksi JWT ([`JwtAuthGuard`](../auth/jwt-auth.guard.ts))
+- Endpoint pengajuan & riwayat hanya untuk role `pegawai`
+- Endpoint verifikasi, dashboard, tren hanya untuk role `admin`
+- Endpoint detail & PDF dapat diakses admin (semua) dan pegawai (hanya milik sendiri)
+
+---
+
 ## DTO & Validasi
 
 - [`CreatePermintaanDto`](dto/create-permintaan.dto.ts): Validasi pengajuan permintaan (items wajib, id_barang & jumlah minimal 1)
@@ -200,63 +183,11 @@ Modul Permintaan menyediakan endpoint untuk pengajuan permintaan barang oleh peg
 
 ---
 
-## Proteksi Endpoint
-
-- Semua endpoint diproteksi JWT ([`JwtAuthGuard`](../auth/jwt-auth.guard.ts))
-- Endpoint pengajuan & riwayat hanya untuk role `pegawai`
-- Endpoint verifikasi, dashboard, tren hanya untuk role `admin`
-- Endpoint detail & PDF dapat diakses admin (semua) dan pegawai (hanya milik sendiri)
-
----
-
-## Contoh Penggunaan
-
-### Pengajuan Permintaan
-
-```http
-POST /permintaan
-Authorization: Bearer <token-pegawai>
-Content-Type: application/json
-
-{
-  "items": [
-    { "id_barang": 1, "jumlah": 2 },
-    { "id_barang": 2, "jumlah": 1 }
-  ],
-  "catatan": "Untuk keperluan rapat bulanan"
-}
-```
-
-### Verifikasi Permintaan
-
-```http
-PATCH /permintaan/10/verifikasi
-Authorization: Bearer <token-admin>
-Content-Type: application/json
-
-{
-  "keputusan": "setuju",
-  "items": [
-    { "id_detail": 100, "jumlah_disetujui": 2 }
-  ],
-  "catatan_verifikasi": "Disetujui"
-}
-```
-
-### Cetak Bukti Permintaan (PDF)
-
-```http
-GET /permintaan/10/pdf
-Authorization: Bearer <token>
-```
-
----
-
 ## Unit Test
 
-- Pengujian service: [permintaan.service.spec.ts](permintaan.service.spec.ts)
-- Pengujian controller: [permintaan.controller.spec.ts](permintaan.controller.spec.ts)
-- Pengujian validasi DTO: [dto/verifikasi-permintaan.dto.spec.ts](dto/verifikasi-permintaan.dto.spec.ts)
+- [src/permintaan/permintaan.service.spec.ts](src/permintaan/permintaan.service.spec.ts)
+- [src/permintaan/permintaan.controller.spec.ts](src/permintaan/permintaan.controller.spec.ts)
+- [src/permintaan/dto/verifikasi-permintaan.dto.spec.ts](src/permintaan/dto/verifikasi-permintaan.dto.spec.ts)
 
 ---
 

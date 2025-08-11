@@ -143,6 +143,14 @@ Modul User menyediakan endpoint untuk manajemen data pengguna (admin & pegawai),
 
 ---
 
+## Proteksi Endpoint
+
+- Semua endpoint diproteksi JWT (`AuthGuard('jwt')`)
+- Endpoint CRUD hanya untuk role `admin` ([`RolesGuard`](../auth/roles.guard.ts))
+- Endpoint profil dapat diakses user login (admin/pegawai)
+
+---
+
 ## DTO & Validasi
 
 - [`CreateUserDto`](dto/create-user.dto.ts): Validasi pembuatan user baru (nama, username, password wajib, role opsional)
@@ -159,61 +167,10 @@ Modul User menyediakan endpoint untuk manajemen data pengguna (admin & pegawai),
 
 ---
 
-## Proteksi Endpoint
-
-- Semua endpoint diproteksi JWT (`AuthGuard('jwt')`)
-- Endpoint CRUD hanya untuk role `admin` ([`RolesGuard`](../auth/roles.guard.ts))
-- Endpoint profil dapat diakses user login (admin/pegawai)
-
----
-
-## Contoh Penggunaan
-
-### Membuat User Baru
-
-```http
-POST /user
-Authorization: Bearer <token-admin>
-Content-Type: application/json
-
-{
-  "nama": "Budi Santoso",
-  "username": "budi",
-  "password": "budi123",
-  "role": "pegawai",
-  "unit_kerja": "Statistik Produksi"
-}
-```
-
-### Update Profil User
-
-```http
-PATCH /user/profile
-Authorization: Bearer <token>
-Content-Type: application/json
-
-{
-  "nama": "Budi S.",
-  "password": "passwordBaru"
-}
-```
-
-### Upload Foto Profil
-
-```http
-PATCH /user/profile/foto
-Authorization: Bearer <token>
-Content-Type: multipart/form-data
-
-foto: <file>
-```
-
----
-
 ## Unit Test
 
-- Pengujian service: [user.service.spec.ts](user.service.spec.ts)
-- Pengujian controller: [user.controller.spec.ts](user.controller.spec.ts)
+- [src/user/user.service.spec.ts](../user/user.service.spec.ts)
+- [src/user/user.controller.spec.ts](../user/user.controller.spec.ts)
 
 ---
 
@@ -222,4 +179,3 @@ foto: <file>
 - Service: [`UserService`](user.service.ts)
 - Controller: [`UserController`](user.controller.ts)
 - DTO: [`CreateUserDto`](dto/create-user.dto.ts), [`UpdateUserDto`](dto/update-user.dto.ts)
-- Modul:
