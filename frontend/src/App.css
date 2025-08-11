@@ -1,18 +1,56 @@
+/*
+===============================================================================
+File: App.css
+-----------------------------------------------------------------------------
+Deskripsi:
+File ini berisi style utama untuk aplikasi SIAP (Sistem Informasi Administrasi
+Pengelolaan Barang, Permintaan, dan Verifikasi BPS Pringsewu).
+Style di sini mengatur tampilan utama, logo, header, dan link aplikasi.
+===============================================================================
+*/
+
+/* ============================================================================
+Class: .App
+-----------------------------------------------------------------------------
+Fungsi:
+Mengatur tata letak utama aplikasi agar konten berada di tengah.
+============================================================================ */
 .App {
   text-align: center;
 }
 
+/* ============================================================================
+Class: .App-logo
+-----------------------------------------------------------------------------
+Fungsi:
+Mengatur ukuran dan interaksi logo aplikasi SIAP.
+============================================================================ */
 .App-logo {
   height: 40vmin;
   pointer-events: none;
 }
 
+/* ============================================================================
+Media Query: prefers-reduced-motion
+-----------------------------------------------------------------------------
+Fungsi:
+Menambahkan animasi berputar pada logo jika pengguna tidak mengaktifkan
+preferensi pengurangan gerakan pada sistemnya.
+============================================================================ */
 @media (prefers-reduced-motion: no-preference) {
   .App-logo {
+    /* Animasi berputar untuk logo SIAP */
     animation: App-logo-spin infinite 20s linear;
   }
 }
 
+/* ============================================================================
+Class: .App-header
+-----------------------------------------------------------------------------
+Fungsi:
+Mengatur tampilan header aplikasi SIAP, termasuk warna latar, tinggi minimum,
+layout flex, dan warna teks.
+============================================================================ */
 .App-header {
   background-color: #282c34;
   min-height: 100vh;
@@ -24,10 +62,23 @@
   color: white;
 }
 
+/* ============================================================================
+Class: .App-link
+-----------------------------------------------------------------------------
+Fungsi:
+Mengatur warna link pada aplikasi SIAP agar konsisten dengan branding.
+============================================================================ */
 .App-link {
   color: #61dafb;
 }
 
+/* ============================================================================
+Keyframes: App-logo-spin
+-----------------------------------------------------------------------------
+Fungsi:
+Mendefinisikan animasi berputar untuk logo aplikasi SIAP.
+Animasi ini digunakan pada .App-logo.
+============================================================================ */
 @keyframes App-logo-spin {
   from {
     transform: rotate(0deg);
