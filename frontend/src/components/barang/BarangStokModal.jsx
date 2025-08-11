@@ -1,6 +1,40 @@
+/**
+ * BarangStokModal.jsx
+ *
+ * Komponen modal untuk menambah stok barang pada aplikasi SIAP.
+ * Digunakan dalam proses pengelolaan barang, khususnya saat admin ingin menambah stok barang tertentu.
+ *
+ * Parameter Props:
+ * - show (boolean): Menentukan apakah modal ditampilkan.
+ * - barang (object): Data barang yang akan ditambah stoknya.
+ * - stokData (object): Data input penambahan stok (jumlahTambah, keterangan).
+ * - loading (boolean): Status loading saat proses submit.
+ * - onChange (function): Handler perubahan input form.
+ * - onClose (function): Handler untuk menutup modal.
+ * - onSubmit (function): Handler submit form penambahan stok.
+ *
+ * Return:
+ * - React Element: Modal penambahan stok barang.
+ */
+
 import React from "react";
 import { PlusCircleIcon } from "@heroicons/react/24/outline";
 
+/**
+ * Komponen modal untuk menambah stok barang.
+ *
+ * Parameter:
+ * - show (boolean): Menampilkan atau menyembunyikan modal.
+ * - barang (object): Data barang yang dipilih.
+ * - stokData (object): Data input penambahan stok.
+ * - loading (boolean): Status loading submit.
+ * - onChange (function): Fungsi handler perubahan input.
+ * - onClose (function): Fungsi handler tutup modal.
+ * - onSubmit (function): Fungsi handler submit form.
+ *
+ * Return:
+ * - React Element: Modal penambahan stok barang.
+ */
 const BarangStokModal = ({
   show,
   barang,
@@ -10,10 +44,16 @@ const BarangStokModal = ({
   onClose,
   onSubmit,
 }) => {
+  // Jika modal tidak ditampilkan atau data barang belum tersedia, tidak render apapun
   if (!show || !barang) return null;
+
+  // Hitung stok setelah penambahan untuk preview
+  const stokSetelahTambah = barang.stok + parseInt(stokData.jumlahTambah || 0);
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 animate-fadeIn">
       <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md relative">
+        {/* Tombol tutup modal */}
         <button
           className="absolute top-3 right-3 text-gray-400 hover:text-red-500 text-2xl font-bold transition"
           onClick={onClose}
@@ -21,6 +61,7 @@ const BarangStokModal = ({
         >
           &times;
         </button>
+        {/* Header modal */}
         <div className="flex items-center mb-4">
           <div className="bg-green-100 text-green-600 rounded-full p-2 mr-3 shadow">
             <PlusCircleIcon className="h-6 w-6" />
@@ -29,6 +70,7 @@ const BarangStokModal = ({
             Tambah Stok Barang
           </h3>
         </div>
+        {/* Informasi barang yang dipilih */}
         <div className="mb-4 p-4 bg-gray-50 rounded-xl flex items-center space-x-4">
           {barang.foto && (
             <img
@@ -48,7 +90,9 @@ const BarangStokModal = ({
             </div>
           </div>
         </div>
+        {/* Form penambahan stok */}
         <form onSubmit={onSubmit} className="space-y-4">
+          {/* Input jumlah penambahan */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1">
               Jumlah Penambahan
@@ -63,6 +107,7 @@ const BarangStokModal = ({
               required
             />
           </div>
+          {/* Input keterangan penambahan */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1">
               Keterangan (Opsional)
@@ -76,17 +121,18 @@ const BarangStokModal = ({
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
             />
           </div>
+          {/* Preview stok setelah penambahan */}
           {stokData.jumlahTambah && (
             <div className="p-3 bg-green-50 rounded-lg mt-2">
               <p className="text-sm text-green-600 font-semibold">
                 Stok Setelah Penambahan:
               </p>
               <p className="font-bold text-green-800 text-lg">
-                {barang.stok + parseInt(stokData.jumlahTambah || 0)}{" "}
-                {barang.satuan}
+                {stokSetelahTambah} {barang.satuan}
               </p>
             </div>
           )}
+          {/* Tombol aksi */}
           <div className="flex justify-end space-x-3 pt-4">
             <button
               type="button"
