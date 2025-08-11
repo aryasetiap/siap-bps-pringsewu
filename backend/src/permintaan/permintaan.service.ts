@@ -285,8 +285,41 @@ export class PermintaanService {
    */
   async generateBuktiPermintaanPDF(id: number): Promise<Buffer> {
     const permintaan = await this.findOneById(id);
-    if (!permintaan) throw new NotFoundException('Permintaan tidak ditemukan');
 
+    const formatDate = (date: Date): string => {
+      if (!date) return '-';
+
+      // Daftar nama bulan dalam bahasa Indonesia
+      const namaBulan = [
+        'Januari',
+        'Februari',
+        'Maret',
+        'April',
+        'Mei',
+        'Juni',
+        'Juli',
+        'Agustus',
+        'September',
+        'Oktober',
+        'November',
+        'Desember',
+      ];
+
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = date.getMonth(); // 0-11
+      const year = date.getFullYear();
+
+      return `${day} ${namaBulan[month]} ${year}`;
+    };
+
+    // Gunakan tanggal saat ini untuk dokumen
+    const today = new Date();
+    const currentDateString = formatDate(today);
+
+    // Tetap simpan tanggal permintaan untuk referensi
+    const permintaanDateString = formatDate(permintaan.tanggal_permintaan);
+
+    // Konfigurasi font
     const fonts = {
       Roboto: {
         normal: path.join(__dirname, '../assets/fonts/Roboto-Regular.ttf'),
@@ -300,50 +333,211 @@ export class PermintaanService {
     };
     const printer = new PdfPrinter(fonts);
 
+    // Logo BPS
+    const logoPath = path.join(
+      __dirname,
+      '../assets/images/logo-bps-pringsewu.png',
+    );
+
+    // Definisi dokumen PDF yang lebih modern
     const docDefinition = {
+      pageSize: 'A4',
+      pageMargins: [40, 60, 40, 60],
+
       content: [
-        { text: 'Bukti Permintaan Barang', style: 'header' },
-        { text: `Nomor: ${permintaan.id}`, margin: [0, 10, 0, 0] },
+        // Header dengan logo dan judul
         {
-          text: `Tanggal: ${new Date(permintaan.tanggal_permintaan).toLocaleDateString('id-ID')}`,
+          columns: [
+            {
+              width: 170,
+              image: logoPath,
+              fit: [170, 85],
+            },
+            {
+              width: '*',
+              text: '',
+            },
+          ],
         },
-        { text: `Pemohon: ${permintaan.pemohon?.nama ?? '-'}` },
-        { text: `Unit Kerja: ${permintaan.pemohon?.unit_kerja ?? '-'}` },
-        { text: `Status: ${permintaan.status}` },
+
+        // Judul dokumen
         {
-          text: `Catatan: ${permintaan.catatan ?? '-'}`,
+          text: 'Permintaan',
+          style: 'header',
+          alignment: 'center',
+          margin: [0, 10, 0, 0],
+        },
+        {
+          text: 'Barang Persediaan',
+          style: 'header',
+          alignment: 'center',
+          margin: [0, 0, 0, 15],
+        },
+
+        // Unit kerja pemohon
+        {
+          text: permintaan.pemohon?.unit_kerja ?? '-',
+          style: 'unitKerja',
+          margin: [0, 0, 0, 20],
+        },
+
+        // Informasi nomor dan tanggal permintaan
+        {
+          columns: [
+            {
+              width: '50%',
+              text: [
+                { text: 'Nomor Permintaan: ', style: 'labelInfo' },
+                { text: `#${permintaan.id}`, style: 'valueInfo' },
+              ],
+            },
+            {
+              width: '50%',
+              text: [
+                { text: 'Tanggal Permintaan: ', style: 'labelInfo' },
+                { text: permintaanDateString, style: 'valueInfo' },
+              ],
+              alignment: 'right',
+            },
+          ],
           margin: [0, 0, 0, 10],
         },
+
+        // Tabel data barang dengan styling modern
         {
           table: {
             headerRows: 1,
-            widths: ['*', 50, 50, 50],
+            widths: [30, '*', 60, 70, 80, 60],
             body: [
               [
+                { text: 'No', style: 'tableHeader' },
                 { text: 'Nama Barang', style: 'tableHeader' },
-                { text: 'Diminta', style: 'tableHeader' },
-                { text: 'Disetujui', style: 'tableHeader' },
+                { text: 'Jumlah', style: 'tableHeader' },
+                { text: 'Kode Barang', style: 'tableHeader' },
+                { text: 'Keterangan', style: 'tableHeader' },
                 { text: 'Satuan', style: 'tableHeader' },
               ],
-              ...permintaan.items.map((item) => [
+              ...permintaan.items.map((item, index) => [
+                { text: index + 1, alignment: 'center' },
                 item.barang?.nama_barang ?? '-',
-                item.jumlah_diminta,
-                item.jumlah_disetujui,
-                item.barang?.satuan ?? '-',
+                { text: item.jumlah_diminta, alignment: 'center' },
+                { text: item.barang?.kode_barang ?? '-', alignment: 'center' },
+                permintaan.catatan || '-',
+                { text: item.barang?.satuan ?? '-', alignment: 'center' },
               ]),
             ],
           },
-          layout: 'lightHorizontalLines',
+          layout: {
+            hLineWidth: function (i, node) {
+              return i === 0 || i === 1 || i === node.table.body.length
+                ? 1
+                : 0.5;
+            },
+            vLineWidth: function (i, node) {
+              return 0.5;
+            },
+            hLineColor: function (i, node) {
+              return i === 0 || i === 1 || i === node.table.body.length
+                ? '#aaaaaa'
+                : '#dddddd';
+            },
+            vLineColor: function (i, node) {
+              return '#aaaaaa';
+            },
+            paddingLeft: function (i, node) {
+              return 8;
+            },
+            paddingRight: function (i, node) {
+              return 8;
+            },
+            paddingTop: function (i, node) {
+              return 8;
+            },
+            paddingBottom: function (i, node) {
+              return 8;
+            },
+          },
+        },
+
+        // Footer dengan tanggal dan tanda tangan
+        {
+          columns: [
+            {
+              width: '50%',
+              stack: [
+                {
+                  text: `\n\nDi Bukukan: ${currentDateString}`,
+                  margin: [0, 20, 0, 15],
+                },
+                { text: 'Kasubag Umum', margin: [0, 0, 0, 40] },
+                { text: 'Singgih Adiwijaya, S.E, M.M', fontSize: 12 },
+              ],
+              alignment: 'left',
+            },
+            {
+              width: '50%',
+              stack: [
+                {
+                  text: `\n\nPringsewu, ${currentDateString}`,
+                  margin: [0, 20, 0, 15],
+                },
+                { text: 'Penerima,', margin: [0, 0, 0, 40] },
+                { text: permintaan.pemohon?.nama ?? '-', fontSize: 12 },
+              ],
+              alignment: 'left',
+            },
+          ],
         },
       ],
+
+      // Definisi styles untuk tampilan modern
       styles: {
-        header: { fontSize: 16, bold: true, alignment: 'center' },
-        tableHeader: { bold: true, fillColor: '#eeeeee' },
+        header: {
+          fontSize: 16,
+          bold: true,
+          color: '#000000', // ubah ke warna hitam
+        },
+        unitKerja: {
+          fontSize: 12,
+          bold: true,
+          color: '#000000', // ubah ke warna hitam
+        },
+        tableHeader: {
+          bold: true,
+          fontSize: 10,
+          fillColor: '#f1f5f9',
+          color: '#000000', // ubah ke warna hitam
+          alignment: 'center',
+          margin: [0, 4],
+        },
+        labelInfo: {
+          fontSize: 10,
+          color: '#000000', // ubah ke warna hitam
+        },
+        valueInfo: {
+          fontSize: 10,
+          bold: true,
+          color: '#000000', // ubah ke warna hitam
+        },
+      },
+
+      // Footer halaman (opsional)
+      footer: {
+        columns: [
+          {
+            text: 'SIAP BPS Pringsewu',
+            alignment: 'center',
+            fontSize: 8,
+            color: '#000000', // ubah ke warna hitam
+            margin: [0, 10, 0, 0],
+          },
+        ],
       },
     };
 
     const pdfDoc = printer.createPdfKitDocument(docDefinition);
     const chunks: Buffer[] = [];
+
     return new Promise<Buffer>((resolve, reject) => {
       pdfDoc.on('data', (chunk) => chunks.push(chunk));
       pdfDoc.on('end', () => resolve(Buffer.concat(chunks)));

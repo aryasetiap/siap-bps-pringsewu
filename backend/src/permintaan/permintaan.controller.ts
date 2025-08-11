@@ -11,6 +11,7 @@ import {
   Res,
   Query,
   BadRequestException,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { PermintaanService } from './permintaan.service';
 import { CreatePermintaanDto } from './dto/create-permintaan.dto';
@@ -117,15 +118,31 @@ export class PermintaanController {
   @UseGuards(JwtAuthGuard)
   @Get(':id/pdf')
   async generateBuktiPermintaanPDF(
-    @Param('id') id: number,
+    @Param('id', ParseIntPipe) id: number,
     @Res() res: Response,
+    @Req() req: any,
   ) {
-    const pdfBuffer = await this.permintaanService.generateBuktiPermintaanPDF(
-      Number(id),
-    );
+    // Cek apakah user berhak mengakses PDF ini
+    const permintaan = await this.permintaanService.findOneById(id);
+    if (
+      req.user.role !== 'admin' &&
+      permintaan.id_user_pemohon !== req.user.userId
+    ) {
+      throw new ForbiddenException(
+        'Anda tidak berhak mengakses bukti permintaan ini',
+      );
+    }
+
+    const pdfBuffer =
+      await this.permintaanService.generateBuktiPermintaanPDF(id);
+
+    // Format tanggal untuk nama file
+    const today = new Date();
+    const dateStr = `${today.getDate()}-${today.getMonth() + 1}-${today.getFullYear()}`;
+
     res.set({
       'Content-Type': 'application/pdf',
-      'Content-Disposition': `attachment; filename="bukti_permintaan_${id}.pdf"`,
+      'Content-Disposition': `attachment; filename="bukti_permintaan_${id}_${dateStr}.pdf"`,
     });
     res.end(pdfBuffer);
   }

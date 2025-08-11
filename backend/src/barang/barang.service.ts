@@ -166,19 +166,19 @@ export class BarangService {
     start: string,
     end: string,
   ): Promise<Buffer> {
-    const penggunaan = await this.barangRepo.query(
-      `
-      SELECT b.nama_barang, b.satuan, SUM(d.jumlah_disetujui) as total_digunakan
-      FROM detail_permintaan d
-      JOIN barang b ON d.id_barang = b.id
-      JOIN permintaan p ON d.id_permintaan = p.id
-      WHERE p.status IN ('Disetujui', 'Disetujui Sebagian')
-        AND p.tanggal_permintaan BETWEEN $1 AND $2
-      GROUP BY b.nama_barang, b.satuan
-      ORDER BY b.nama_barang
-    `,
-      [start, end],
-    );
+    const penggunaan = await this.getLaporanPenggunaanJSON(start, end);
+
+    // Format tanggal untuk tampilan
+    const formatDate = (dateStr: string): string => {
+      const date = new Date(dateStr);
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const year = date.getFullYear();
+      return `${day}-${month}-${year}`;
+    };
+
+    const today = new Date();
+    const dateStr = `${today.getDate()}-${today.getMonth() + 1}-${today.getFullYear()}`;
 
     const fonts = {
       Roboto: {
@@ -193,16 +193,24 @@ export class BarangService {
     };
     const printer = new PdfPrinter(fonts);
 
+    // Logo BPS
+    const logoPath = path.join(
+      __dirname,
+      '../assets/images/logo-bps-pringsewu.png',
+    );
+
     const bodyRows =
       penggunaan.length > 0
-        ? penggunaan.map((row) => [
+        ? penggunaan.map((row, index) => [
+            index + 1,
             row.nama_barang,
             row.total_digunakan,
             row.satuan,
           ])
         : [
             [
-              { text: 'Tidak ada data', colSpan: 3, alignment: 'center' },
+              { text: 'Tidak ada data', colSpan: 4, alignment: 'center' },
+              {},
               {},
               {},
             ],
@@ -210,14 +218,33 @@ export class BarangService {
 
     const docDefinition = {
       content: [
-        { text: 'Laporan Penggunaan Barang', style: 'header' },
-        { text: `Periode: ${start} s/d ${end}`, margin: [0, 10, 0, 10] },
+        {
+          columns: [
+            {
+              image: logoPath,
+              width: 100,
+              height: 50,
+            },
+            {
+              width: '*',
+              text: '',
+            },
+          ],
+        },
+        { text: 'Laporan Penggunaan', style: 'header', alignment: 'center' },
+        { text: 'Barang Persediaan', style: 'header', alignment: 'center' },
+        {
+          text: `Periode: ${formatDate(start)} s/d ${formatDate(end)}`,
+          margin: [0, 10, 0, 15],
+          alignment: 'center',
+        },
         {
           table: {
             headerRows: 1,
-            widths: ['*', 60, 60],
+            widths: [30, '*', 60, 60],
             body: [
               [
+                { text: 'No', style: 'tableHeader' },
                 { text: 'Nama Barang', style: 'tableHeader' },
                 { text: 'Total Digunakan', style: 'tableHeader' },
                 { text: 'Satuan', style: 'tableHeader' },
@@ -227,15 +254,36 @@ export class BarangService {
           },
           layout: 'lightHorizontalLines',
         },
+        {
+          columns: [
+            {
+              width: '50%',
+              text: [
+                { text: `\n\nDi Bukukan: ${dateStr}\n\n`, alignment: 'left' },
+                { text: 'Kasubag Umum\n\n\n\n\n', alignment: 'left' },
+                { text: 'Singgih Adiwijaya, S.E, M.M', alignment: 'left' },
+              ],
+            },
+            {
+              width: '50%',
+              text: [
+                { text: `\n\nPringsewu, ${dateStr}\n\n`, alignment: 'left' },
+                { text: 'Kepala BPS Pringsewu,\n\n\n\n\n', alignment: 'left' },
+                { text: 'Dr. Budi Pranoto, M.Si', alignment: 'left' },
+              ],
+            },
+          ],
+        },
       ],
       styles: {
-        header: { fontSize: 16, bold: true, alignment: 'center' },
+        header: { fontSize: 16, bold: true },
         tableHeader: { bold: true, fillColor: '#eeeeee' },
       },
     };
 
     const pdfDoc = printer.createPdfKitDocument(docDefinition);
     const chunks: Buffer[] = [];
+
     return new Promise<Buffer>((resolve, reject) => {
       pdfDoc.on('data', (chunk) => chunks.push(chunk));
       pdfDoc.on('end', () => resolve(Buffer.concat(chunks)));
