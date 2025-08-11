@@ -1,7 +1,7 @@
 # 🚀 SIAP BPS Pringsewu
 
 <p align="center">
-  <img src="logo-bps-pringsewu.png" alt="SIAP Logo" style="width: 100%; background: #fff; border-radius: 8px; padding: 10px;" />
+  <img src="logo-bps-pringsewu.png" alt="SIAP Logo" style="width: 100%; background: #ffffff; border-radius: 8px; padding: 10px;" />
 </p>
 
 <p align="center">
