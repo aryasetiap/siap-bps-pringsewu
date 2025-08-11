@@ -181,6 +181,9 @@ export class BarangService {
    * - BadRequestException: Jika barang tidak aktif.
    */
   async addStok(id: number, dto: AddStokDto): Promise<Barang> {
+    if (dto.jumlah < 1) {
+      throw new BadRequestException('Jumlah penambahan stok minimal 1');
+    }
     const barang = await this.findOne(id);
     if (!barang.status_aktif) {
       throw new BadRequestException('Barang tidak aktif');
