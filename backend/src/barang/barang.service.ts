@@ -249,6 +249,16 @@ export class BarangService {
        */
       const formatDate = (dateStr: string): string => {
         const date = new Date(dateStr);
+        // Format tanggal menjadi "DD/MM/YYYY"
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = date.getMonth() + 1; // Bulan dimulai dari 0, sehingga perlu +1
+        const year = date.getFullYear();
+        return `${day}/${month}/${year}`;
+      };
+
+      // Format untuk tampilan periode di header (tetap gunakan format lengkap)
+      const formatDateFull = (dateStr: string): string => {
+        const date = new Date(dateStr);
         const namaBulan = [
           'Januari',
           'Februari',
@@ -270,9 +280,11 @@ export class BarangService {
       };
 
       const today = new Date();
-      const currentDateString = formatDate(today.toISOString().split('T')[0]);
-      const startFormatted = formatDate(start);
-      const endFormatted = formatDate(end);
+      const currentDateString = formatDateFull(
+        today.toISOString().split('T')[0],
+      );
+      const startFormatted = formatDateFull(start);
+      const endFormatted = formatDateFull(end);
 
       // Konfigurasi font untuk PDF
       const fonts = {
@@ -303,7 +315,7 @@ export class BarangService {
               { text: row.kode_barang, alignment: 'center' },
               { text: row.total_digunakan, alignment: 'center' },
               row.satuan,
-              { text: formatDate(row.tanggal_permintaan), alignment: 'center' }, // ubah jadi tanggal permintaan
+              { text: formatDate(row.tanggal_permintaan), alignment: 'center' }, // Format tanggal permintaan menjadi DD/MM/YYYY
             ])
           : [
               [
