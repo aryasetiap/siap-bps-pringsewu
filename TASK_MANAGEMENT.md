@@ -82,73 +82,53 @@ Dokumentasi tahapan kerja detail untuk monitoring dan catatan progres proyek.
 
 ## FRONTEND (FE) - React.js
 
-### 1. Setup & Fondasi Proyek
+### 1. Audit & Refactor
 
-- [ ] Inisialisasi project React.js baru
-- [ ] Setup struktur folder, routing dasar (React Router)
-- [ ] Instalasi dependensi utama (axios, tailwindcss, dsb)
-- [ ] Setup koneksi ke API backend (axios instance)
-- [ ] Setup state management (jika perlu, misal context/redux)
+- [x] Audit seluruh komponen yang sudah ada (struktur, style, konsistensi)
+- [x] Refactor komponen agar siap integrasi API (pisahkan logic & UI)
 
-### 2. Modul Autentikasi & User
+### 2. Penyelesaian Fitur Utama (UI/UX)
 
-- [ ] Halaman login (Admin & Pegawai)
-- [ ] Implementasi session/token management
-- [ ] Halaman profil user (lihat & edit data diri, ubah password)
-- [ ] Proteksi route sesuai role
+#### Pegawai
 
-### 3. Dashboard Admin
+- [x] Halaman daftar barang (pegawai): tabel, search, filter, info stok
+- [x] Form pengajuan permintaan barang (multi-item, pilih barang, jumlah, satuan)
+- [x] Halaman riwayat permintaan pegawai (tabel, status, detail)
+- [x] Halaman detail permintaan (pegawai)
 
-- [ ] Halaman dashboard: widget statistik, grafik tren permintaan, notifikasi stok kritis
-- [ ] Komponen daftar permintaan tertunda
+#### Admin
 
-### 4. Manajemen Barang (Admin)
+- [x] Halaman laporan periodik penggunaan barang (filter tanggal, rekap, ekspor PDF)
+- [x] Halaman cetak bukti permintaan (preview, tombol cetak PDF)
 
-- [ ] Halaman daftar barang (tabel, search, filter)
-- [ ] Form tambah/edit barang (modal)
-- [ ] Fitur penambahan stok barang
-- [ ] Notifikasi stok kritis visual
+#### Umum
 
-### 5. Manajemen Pengguna (Admin)
+- [x] Halaman profil user (lihat/edit data diri, ubah password)
+- [x] Halaman error/forbidden/404
+- [x] Komponen notifikasi visual (stok kritis, permintaan baru, dsb)
 
-- [ ] Halaman daftar user (tabel)
-- [ ] Form tambah/edit/nonaktifkan user
+### 3. Integrasi dengan Backend
 
-### 6. Permintaan Barang (Pegawai)
+- [x] Buat dan konfigurasi `src/services/api.js` (axios instance + interceptor)
+- [x] Update seluruh service di `services` untuk pakai axios instance
+- [x] Refactor `AdminDashboard.jsx` untuk ambil data dari API
+- [x] Refactor `ManajemenBarang.jsx` untuk CRUD barang via API
+- [x] Refactor `UserManagement.jsx` untuk CRUD user via API
+- [x] Refactor `RequestVerification.jsx` untuk ambil dan update permintaan via API
+- [x] Refactor `LaporanPeriodik.jsx` untuk ambil dan ekspor laporan via API
+- [x] Refactor `EmployeeRequest.jsx` untuk submit permintaan via API
+- [x] Refactor `EmployeeHistory.jsx` untuk ambil riwayat permintaan via API
+- [x] Refactor `ProfilePage.jsx` untuk update profil via API
+- [x] Refactor `LoginPage.jsx` untuk login via API & error handling
+- [x] Refactor `CetakBuktiPermintaan.jsx` untuk ambil detail & cetak PDF via API
 
-- [ ] Halaman daftar barang (pegawai): search, filter, info stok
-- [ ] Form pengajuan permintaan (multi-item, pilih barang, jumlah, satuan)
-- [ ] Validasi stok real-time di form
+### 4. Testing & Polish
 
-### 7. Riwayat Permintaan (Pegawai)
+- [ ] Uji seluruh alur kerja end-to-end (login, CRUD, permintaan, verifikasi, laporan, PDF)
+- [ ] Uji UI/UX (responsif, mobile friendly, konsistensi style)
+- [ ] Refactor kode, perbaiki bug, dan lakukan code review
 
-- [ ] Halaman riwayat permintaan (tabel, status, detail)
-- [ ] Halaman detail permintaan (barang, jumlah, status, catatan)
-
-### 8. Verifikasi Permintaan (Admin)
-
-- [ ] Halaman daftar permintaan masuk (tabel)
-- [ ] Halaman detail permintaan (item, jumlah diminta, stok tersedia)
-- [ ] Form verifikasi (setuju/sebagian/tolak, jumlah disetujui, catatan)
-
-### 9. Laporan & Cetak PDF
-
-- [ ] Halaman laporan periodik (filter tanggal, rekap penggunaan barang)
-- [ ] Tombol ekspor/cetak PDF laporan
-- [ ] Halaman cetak bukti permintaan (preview, cetak PDF)
-
-### 10. Notifikasi & Error Handling
-
-- [ ] Komponen notifikasi (stok kritis, permintaan baru, dsb)
-- [ ] Halaman error/forbidden/404
-
-### 11. Testing & Polish
-
-- [ ] Uji integrasi API (login, CRUD, permintaan, dsb)
-- [ ] Uji UI/UX (responsif, mobile friendly)
-- [ ] Refactor & code review
-
-### 12. Deployment & Maintenance
+### 5. Deployment & Maintenance
 
 - [ ] Build production FE
 - [ ] Deploy ke server (staging/production)
