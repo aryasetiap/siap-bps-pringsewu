@@ -87,12 +87,12 @@ export class AuthService {
   ): Promise<{ access_token: string; user: any }> {
     const user = await this.userService.findByUsername(username);
     if (!user) {
-      throw new UnauthorizedException('User tidak ditemukan');
+      throw new UnauthorizedException('User not found');
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      throw new UnauthorizedException('Password salah');
+      throw new UnauthorizedException('Invalid password');
     }
 
     // Payload JWT berisi informasi penting untuk otorisasi

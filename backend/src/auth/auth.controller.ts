@@ -60,7 +60,7 @@ export class AuthController {
      */
     const token = authHeader?.replace('Bearer ', '');
     if (!token) {
-      return { message: 'Token tidak disediakan' };
+      return { message: 'No token provided' };
     }
     return this.authService.logout(token);
   }
