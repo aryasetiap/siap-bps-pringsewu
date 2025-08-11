@@ -1,5 +1,7 @@
 import api from "./api";
 
+const API_URL = "/barang";
+
 // Mendapatkan daftar barang (dengan query opsional)
 export const getAllBarang = (params) => api.get("/barang", { params });
 
@@ -26,19 +28,15 @@ export const getBarangStokKritis = () => api.get(`/barang/stok-kritis`);
 export const getNotifStokKritis = () =>
   api.get(`/barang/dashboard/notifikasi-stok-kritis`);
 
-// Mendapatkan laporan penggunaan barang (PDF)
-export const getLaporanPenggunaanPDF = (start, end, config = {}) =>
-  api.get(`/barang/laporan-penggunaan/pdf`, {
-    params: { start, end },
-    responseType: "blob",
-    ...config,
-  });
+// Mendapatkan laporan penggunaan barang dalam format JSON
+export const getLaporanPenggunaanJSON = (queryParams) =>
+  api.get(`${API_URL}/laporan-penggunaan`, { params: queryParams });
 
-// Mendapatkan rekap penggunaan barang (data, bukan PDF)
-export const getLaporanPenggunaan = (start, end, config = {}) =>
-  api.get(`/barang/laporan-penggunaan`, {
-    params: { start, end },
-    ...config,
+// Mendapatkan laporan penggunaan barang dalam format PDF
+export const getLaporanPenggunaanPDF = (queryParams) =>
+  api.get(`${API_URL}/laporan-penggunaan/pdf`, {
+    responseType: "blob",
+    params: queryParams,
   });
 
 // barangService.js

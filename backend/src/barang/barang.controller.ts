@@ -98,6 +98,7 @@ export class BarangController {
   async getLaporanPenggunaanJSON(
     @Query('start') start: string,
     @Query('end') end: string,
+    @Query('unit_kerja') unitKerja: string,
   ) {
     if (
       !/^\d{4}-\d{2}-\d{2}$/.test(start) ||
@@ -108,7 +109,11 @@ export class BarangController {
     if (new Date(start) > new Date(end)) {
       throw new BadRequestException('Tanggal mulai harus <= tanggal akhir');
     }
-    return await this.barangService.getLaporanPenggunaanJSON(start, end);
+    return await this.barangService.getLaporanPenggunaanJSON(
+      start,
+      end,
+      unitKerja,
+    );
   }
 
   /**
@@ -119,6 +124,7 @@ export class BarangController {
   async generateLaporanPenggunaanPDF(
     @Query('start') start: string,
     @Query('end') end: string,
+    @Query('unit_kerja') unitKerja: string,
     @Res() res: Response,
   ) {
     if (
@@ -130,10 +136,13 @@ export class BarangController {
     if (new Date(start) > new Date(end)) {
       throw new BadRequestException('Tanggal mulai harus <= tanggal akhir');
     }
+
     const pdfBuffer = await this.barangService.generateLaporanPenggunaanPDF(
       start,
       end,
+      unitKerja,
     );
+
     res.set({
       'Content-Type': 'application/pdf',
       'Content-Disposition': `attachment; filename="laporan_penggunaan_${start}_${end}.pdf"`,

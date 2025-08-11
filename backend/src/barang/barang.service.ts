@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Barang } from '../entities/barang.entity';
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm'; // Importa DataSource
 import { CreateBarangDto } from './dto/create-barang.dto';
 import { UpdateBarangDto } from './dto/update-barang.dto';
 import { AddStokDto } from './dto/add-stok.dto';
@@ -17,6 +17,7 @@ export class BarangService {
   constructor(
     @InjectRepository(Barang)
     private barangRepo: Repository<Barang>,
+    private dataSource: DataSource, // Añade la inyección de DataSource
   ) {}
 
   /**
@@ -160,26 +161,55 @@ export class BarangService {
    * Menghasilkan laporan penggunaan barang dalam format PDF untuk periode tertentu.
    * @param start Tanggal awal periode (format: YYYY-MM-DD).
    * @param end Tanggal akhir periode (format: YYYY-MM-DD).
+   * @param unitKerja Unit kerja yang akan difilter (opsional).
    * @returns Buffer PDF laporan penggunaan barang.
    */
   async generateLaporanPenggunaanPDF(
     start: string,
     end: string,
+    unitKerja?: string,
   ): Promise<Buffer> {
-    const penggunaan = await this.getLaporanPenggunaanJSON(start, end);
+    const penggunaan = await this.getLaporanPenggunaanJSON(
+      start,
+      end,
+      unitKerja,
+    );
 
     // Format tanggal untuk tampilan
     const formatDate = (dateStr: string): string => {
       const date = new Date(dateStr);
+
+      // Daftar nama bulan dalam bahasa Indonesia
+      const namaBulan = [
+        'Januari',
+        'Februari',
+        'Maret',
+        'April',
+        'Mei',
+        'Juni',
+        'Juli',
+        'Agustus',
+        'September',
+        'Oktober',
+        'November',
+        'Desember',
+      ];
+
       const day = String(date.getDate()).padStart(2, '0');
-      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const month = date.getMonth(); // 0-11
       const year = date.getFullYear();
-      return `${day}-${month}-${year}`;
+
+      return `${day} ${namaBulan[month]} ${year}`;
     };
 
     const today = new Date();
-    const dateStr = `${today.getDate()}-${today.getMonth() + 1}-${today.getFullYear()}`;
+    const currentDateString = formatDate(today.toISOString().split('T')[0]);
 
+    // Format tanggal periode
+    const startFormatted = formatDate(start);
+    const endFormatted = formatDate(end);
+
+    // Konfigurasi font
     const fonts = {
       Roboto: {
         normal: path.join(__dirname, '../assets/fonts/Roboto-Regular.ttf'),
@@ -199,31 +229,45 @@ export class BarangService {
       '../assets/images/logo-bps-pringsewu.png',
     );
 
+    // Siapkan data untuk tabel - Quitamos unit_kerja y añadimos keterangan (comentario vacío por defecto)
     const bodyRows =
       penggunaan.length > 0
         ? penggunaan.map((row, index) => [
-            index + 1,
+            { text: index + 1, alignment: 'center' },
             row.nama_barang,
-            row.total_digunakan,
+            { text: row.kode_barang, alignment: 'center' },
+            { text: row.total_digunakan, alignment: 'center' },
             row.satuan,
+            '-', // Keterangan (defaultnya kosong)
           ])
         : [
             [
-              { text: 'Tidak ada data', colSpan: 4, alignment: 'center' },
+              {
+                text: 'Tidak ada data penggunaan barang dalam periode ini',
+                colSpan: 6,
+                alignment: 'center',
+              },
+              {},
+              {},
               {},
               {},
               {},
             ],
           ];
 
+    // Definisi dokumen PDF yang lebih modern
     const docDefinition = {
+      pageSize: 'A4',
+      pageMargins: [40, 60, 40, 60],
+
       content: [
+        // Header dengan logo dan judul
         {
           columns: [
             {
+              width: 170,
               image: logoPath,
-              width: 100,
-              height: 50,
+              fit: [170, 85],
             },
             {
               width: '*',
@@ -231,53 +275,171 @@ export class BarangService {
             },
           ],
         },
-        { text: 'Laporan Penggunaan', style: 'header', alignment: 'center' },
-        { text: 'Barang Persediaan', style: 'header', alignment: 'center' },
+
+        // Judul dokumen
         {
-          text: `Periode: ${formatDate(start)} s/d ${formatDate(end)}`,
-          margin: [0, 10, 0, 15],
+          text: 'Laporan Penggunaan',
+          style: 'header',
           alignment: 'center',
+          margin: [0, 10, 0, 0],
         },
+        {
+          text: 'Barang Persediaan',
+          style: 'header',
+          alignment: 'center',
+          margin: [0, 0, 0, 15],
+        },
+
+        // Unit kerja yang difilter (jika ada)
+        unitKerja
+          ? {
+              text: unitKerja,
+              style: 'unitKerja',
+              margin: [0, 0, 0, 20],
+            }
+          : {},
+
+        // Informasi periode laporan
+        {
+          columns: [
+            {
+              width: '100%',
+              text: [
+                { text: 'Periode: ', style: 'labelInfo' },
+                {
+                  text: `${startFormatted} s/d ${endFormatted}`,
+                  style: 'valueInfo',
+                },
+              ],
+              alignment: 'center',
+            },
+          ],
+          margin: [0, 0, 0, 20],
+        },
+
+        // Tabel data penggunaan barang dengan styling modern
+        // Cambiamos widths y cabeceras para reemplazar "Unit Kerja" por "Keterangan"
         {
           table: {
             headerRows: 1,
-            widths: [30, '*', 60, 60],
+            widths: [30, '*', 70, 60, 50, 80],
             body: [
               [
                 { text: 'No', style: 'tableHeader' },
                 { text: 'Nama Barang', style: 'tableHeader' },
-                { text: 'Total Digunakan', style: 'tableHeader' },
+                { text: 'Kode Barang', style: 'tableHeader' },
+                { text: 'Jumlah', style: 'tableHeader' },
                 { text: 'Satuan', style: 'tableHeader' },
+                { text: 'Keterangan', style: 'tableHeader' },
               ],
               ...bodyRows,
             ],
           },
-          layout: 'lightHorizontalLines',
+          layout: {
+            hLineWidth: function (i, node) {
+              return i === 0 || i === 1 || i === node.table.body.length
+                ? 1
+                : 0.5;
+            },
+            vLineWidth: function (i, node) {
+              return 0.5;
+            },
+            hLineColor: function (i, node) {
+              return i === 0 || i === 1 || i === node.table.body.length
+                ? '#aaaaaa'
+                : '#dddddd';
+            },
+            vLineColor: function (i, node) {
+              return '#aaaaaa';
+            },
+            paddingLeft: function (i, node) {
+              return 8;
+            },
+            paddingRight: function (i, node) {
+              return 8;
+            },
+            paddingTop: function (i, node) {
+              return 8;
+            },
+            paddingBottom: function (i, node) {
+              return 8;
+            },
+          },
         },
+
+        // Footer dengan tanggal dan tanda tangan
         {
           columns: [
             {
               width: '50%',
-              text: [
-                { text: `\n\nDi Bukukan: ${dateStr}\n\n`, alignment: 'left' },
-                { text: 'Kasubag Umum\n\n\n\n\n', alignment: 'left' },
-                { text: 'Singgih Adiwijaya, S.E, M.M', alignment: 'left' },
+              stack: [
+                {
+                  text: `\n\nDi Bukukan: ${currentDateString}`,
+                  margin: [0, 20, 0, 15],
+                },
+                { text: 'Kasubag Umum', margin: [0, 0, 0, 40] },
+                { text: 'Singgih Adiwijaya, S.E, M.M', fontSize: 12 },
               ],
+              alignment: 'left',
             },
             {
               width: '50%',
-              text: [
-                { text: `\n\nPringsewu, ${dateStr}\n\n`, alignment: 'left' },
-                { text: 'Kepala BPS Pringsewu,\n\n\n\n\n', alignment: 'left' },
-                { text: 'Dr. Budi Pranoto, M.Si', alignment: 'left' },
+              stack: [
+                {
+                  text: `\n\nPringsewu, ${currentDateString}`,
+                  margin: [0, 20, 0, 15],
+                },
+                { text: 'Kepala BPS Pringsewu', margin: [0, 0, 0, 40] },
+                { text: 'Dr. Budi Pranoto, M.Si', fontSize: 12 },
               ],
+              alignment: 'left',
             },
           ],
         },
       ],
+
+      // Definisi styles untuk tampilan modern
       styles: {
-        header: { fontSize: 16, bold: true },
-        tableHeader: { bold: true, fillColor: '#eeeeee' },
+        header: {
+          fontSize: 16,
+          bold: true,
+          color: '#000000',
+        },
+        unitKerja: {
+          fontSize: 12,
+          bold: true,
+          color: '#000000',
+        },
+        tableHeader: {
+          bold: true,
+          fontSize: 10,
+          fillColor: '#f1f5f9',
+          color: '#000000',
+          alignment: 'center',
+          margin: [0, 4],
+        },
+        labelInfo: {
+          fontSize: 10,
+          color: '#000000',
+        },
+        valueInfo: {
+          fontSize: 10,
+          bold: true,
+          color: '#000000',
+        },
+      },
+
+      // Footer halaman
+      footer: {
+        columns: [
+          {
+            text: 'SIAP BPS Pringsewu',
+            alignment: 'center',
+            fontSize: 8,
+            color: '#000000',
+            margin: [0, 10, 0, 0],
+          },
+        ],
       },
     };
 
@@ -298,25 +460,62 @@ export class BarangService {
    * @param end Tanggal akhir periode (format: YYYY-MM-DD).
    * @returns Array rekap penggunaan barang.
    */
+  /**
+   * Menghasilkan data JSON laporan penggunaan barang untuk periode tertentu.
+   * @param start Tanggal awal periode (format: YYYY-MM-DD).
+   * @param end Tanggal akhir periode (format: YYYY-MM-DD).
+   * @param unitKerja Unit kerja yang akan difilter (opsional).
+   * @returns Array data penggunaan barang.
+   */
   async getLaporanPenggunaanJSON(
     start: string,
     end: string,
-  ): Promise<
-    { nama_barang: string; total_digunakan: number; satuan: string }[]
-  > {
-    const result = await this.barangRepo.query(
-      `
-      SELECT b.nama_barang, b.satuan, COALESCE(SUM(d.jumlah_disetujui),0) as total_digunakan
-      FROM detail_permintaan d
-      JOIN barang b ON d.id_barang = b.id
-      JOIN permintaan p ON d.id_permintaan = p.id
-      WHERE p.status IN ('Disetujui', 'Disetujui Sebagian')
-        AND p.tanggal_permintaan BETWEEN $1 AND $2
-      GROUP BY b.nama_barang, b.satuan
-      ORDER BY b.nama_barang
-      `,
-      [start, end],
-    );
+    unitKerja?: string,
+  ) {
+    // Validasi format tanggal
+    if (
+      !/^\d{4}-\d{2}-\d{2}$/.test(start) ||
+      !/^\d{4}-\d{2}-\d{2}$/.test(end)
+    ) {
+      throw new BadRequestException('Format tanggal harus YYYY-MM-DD');
+    }
+
+    // Validasi rentang tanggal
+    if (new Date(start) > new Date(end)) {
+      throw new BadRequestException('Tanggal mulai harus <= tanggal akhir');
+    }
+
+    const qb = this.dataSource
+      .createQueryBuilder()
+      .select([
+        'b.nama_barang AS nama_barang',
+        'b.kode_barang AS kode_barang',
+        'b.satuan AS satuan',
+        'SUM(dp.jumlah_disetujui) AS total_digunakan',
+        'u.unit_kerja AS unit_kerja',
+      ])
+      .from('detail_permintaan', 'dp')
+      .innerJoin('barang', 'b', 'dp.id_barang = b.id')
+      .innerJoin('permintaan', 'p', 'dp.id_permintaan = p.id')
+      .innerJoin('users', 'u', 'p.id_user_pemohon = u.id')
+      .where('p.status IN (:...statuses)', {
+        statuses: ['Disetujui', 'Disetujui Sebagian'],
+      })
+      .andWhere('p.tanggal_verifikasi >= :start', { start })
+      .andWhere('p.tanggal_verifikasi <= :end', { end })
+      .andWhere('dp.jumlah_disetujui > 0')
+      .groupBy('b.nama_barang')
+      .addGroupBy('b.kode_barang')
+      .addGroupBy('b.satuan')
+      .addGroupBy('u.unit_kerja')
+      .orderBy('b.nama_barang', 'ASC');
+
+    // Tambahkan filter unit kerja jika ada
+    if (unitKerja) {
+      qb.andWhere('u.unit_kerja = :unitKerja', { unitKerja });
+    }
+
+    const result = await qb.getRawMany();
     return result;
   }
 }
