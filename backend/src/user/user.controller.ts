@@ -19,6 +19,7 @@ import {
   Req,
   UploadedFile,
   UseInterceptors,
+  BadRequestException,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../auth/roles.guard';
@@ -226,7 +227,11 @@ export class UserController {
       fileFilter: (req, file, cb) => {
         // Validasi tipe file gambar
         if (!file.mimetype.match(/^image\/(jpeg|png|jpg|webp)$/)) {
-          return cb(new Error('Hanya file gambar yang diperbolehkan!'), false);
+          // Panggil callback dengan BadRequestException agar error 400
+          return cb(
+            new BadRequestException('Hanya file gambar yang diperbolehkan!'),
+            false,
+          );
         }
         cb(null, true);
       },
