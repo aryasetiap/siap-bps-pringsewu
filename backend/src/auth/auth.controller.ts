@@ -1,34 +1,67 @@
-import { Controller, Post, Req, Headers } from '@nestjs/common';
+/**
+ * File ini berisi controller untuk autentikasi pengguna pada aplikasi SIAP.
+ * Controller ini menangani proses login dan logout pengguna, serta mengelola token autentikasi.
+ *
+ * Konteks bisnis: Digunakan dalam proses pengelolaan barang, permintaan, dan verifikasi di aplikasi SIAP.
+ */
+
+import { Controller, Post, Req, Headers, Body } from '@nestjs/common';
 import { AuthService } from './auth.service';
 
 /**
- * Controller untuk menangani autentikasi pengguna.
+ * Controller untuk autentikasi pengguna.
+ *
+ * Digunakan untuk menangani permintaan login dan logout pada aplikasi SIAP.
  */
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  /**
+   * Konstruktor untuk AuthController.
+   *
+   * Parameter:
+   * - authService (AuthService): Service yang menangani logika autentikasi.
+   */
+  constructor(private readonly authService: AuthService) {}
 
   /**
-   * Endpoint untuk melakukan login pengguna.
+   * Endpoint untuk login pengguna.
    *
-   * @param req - Objek request yang berisi username dan password pada body.
-   * @returns Hasil autentikasi dari AuthService, biasanya token atau informasi pengguna.
+   * Fungsi ini digunakan untuk memproses permintaan login dari pengguna.
+   *
+   * Parameter:
+   * - req (Request): Objek request yang berisi data login pada body.
+   *
+   * Return:
+   * - Promise<any>: Token autentikasi atau informasi pengguna jika login berhasil.
    */
   @Post('login')
-  async login(@Req() req) {
-    return this.authService.login(req.body.username, req.body.password);
+  async login(@Req() req): Promise<any> {
+    const { username, password } = req.body;
+    // Validasi input dapat ditambahkan di sini jika diperlukan
+    return this.authService.login(username, password);
   }
 
   /**
-   * Endpoint untuk melakukan logout pengguna.
+   * Endpoint untuk logout pengguna.
    *
-   * @param authHeader - Header otorisasi yang berisi token Bearer.
-   * @returns Pesan hasil logout atau pesan jika token tidak disediakan.
+   * Fungsi ini digunakan untuk memproses permintaan logout dari pengguna.
+   *
+   * Parameter:
+   * - authHeader (string): Header 'authorization' yang berisi token Bearer.
+   *
+   * Return:
+   * - Promise<any>: Pesan hasil logout atau pesan jika token tidak disediakan.
    */
   @Post('logout')
-  async logout(@Headers('authorization') authHeader: string) {
+  async logout(@Headers('authorization') authHeader: string): Promise<any> {
+    /**
+     * Mengambil token dari header Authorization.
+     * Jika token tidak ada, kembalikan pesan error.
+     */
     const token = authHeader?.replace('Bearer ', '');
-    if (!token) return { message: 'No token provided' };
+    if (!token) {
+      return { message: 'Token tidak disediakan' };
+    }
     return this.authService.logout(token);
   }
 }

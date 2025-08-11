@@ -1,50 +1,107 @@
+/**
+ * File: auth.service.ts
+ *
+ * Service ini digunakan untuk menangani proses autentikasi pengguna pada aplikasi SIAP,
+ * termasuk validasi kredensial, login, logout, dan manajemen blacklist token JWT.
+ *
+ * Konteks bisnis: Digunakan untuk memastikan hanya pengguna yang terverifikasi yang dapat
+ * mengakses fitur pengelolaan barang, permintaan, dan verifikasi pada aplikasi SIAP.
+ */
+
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { UserService } from '../user/user.service';
 import * as bcrypt from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
 
 /**
- * Service untuk menangani autentikasi pengguna.
+ * Kelas AuthService bertanggung jawab untuk proses autentikasi pengguna.
+ *
+ * Fitur utama:
+ * - Validasi kredensial pengguna
+ * - Proses login dan pembuatan token JWT
+ * - Proses logout dan blacklist token
+ * - Pengecekan status blacklist token
  */
 @Injectable()
 export class AuthService {
-  private tokenBlacklist: Set<string> = new Set();
+  /**
+   * Set untuk menyimpan token JWT yang telah di-blacklist (logout).
+   */
+  private readonly tokenBlacklist: Set<string> = new Set();
 
+  /**
+   * Konstruktor untuk inisialisasi dependensi UserService dan JwtService.
+   *
+   * Parameter:
+   * - userService (UserService): Service untuk manajemen data pengguna.
+   * - jwtService (JwtService): Service untuk pembuatan dan verifikasi JWT.
+   */
   constructor(
-    private userService: UserService,
-    private jwtService: JwtService,
+    private readonly userService: UserService,
+    private readonly jwtService: JwtService,
   ) {}
 
   /**
-   * Memvalidasi kredensial pengguna berdasarkan username dan password.
+   * Fungsi untuk memvalidasi kredensial pengguna berdasarkan username dan password.
+   * Digunakan pada proses login dan verifikasi akses.
    *
-   * @param username - Nama pengguna yang akan divalidasi.
-   * @param password - Password yang akan divalidasi.
-   * @returns Objek user tanpa password jika valid, atau null jika tidak valid.
+   * Parameter:
+   * - username (string): Nama pengguna yang akan divalidasi.
+   * - password (string): Password yang akan divalidasi.
+   *
+   * Return:
+   * - object | null: Data user tanpa password jika valid, null jika tidak valid.
    */
-  async validateUser(username: string, password: string) {
+  async validateUser(
+    username: string,
+    password: string,
+  ): Promise<Omit<any, 'password'> | null> {
     const user = await this.userService.findByUsername(username);
-    if (user && (await bcrypt.compare(password, user.password))) {
-      const { password, ...result } = user;
-      return result;
-    }
-    return null;
+    if (!user) return null;
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) return null;
+
+    // Menghilangkan field password dari hasil return
+    const { password: _, ...userWithoutPassword } = user;
+    return userWithoutPassword;
   }
 
   /**
-   * Melakukan proses login pengguna dan menghasilkan token JWT jika berhasil.
+   * Fungsi untuk melakukan proses login pengguna.
+   * Jika kredensial valid, menghasilkan token JWT dan data user.
    *
-   * @param username - Nama pengguna yang akan login.
-   * @param password - Password pengguna.
-   * @returns Objek berisi access_token dan data user jika login berhasil.
-   * @throws UnauthorizedException jika user tidak ditemukan atau password salah.
+   * Parameter:
+   * - username (string): Nama pengguna yang akan login.
+   * - password (string): Password pengguna.
+   *
+   * Return:
+   * - object: Berisi access_token dan data user jika login berhasil.
+   *
+   * Throw:
+   * - UnauthorizedException: Jika user tidak ditemukan atau password salah.
    */
-  async login(username: string, password: string) {
+  async login(
+    username: string,
+    password: string,
+  ): Promise<{ access_token: string; user: any }> {
     const user = await this.userService.findByUsername(username);
-    if (!user) throw new UnauthorizedException('User not found');
-    const valid = await bcrypt.compare(password, user.password);
-    if (!valid) throw new UnauthorizedException('Invalid password');
-    const payload = { sub: user.id, username: user.username, role: user.role };
+    if (!user) {
+      throw new UnauthorizedException('User tidak ditemukan');
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Password salah');
+    }
+
+    // Payload JWT berisi informasi penting untuk otorisasi
+    const payload = {
+      sub: user.id,
+      username: user.username,
+      role: user.role,
+    };
+
     return {
       access_token: this.jwtService.sign(payload),
       user: {
@@ -57,21 +114,29 @@ export class AuthService {
   }
 
   /**
-   * Melakukan proses logout dengan menambahkan token ke blacklist.
+   * Fungsi untuk melakukan proses logout pengguna.
+   * Token JWT yang digunakan akan dimasukkan ke blacklist agar tidak bisa digunakan lagi.
    *
-   * @param token - Token JWT yang akan di-blacklist.
-   * @returns Pesan konfirmasi logout berhasil.
+   * Parameter:
+   * - token (string): Token JWT yang akan di-blacklist.
+   *
+   * Return:
+   * - object: Pesan konfirmasi logout berhasil.
    */
-  logout(token: string) {
+  logout(token: string): { message: string } {
     this.tokenBlacklist.add(token);
-    return { message: 'Logout success (token revoked)' };
+    return { message: 'Logout berhasil (token telah di-revoke)' };
   }
 
   /**
-   * Mengecek apakah token sudah masuk ke dalam blacklist.
+   * Fungsi untuk mengecek apakah token JWT sudah masuk ke dalam blacklist.
+   * Digunakan untuk memastikan token yang sudah logout tidak bisa digunakan lagi.
    *
-   * @param token - Token JWT yang akan dicek.
-   * @returns True jika token ada di blacklist, false jika tidak.
+   * Parameter:
+   * - token (string): Token JWT yang akan dicek.
+   *
+   * Return:
+   * - boolean: True jika token ada di blacklist, false jika tidak.
    */
   isTokenBlacklisted(token: string): boolean {
     return this.tokenBlacklist.has(token);
