@@ -1,3 +1,18 @@
+/**
+ * Halaman ProfilePage untuk aplikasi SIAP.
+ *
+ * Digunakan untuk menampilkan dan mengelola data profil pengguna, termasuk:
+ * - Melihat detail profil (nama, username, unit kerja, role, foto)
+ * - Mengubah data profil
+ * - Mengubah password
+ * - Mengunggah foto profil
+ *
+ * Parameter: Tidak ada parameter langsung (menggunakan state dan props internal)
+ *
+ * Return:
+ * - Komponen React yang menampilkan halaman profil pengguna
+ */
+
 import React, { useEffect, useState } from "react";
 import ProfileForm from "../components/common/ProfileForm";
 import { toast } from "react-toastify";
@@ -8,23 +23,41 @@ import {
   ArrowPathIcon,
 } from "@heroicons/react/24/outline";
 
+/**
+ * Komponen utama halaman profil pengguna.
+ *
+ * State:
+ * - profile: Data profil pengguna yang sedang login
+ * - loading: Status loading untuk proses fetch/update
+ * - error: Pesan error jika terjadi kegagalan
+ * - photoLoading: Status loading khusus untuk upload foto
+ */
 const ProfilePage = () => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [photoLoading, setPhotoLoading] = useState(false);
 
+  // Fetch data profil saat komponen pertama kali di-mount
   useEffect(() => {
     fetchProfile();
   }, []);
 
+  /**
+   * Mengambil data profil pengguna dari API.
+   *
+   * Parameter: Tidak ada
+   *
+   * Return:
+   * - void (mengubah state profile, loading, error)
+   */
   const fetchProfile = async () => {
     setLoading(true);
     setError(null);
     try {
       const response = await userService.getProfile();
 
-      // Mapping dari API response ke format yang diharapkan oleh ProfileForm
+      // Mapping dari response API ke format yang digunakan oleh ProfileForm
       const userData = {
         id: response.data.id,
         nama: response.data.nama,
@@ -40,12 +73,11 @@ const ProfilePage = () => {
       console.error("Error fetching profile:", err);
       setError("Gagal memuat data profil");
 
-      // Error handling yang lebih spesifik
+      // Penanganan error spesifik sesuai status kode API
       if (err.response) {
         if (err.response.status === 401) {
           toast.error("Sesi login Anda telah berakhir. Silakan login kembali.");
-          // Redirect ke login page jika diperlukan
-          // window.location.href = "/login";
+          // window.location.href = "/login"; // Redirect jika diperlukan
         } else if (err.response.status === 403) {
           toast.error("Anda tidak memiliki izin untuk mengakses data ini.");
         } else {
@@ -61,10 +93,18 @@ const ProfilePage = () => {
     }
   };
 
+  /**
+   * Mengupdate data profil pengguna ke API.
+   *
+   * Parameter:
+   * - data (Object): Data profil yang akan diupdate (nama, unitKerja)
+   *
+   * Return:
+   * - void (mengubah state loading, memanggil fetchProfile)
+   */
   const handleUpdate = async (data) => {
     setLoading(true);
     try {
-      // Mapping dari form data ke format yang diharapkan API
       const updateData = {
         nama: data.nama,
         unit_kerja: data.unitKerja,
@@ -72,11 +112,11 @@ const ProfilePage = () => {
 
       await userService.updateProfile(updateData);
       toast.success("Profil berhasil diperbarui!");
-      fetchProfile(); // Reload profile data
+      fetchProfile(); // Reload data profil setelah update
     } catch (err) {
       console.error("Error updating profile:", err);
 
-      // Error handling yang lebih spesifik
+      // Penanganan error spesifik sesuai status kode API
       if (err.response) {
         if (err.response.status === 400) {
           toast.error(err.response.data?.message || "Data profil tidak valid.");
@@ -97,16 +137,24 @@ const ProfilePage = () => {
     }
   };
 
+  /**
+   * Mengubah password pengguna melalui API.
+   *
+   * Parameter:
+   * - data (Object): Data berisi password baru
+   *
+   * Return:
+   * - void (mengubah state loading)
+   */
   const handleChangePassword = async (data) => {
     setLoading(true);
     try {
-      // Perhatikan bahwa API mengharapkan field "password"
       await userService.updateProfile({ password: data.passwordBaru });
       toast.success("Password berhasil diubah!");
     } catch (err) {
       console.error("Error changing password:", err);
 
-      // Error handling yang lebih spesifik
+      // Penanganan error spesifik sesuai status kode API
       if (err.response) {
         if (err.response.status === 400) {
           toast.error(err.response.data?.message || "Password tidak valid.");
@@ -125,18 +173,27 @@ const ProfilePage = () => {
     }
   };
 
+  /**
+   * Mengunggah foto profil pengguna ke API.
+   *
+   * Parameter:
+   * - e (Event): Event input file dari user
+   *
+   * Return:
+   * - void (mengubah state photoLoading, memanggil fetchProfile)
+   */
   const handlePhotoUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Validasi ukuran file (max 2MB)
-    const maxSize = 2 * 1024 * 1024; // 2MB in bytes
+    // Validasi ukuran file (maksimal 2MB)
+    const maxSize = 2 * 1024 * 1024;
     if (file.size > maxSize) {
       toast.error("Ukuran foto maksimal 2MB");
       return;
     }
 
-    // Validasi tipe file
+    // Validasi tipe file yang diizinkan
     const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
     if (!allowedTypes.includes(file.type)) {
       toast.error("Format foto harus JPG, PNG, atau WebP");
@@ -150,7 +207,7 @@ const ProfilePage = () => {
 
       await userService.updateProfilePhoto(formData);
       toast.success("Foto profil berhasil diperbarui!");
-      fetchProfile(); // Reload profile data
+      fetchProfile(); // Reload data profil setelah upload foto
     } catch (err) {
       console.error("Error uploading photo:", err);
 
@@ -168,9 +225,10 @@ const ProfilePage = () => {
     }
   };
 
+  // Render UI halaman profil
   return (
     <div className="p-6">
-      {/* Header Section with Icon */}
+      {/* Header Section dengan ikon profil */}
       <div className="mb-6">
         <div className="flex items-center space-x-4">
           <div className="bg-blue-100 text-blue-600 rounded-full p-3 shadow-md">
@@ -185,7 +243,7 @@ const ProfilePage = () => {
         </div>
       </div>
 
-      {/* Loading State */}
+      {/* State loading saat data profil diambil */}
       {loading && !profile ? (
         <div className="bg-white p-8 rounded-xl shadow-lg border border-gray-100">
           <div className="flex flex-col items-center justify-center py-12">
@@ -194,7 +252,7 @@ const ProfilePage = () => {
           </div>
         </div>
       ) : error ? (
-        // Error State
+        // State error jika gagal mengambil data profil
         <div className="bg-white p-8 rounded-xl shadow-lg border border-gray-100">
           <div className="flex flex-col items-center justify-center py-12">
             <div className="bg-red-100 p-3 rounded-full mb-4">
@@ -216,10 +274,10 @@ const ProfilePage = () => {
           </div>
         </div>
       ) : (
-        // Profile Content
+        // State sukses: tampilkan data profil dan form
         profile && (
           <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
-            {/* Profile Header with Photo */}
+            {/* Header profil dengan foto */}
             <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-8 border-b border-gray-200">
               <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
                 <div className="flex-shrink-0 relative">
@@ -247,7 +305,7 @@ const ProfilePage = () => {
                     </div>
                   )}
 
-                  {/* Tombol upload foto dengan posisi absolut yang lebih baik */}
+                  {/* Tombol upload foto profil */}
                   <div className="absolute bottom-0 right-0">
                     <label className="flex cursor-pointer bg-blue-600 hover:bg-blue-700 text-white rounded-full p-2.5 shadow-lg transition transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                       <svg
@@ -300,7 +358,7 @@ const ProfilePage = () => {
               </div>
             </div>
 
-            {/* Profile Form */}
+            {/* Form untuk update profil dan password */}
             <div className="p-8">
               <ProfileForm
                 profile={profile}

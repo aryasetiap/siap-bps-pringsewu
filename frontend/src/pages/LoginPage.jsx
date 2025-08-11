@@ -1,3 +1,18 @@
+/**
+ * Halaman Login SIAP (Sistem Aplikasi Pengelolaan Aset & Persediaan)
+ *
+ * Digunakan untuk autentikasi user (admin/pegawai) sebelum mengakses fitur pengelolaan barang dan permintaan.
+ *
+ * Komponen ini terdiri dari dua bagian utama:
+ * - Branding aplikasi (kiri, desktop)
+ * - Form login (kanan)
+ *
+ * Parameter: Tidak ada (menggunakan state internal dan hook React)
+ *
+ * Return:
+ * - JSX: Tampilan halaman login SIAP
+ */
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -9,25 +24,63 @@ import {
   ExclamationCircleIcon,
 } from "@heroicons/react/24/outline";
 
+/**
+ * Komponen utama halaman login SIAP.
+ *
+ * Menyediakan form login, validasi input, dan proses autentikasi user.
+ * Melakukan redirect otomatis jika user sudah login.
+ *
+ * Return:
+ * - JSX: Tampilan halaman login
+ */
 function LoginPage() {
-  // State untuk form input dan validasi
+  /**
+   * State untuk menyimpan data input form login.
+   *
+   * Struktur:
+   * - username (string): Username yang diinput user
+   * - password (string): Password yang diinput user
+   */
   const [formData, setFormData] = useState({
     username: "",
     password: "",
   });
+
+  /**
+   * State untuk menyimpan pesan error validasi per field.
+   *
+   * Struktur:
+   * - username (string): Pesan error username
+   * - password (string): Pesan error password
+   */
   const [errors, setErrors] = useState({});
+
+  /**
+   * State untuk menandakan proses login sedang berlangsung.
+   *
+   * Tipe: boolean
+   */
   const [loading, setLoading] = useState(false);
+
+  /**
+   * State untuk menyimpan pesan error umum (misal: gagal login, server error).
+   *
+   * Tipe: string
+   */
   const [generalError, setGeneralError] = useState("");
 
   const navigate = useNavigate();
 
-  // Cek jika user sudah login saat komponen mount
+  /**
+   * Efek untuk melakukan pengecekan token autentikasi saat komponen mount.
+   * Jika user sudah login, redirect ke halaman sesuai role.
+   */
   useEffect(() => {
     const token = localStorage.getItem("authToken");
     const userRole = localStorage.getItem("userRole");
 
     if (token) {
-      // Redirect ke halaman yang sesuai berdasarkan role
+      // Redirect ke halaman dashboard sesuai role user
       if (userRole === "admin") {
         navigate("/admin/dashboard");
       } else if (userRole === "pegawai") {
@@ -36,29 +89,47 @@ function LoginPage() {
     }
   }, [navigate]);
 
-  // Handler untuk perubahan input field
+  /**
+   * Handler perubahan input form login.
+   *
+   * Parameter:
+   * - e (SyntheticEvent): Event perubahan input
+   *
+   * Efek:
+   * - Update state formData sesuai input
+   * - Reset error pada field yang diubah
+   * - Reset error umum jika ada
+   */
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
+    setFormData((prev) => ({
+      ...prev,
       [name]: value,
-    });
+    }));
 
-    // Reset error ketika user mengubah input
+    // Reset error pada field yang diubah
     if (errors[name]) {
-      setErrors({
-        ...errors,
+      setErrors((prev) => ({
+        ...prev,
         [name]: "",
-      });
+      }));
     }
 
-    // Reset general error ketika user mengubah input
+    // Reset error umum jika ada
     if (generalError) {
       setGeneralError("");
     }
   };
 
-  // Validasi form sebelum submit
+  /**
+   * Fungsi validasi form login sebelum submit.
+   *
+   * Return:
+   * - boolean: true jika valid, false jika ada error
+   *
+   * Efek:
+   * - Set state errors jika ada input yang tidak valid
+   */
   const validateForm = () => {
     const newErrors = {};
 
@@ -76,30 +147,43 @@ function LoginPage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  // Handler untuk form submission
+  /**
+   * Handler submit form login.
+   *
+   * Parameter:
+   * - e (SyntheticEvent): Event submit form
+   *
+   * Efek:
+   * - Validasi input
+   * - Proses autentikasi ke backend
+   * - Simpan token dan data user di localStorage
+   * - Redirect ke halaman sesuai role
+   * - Tampilkan notifikasi sukses/gagal
+   */
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validasi form
+    // Validasi form sebelum proses login
     if (!validateForm()) return;
 
     setLoading(true);
     setGeneralError("");
 
     try {
+      // Proses login ke backend
       const res = await authService.login(formData);
 
-      // Simpan data di localStorage
+      // Simpan token dan data user di localStorage untuk session
       localStorage.setItem("authToken", res.data.access_token);
       localStorage.setItem("username", res.data.user.username);
       localStorage.setItem("userRole", res.data.user.role);
 
-      // Tampilkan notifikasi sukses
+      // Tampilkan notifikasi selamat datang
       toast.success(
         `Selamat datang, ${res.data.user.nama || res.data.user.username}!`
       );
 
-      // Redirect sesuai role
+      // Redirect ke halaman dashboard sesuai role user
       if (res.data.user.role === "admin") {
         navigate("/admin/dashboard");
       } else if (res.data.user.role === "pegawai") {
@@ -108,7 +192,7 @@ function LoginPage() {
         navigate("/");
       }
     } catch (err) {
-      // Error handling yang detail
+      // Penanganan error login
       console.error("Login error:", err);
 
       if (err.response) {
@@ -133,12 +217,12 @@ function LoginPage() {
             setGeneralError(message || "Login gagal. Silakan coba lagi");
         }
       } else if (err.request) {
-        // Tidak ada response dari server
+        // Tidak ada response dari server (misal: koneksi internet)
         setGeneralError(
           "Tidak dapat terhubung ke server. Periksa koneksi Anda"
         );
       } else {
-        // Error lainnya
+        // Error lain (misal: error JS)
         setGeneralError("Terjadi kesalahan. Silakan coba lagi");
       }
 
@@ -149,9 +233,10 @@ function LoginPage() {
     }
   };
 
+  // --- UI tidak diubah sesuai instruksi ---
   return (
     <div className="min-h-screen flex flex-col md:flex-row overflow-hidden">
-      {/* Left Section - Background and Branding */}
+      {/* Left Section - Branding SIAP */}
       <div className="hidden md:flex md:w-1/2 bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 p-12 text-white justify-center items-center">
         <div className="max-w-md">
           <div className="mb-12 text-center">
@@ -183,6 +268,7 @@ function LoginPage() {
           </div>
 
           <div className="space-y-6">
+            {/* Fitur utama SIAP */}
             <div className="flex items-center p-4 bg-white/10 backdrop-blur-sm rounded-xl">
               <div className="p-2 bg-white/20 rounded-lg mr-4">
                 <svg
@@ -263,7 +349,7 @@ function LoginPage() {
         </div>
       </div>
 
-      {/* Right Section - Login Form */}
+      {/* Right Section - Form Login */}
       <div className="w-full md:w-1/2 flex flex-col justify-center items-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
         <div className="w-full max-w-md">
           <div className="text-center mb-10">
@@ -298,7 +384,7 @@ function LoginPage() {
             </p>
           </div>
 
-          {/* Error Message */}
+          {/* Pesan error umum jika login gagal */}
           {generalError && (
             <div className="mb-6 bg-red-50 border border-red-100 p-4 rounded-xl shadow-sm animate-fadeIn">
               <div className="flex">
@@ -309,7 +395,7 @@ function LoginPage() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Username Input */}
+            {/* Input Username */}
             <div>
               <label
                 className="block text-sm font-medium text-gray-700 mb-1"
@@ -336,6 +422,7 @@ function LoginPage() {
                   placeholder="Masukkan username"
                 />
               </div>
+              {/* Pesan error username */}
               {errors.username && (
                 <p className="mt-1 text-sm text-red-600 flex items-center">
                   <ExclamationCircleIcon className="h-4 w-4 mr-1" />
@@ -344,7 +431,7 @@ function LoginPage() {
               )}
             </div>
 
-            {/* Password Input */}
+            {/* Input Password */}
             <div>
               <label
                 className="block text-sm font-medium text-gray-700 mb-1"
@@ -371,6 +458,7 @@ function LoginPage() {
                   placeholder="Masukkan password"
                 />
               </div>
+              {/* Pesan error password */}
               {errors.password && (
                 <p className="mt-1 text-sm text-red-600 flex items-center">
                   <ExclamationCircleIcon className="h-4 w-4 mr-1" />
@@ -379,7 +467,7 @@ function LoginPage() {
               )}
             </div>
 
-            {/* Login Button */}
+            {/* Tombol Login */}
             <div>
               <button
                 type="submit"
@@ -422,7 +510,7 @@ function LoginPage() {
             </div>
           </form>
 
-          {/* Footer */}
+          {/* Footer SIAP */}
           <div className="mt-10 pt-6 border-t border-gray-200">
             <div className="text-center text-sm text-gray-500">
               <p>BPS Kabupaten Pringsewu</p>
