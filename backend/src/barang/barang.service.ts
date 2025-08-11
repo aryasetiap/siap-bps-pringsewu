@@ -403,7 +403,7 @@ export class BarangService {
                 width: '50%',
                 stack: [
                   {
-                    text: `\n\nDi Bukukan: ${currentDateString}`,
+                    text: `\n\n\n`,
                     margin: [0, 20, 0, 15],
                   },
                   { text: 'Kasubag Umum', margin: [0, 0, 0, 40] },
