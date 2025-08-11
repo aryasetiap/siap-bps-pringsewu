@@ -1,3 +1,20 @@
+/**
+ * Halaman EmployeeRequestPage digunakan untuk pengajuan permintaan barang oleh pegawai.
+ * Pegawai dapat memilih barang dari daftar, menambahkannya ke keranjang, mengatur jumlah,
+ * menambahkan catatan, dan mengirim permintaan ke admin untuk diverifikasi.
+ *
+ * Fitur utama:
+ * - Pencarian dan filter barang berdasarkan kategori
+ * - Penambahan barang ke keranjang permintaan
+ * - Validasi jumlah barang terhadap stok
+ * - Pengiriman permintaan dengan konfirmasi
+ *
+ * Komponen terkait:
+ * - EmployeeBarangTable: Tabel daftar barang yang dapat dipilih
+ * - EmployeeRequestForm: Formulir permintaan barang
+ * - ConfirmationModal: Modal konfirmasi sebelum submit
+ */
+
 import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { ShoppingCartIcon } from "@heroicons/react/24/outline";
@@ -7,7 +24,14 @@ import ConfirmationModal from "../../components/common/ConfirmationModal";
 import * as barangService from "../../services/barangService";
 import * as employeeRequestService from "../../services/employeeRequestService";
 
+/**
+ * Komponen utama halaman permintaan barang oleh pegawai.
+ *
+ * Return:
+ * - JSX: Tampilan halaman permintaan barang
+ */
 const EmployeeRequestPage = () => {
+  // State untuk data barang, filter, keranjang, dan loading
   const [barang, setBarang] = useState([]);
   const [filteredBarang, setFilteredBarang] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -18,18 +42,20 @@ const EmployeeRequestPage = () => {
   const [kategoriOptions, setKategoriOptions] = useState([]);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
-  // Fetch barang dari API
-  useEffect(() => {
-    fetchBarang();
-  }, []);
-
+  /**
+   * Mengambil data barang dari API khusus pegawai.
+   * Menyimpan data barang dan daftar kategori unik.
+   *
+   * Return:
+   * - void
+   */
   const fetchBarang = async () => {
     setLoading(true);
     try {
-      // Gunakan endpoint yang tersedia untuk pegawai
       const res = await barangService.getAllBarangForEmployee();
       setBarang(res.data);
-      // Generate kategori unik dari data barang
+
+      // Membuat daftar kategori unik dari data barang
       const kategoriSet = new Set(
         res.data.map((item) => item.kategori).filter(Boolean)
       );
@@ -40,7 +66,23 @@ const EmployeeRequestPage = () => {
     setLoading(false);
   };
 
-  // Filter barang
+  // Fetch barang saat komponen pertama kali di-mount
+  useEffect(() => {
+    fetchBarang();
+  }, []);
+
+  /**
+   * Melakukan filter barang berdasarkan kata kunci pencarian dan kategori.
+   * Hasil filter disimpan ke state filteredBarang.
+   *
+   * Parameter:
+   * - searchTerm (string): Kata kunci pencarian
+   * - filterKategori (string): Kategori barang yang dipilih
+   * - barang (array): Daftar barang dari API
+   *
+   * Return:
+   * - void
+   */
   useEffect(() => {
     let filtered = barang;
     if (searchTerm) {
@@ -56,19 +98,46 @@ const EmployeeRequestPage = () => {
     setFilteredBarang(filtered);
   }, [searchTerm, filterKategori, barang]);
 
-  // Handler search/filter
+  /**
+   * Handler perubahan kata kunci pencarian barang.
+   *
+   * Parameter:
+   * - e (Event): Event input
+   *
+   * Return:
+   * - void
+   */
   const handleSearchChange = (e) => setSearchTerm(e.target.value);
+
+  /**
+   * Handler perubahan filter kategori barang.
+   *
+   * Parameter:
+   * - e (Event): Event input
+   *
+   * Return:
+   * - void
+   */
   const handleFilterKategoriChange = (e) => setFilterKategori(e.target.value);
 
-  // Handler tambah barang ke keranjang
+  /**
+   * Menambahkan barang ke keranjang permintaan.
+   * Barang yang sudah ada di keranjang tidak akan ditambahkan lagi.
+   *
+   * Parameter:
+   * - item (object): Data barang yang dipilih
+   *
+   * Return:
+   * - void
+   */
   const handleAddItem = (item) => {
     if (keranjang.find((i) => i.id === item.id)) return;
     setKeranjang((prev) => [
       ...prev,
       {
         id: item.id,
-        kode: item.kode, // Pastikan field ini ada
-        nama: item.nama, // Pastikan field ini ada
+        kode: item.kode,
+        nama: item.nama,
         kategori: item.kategori,
         stok: item.stok,
         satuan: item.satuan,
@@ -77,7 +146,17 @@ const EmployeeRequestPage = () => {
     ]);
   };
 
-  // Handler ubah jumlah barang di keranjang
+  /**
+   * Mengubah jumlah barang pada keranjang permintaan.
+   * Jumlah minimal 1 dan maksimal sesuai stok tersedia.
+   *
+   * Parameter:
+   * - id (number|string): ID barang
+   * - jumlah (number|string): Jumlah yang diinputkan
+   *
+   * Return:
+   * - void
+   */
   const handleItemChange = (id, jumlah) => {
     setKeranjang((prev) =>
       prev.map((item) =>
@@ -91,24 +170,50 @@ const EmployeeRequestPage = () => {
     );
   };
 
-  // Handler hapus barang dari keranjang
+  /**
+   * Menghapus barang dari keranjang permintaan.
+   *
+   * Parameter:
+   * - id (number|string): ID barang yang akan dihapus
+   *
+   * Return:
+   * - void
+   */
   const handleRemoveItem = (id) => {
     setKeranjang((prev) => prev.filter((item) => item.id !== id));
   };
 
-  // Handler catatan
+  /**
+   * Handler perubahan catatan permintaan barang.
+   *
+   * Parameter:
+   * - e (Event): Event input
+   *
+   * Return:
+   * - void
+   */
   const handleCatatanChange = (e) => setCatatan(e.target.value);
 
-  // Handler validasi dan pra-submit
+  /**
+   * Handler validasi sebelum submit permintaan barang.
+   * Menampilkan modal konfirmasi jika validasi lolos.
+   *
+   * Parameter:
+   * - e (Event): Event submit form
+   *
+   * Return:
+   * - void
+   */
   const handlePreSubmit = (e) => {
     e.preventDefault();
-    // Validasi
+
+    // Validasi minimal satu barang di keranjang
     if (keranjang.length === 0) {
       toast.error("Pilih minimal satu barang!");
       return;
     }
 
-    // Validasi per item
+    // Validasi jumlah barang per item
     for (const item of keranjang) {
       if (item.jumlah < 1) {
         toast.error(`Jumlah untuk ${item.nama} harus minimal 1.`);
@@ -120,11 +225,16 @@ const EmployeeRequestPage = () => {
       }
     }
 
-    // Tampilkan modal konfirmasi
     setShowConfirmModal(true);
   };
 
-  // Handler submit setelah konfirmasi
+  /**
+   * Handler submit permintaan barang ke API setelah konfirmasi.
+   * Melakukan reset form dan menampilkan notifikasi sesuai hasil.
+   *
+   * Return:
+   * - void
+   */
   const handleSubmit = async () => {
     setLoading(true);
     try {
@@ -136,34 +246,32 @@ const EmployeeRequestPage = () => {
         catatan,
       });
 
-      // Reset form
+      // Reset form permintaan
       setKeranjang([]);
       setCatatan("");
-
-      // Tutup modal konfirmasi
       setShowConfirmModal(false);
 
-      // Notifikasi sukses dengan detail
+      // Notifikasi sukses dengan nomor permintaan
       toast.success(
         `Permintaan berhasil diajukan dengan nomor: ${
           response.data.nomor_permintaan || response.data.id
         }!`
       );
 
-      // Refresh data barang
+      // Refresh data barang agar stok terbaru
       fetchBarang();
     } catch (err) {
-      // Error handling spesifik
+      // Penanganan error spesifik dari API SIAP
       if (err.response) {
         const status = err.response.status;
         const message = err.response.data?.message;
 
         if (status === 400) {
-          if (message.includes("stok")) {
+          if (message?.includes("stok")) {
             toast.error(
               "Stok tidak mencukupi untuk beberapa barang. Silakan periksa kembali."
             );
-          } else if (message.includes("items")) {
+          } else if (message?.includes("items")) {
             toast.error("Data barang tidak valid. Silakan pilih barang lain.");
           } else {
             toast.error(
@@ -189,6 +297,7 @@ const EmployeeRequestPage = () => {
     }
   };
 
+  // Render halaman permintaan barang pegawai
   return (
     <div className="p-6">
       {/* Header dengan ikon dan informasi */}

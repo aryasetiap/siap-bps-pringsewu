@@ -1,3 +1,17 @@
+/**
+ * Halaman EmployeeHistory.jsx
+ *
+ * Halaman ini digunakan untuk menampilkan riwayat permintaan barang oleh pegawai pada aplikasi SIAP.
+ * Fitur utama meliputi pencarian, filter status, pagination, dan detail permintaan.
+ *
+ * Komponen utama:
+ * - EmployeeHistory: Komponen utama halaman riwayat permintaan.
+ * - EmployeeRequestHistoryTable: Tabel daftar permintaan.
+ * - EmployeeRequestDetailModal: Modal detail permintaan.
+ *
+ * Konteks bisnis: Pengelolaan permintaan barang, verifikasi, dan dokumentasi permintaan.
+ */
+
 import React, { useState, useEffect, useCallback } from "react";
 import { toast } from "react-toastify";
 import {
@@ -13,7 +27,8 @@ import * as permintaanService from "../../services/permintaanService";
 import EmployeeRequestHistoryTable from "../../components/employee/EmployeeRequestHistoryTable";
 import EmployeeRequestDetailModal from "../../components/employee/EmployeeRequestDetailModal";
 
-const statusOptions = [
+// Opsi status permintaan barang
+const STATUS_OPTIONS = [
   { value: "", label: "Semua Status" },
   { value: "Menunggu", label: "Menunggu" },
   { value: "Disetujui", label: "Disetujui" },
@@ -21,26 +36,46 @@ const statusOptions = [
   { value: "Ditolak", label: "Ditolak" },
 ];
 
+/**
+ * Komponen utama untuk halaman riwayat permintaan barang pegawai.
+ *
+ * Fitur:
+ * - Menampilkan daftar permintaan barang.
+ * - Filter berdasarkan status dan pencarian barang/nomor.
+ * - Pagination dan pengaturan jumlah data per halaman.
+ * - Melihat detail permintaan dan mengunduh PDF permintaan.
+ *
+ * Return:
+ * - JSX: Tampilan halaman riwayat permintaan barang.
+ */
 const EmployeeHistory = () => {
-  // State variables remain unchanged
-  const [permintaan, setPermintaan] = useState([]);
-  const [filtered, setFiltered] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [selected, setSelected] = useState(null);
-  const [showDetail, setShowDetail] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [limit, setLimit] = useState(10);
-  const [pdfLoading, setPdfLoading] = useState(false);
+  // State utama untuk pengelolaan data permintaan dan UI
+  const [permintaan, setPermintaan] = useState([]); // Data permintaan dari API
+  const [filtered, setFiltered] = useState([]); // Data permintaan setelah filter/pencarian
+  const [searchTerm, setSearchTerm] = useState(""); // Kata kunci pencarian
+  const [filterStatus, setFilterStatus] = useState(""); // Status filter
+  const [loading, setLoading] = useState(false); // Status loading data
+  const [selected, setSelected] = useState(null); // Permintaan yang dipilih untuk detail
+  const [showDetail, setShowDetail] = useState(false); // Status modal detail
+  const [currentPage, setCurrentPage] = useState(1); // Halaman saat ini
+  const [totalPages, setTotalPages] = useState(1); // Total halaman
+  const [limit, setLimit] = useState(10); // Jumlah data per halaman
+  const [pdfLoading, setPdfLoading] = useState(false); // Status loading PDF
 
-  // Existing callback and functions remain unchanged
+  /**
+   * Mengambil data riwayat permintaan barang dari backend.
+   *
+   * Parameter:
+   * - page (number): Nomor halaman yang ingin diambil.
+   *
+   * Return:
+   * - void: Mengupdate state permintaan, filtered, dan pagination.
+   */
   const fetchData = useCallback(
     async (page = 1) => {
       setLoading(true);
       try {
-        // Anda bisa menambahkan parameter pagination ke API jika backend mendukung
+        // Ambil data riwayat permintaan dari backend dengan filter dan pagination
         const res = await permintaanService.getRiwayatPermintaan({
           page,
           limit,
@@ -48,7 +83,7 @@ const EmployeeHistory = () => {
           search: searchTerm || undefined,
         });
 
-        // Mapping data dari API ke format yang dibutuhkan komponen
+        // Mapping data API ke format yang dibutuhkan komponen
         const mappedData = res.data.map((item) => ({
           id: item.id,
           nomorPermintaan: item.nomor_permintaan || `#${item.id}`,
@@ -72,12 +107,11 @@ const EmployeeHistory = () => {
         setPermintaan(mappedData);
         setFiltered(mappedData);
 
-        // Jika API mendukung pagination, perbarui totalPages
-        // Jika tidak, gunakan perhitungan sederhana
+        // Update total halaman jika API mendukung pagination
         if (res.meta && res.meta.totalPages) {
           setTotalPages(res.meta.totalPages);
         } else {
-          // Fallback pagination calculation
+          // Fallback jika backend tidak support pagination
           setTotalPages(Math.ceil(mappedData.length / limit));
         }
 
@@ -94,12 +128,20 @@ const EmployeeHistory = () => {
     [filterStatus, searchTerm, limit]
   );
 
-  // Initial load
+  // Load data pertama kali dan setiap kali filter/pagination berubah
   useEffect(() => {
     fetchData(1);
   }, [fetchData]);
 
-  // Filtering
+  /**
+   * Melakukan filter dan pencarian pada data permintaan.
+   *
+   * Parameter:
+   * - Tidak ada (menggunakan state permintaan, searchTerm, filterStatus)
+   *
+   * Return:
+   * - void: Mengupdate state filtered.
+   */
   useEffect(() => {
     let data = permintaan;
     if (searchTerm) {
@@ -117,12 +159,20 @@ const EmployeeHistory = () => {
     setFiltered(data);
   }, [searchTerm, filterStatus, permintaan]);
 
-  // Format tanggal dengan benar
+  /**
+   * Memformat tanggal ke format Indonesia.
+   *
+   * Parameter:
+   * - dateString (string): Tanggal dalam format ISO atau string.
+   *
+   * Return:
+   * - string: Tanggal yang sudah diformat, atau "-" jika tidak valid.
+   */
   const formatDate = (dateString) => {
     if (!dateString) return "-";
     try {
       const date = new Date(dateString);
-      if (isNaN(date.getTime())) return "-"; // Handle invalid date
+      if (isNaN(date.getTime())) return "-";
       return date.toLocaleDateString("id-ID", {
         day: "2-digit",
         month: "2-digit",
@@ -133,7 +183,15 @@ const EmployeeHistory = () => {
     }
   };
 
-  // Add getStatusColor function
+  /**
+   * Mendapatkan warna status permintaan untuk badge.
+   *
+   * Parameter:
+   * - status (string): Status permintaan barang.
+   *
+   * Return:
+   * - string: Kelas warna Tailwind CSS.
+   */
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
       case "menunggu":
@@ -149,27 +207,48 @@ const EmployeeHistory = () => {
     }
   };
 
-  // Handler untuk memuat ulang data
+  /**
+   * Handler untuk memuat ulang data permintaan.
+   *
+   * Return:
+   * - void: Memanggil fetchData dengan halaman saat ini.
+   */
   const handleRefresh = () => {
     fetchData(currentPage);
   };
 
-  // Handler untuk mengubah halaman
+  /**
+   * Handler untuk mengubah halaman pada pagination.
+   *
+   * Parameter:
+   * - page (number): Nomor halaman yang ingin ditampilkan.
+   *
+   * Return:
+   * - void: Memanggil fetchData dengan halaman baru.
+   */
   const handlePageChange = (page) => {
     fetchData(page);
   };
 
-  // Handler untuk mengunduh PDF permintaan
+  /**
+   * Handler untuk mengunduh PDF permintaan barang.
+   *
+   * Parameter:
+   * - id (number): ID permintaan barang.
+   *
+   * Return:
+   * - void: Membuka PDF di tab baru dan menampilkan notifikasi.
+   */
   const handleDownloadPDF = async (id) => {
     setPdfLoading(id);
     try {
       const response = await permintaanService.getPermintaanPDF(id);
 
-      // Membuat blob URL dari response
+      // Membuat blob URL dari response PDF
       const file = new Blob([response.data], { type: "application/pdf" });
       const fileURL = URL.createObjectURL(file);
 
-      // Buka PDF di tab baru
+      // Membuka PDF di tab baru
       const pdfWindow = window.open();
       pdfWindow.location.href = fileURL;
 
@@ -182,9 +261,10 @@ const EmployeeHistory = () => {
     }
   };
 
+  // Render utama halaman
   return (
     <div className="p-6">
-      {/* Header Section with Icon */}
+      {/* Header Section dengan ikon dan jumlah permintaan */}
       <div className="mb-6">
         <div className="flex items-center space-x-4">
           <div className="bg-blue-100 text-blue-600 rounded-full p-3 shadow">
@@ -206,10 +286,10 @@ const EmployeeHistory = () => {
         </div>
       </div>
 
-      {/* Filter and Controls Panel */}
+      {/* Panel Filter dan Kontrol */}
       <div className="bg-white rounded-xl shadow-lg mb-6 border border-gray-100 p-4">
         <div className="flex flex-wrap items-center gap-4">
-          {/* Search Input */}
+          {/* Input Pencarian */}
           <div className="relative flex-grow max-w-md">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
@@ -223,7 +303,7 @@ const EmployeeHistory = () => {
             />
           </div>
 
-          {/* Status Filter */}
+          {/* Filter Status Permintaan */}
           <div className="flex items-center">
             <FunnelIcon className="h-5 w-5 text-gray-400 mr-2" />
             <select
@@ -231,7 +311,7 @@ const EmployeeHistory = () => {
               onChange={(e) => setFilterStatus(e.target.value)}
               className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition-all text-sm"
             >
-              {statusOptions.map((s) => (
+              {STATUS_OPTIONS.map((s) => (
                 <option key={s.value} value={s.value}>
                   {s.label}
                 </option>
@@ -239,7 +319,7 @@ const EmployeeHistory = () => {
             </select>
           </div>
 
-          {/* Items Per Page */}
+          {/* Pengaturan Jumlah Data per Halaman */}
           <div className="flex items-center">
             <span className="text-sm text-gray-600 mr-2">Tampilkan:</span>
             <select
@@ -257,7 +337,7 @@ const EmployeeHistory = () => {
             </select>
           </div>
 
-          {/* Refresh Button */}
+          {/* Tombol Refresh Data */}
           <button
             onClick={handleRefresh}
             className="ml-auto flex items-center px-3 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition text-sm font-medium text-gray-700 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
@@ -268,7 +348,7 @@ const EmployeeHistory = () => {
         </div>
       </div>
 
-      {/* Content Section */}
+      {/* Konten Utama: Loading, Kosong, atau Tabel Permintaan */}
       {loading ? (
         <div className="bg-white rounded-xl shadow-lg p-12 text-center border border-gray-100">
           <div className="flex justify-center mb-4">
@@ -295,6 +375,7 @@ const EmployeeHistory = () => {
         </div>
       ) : (
         <>
+          {/* Tabel Riwayat Permintaan Barang */}
           <EmployeeRequestHistoryTable
             permintaan={filtered}
             onDetail={(p) => {
@@ -307,13 +388,14 @@ const EmployeeHistory = () => {
             formatDate={formatDate}
           />
 
-          {/* Improved Pagination */}
+          {/* Pagination: Navigasi Halaman */}
           {totalPages > 1 && (
             <div className="mt-6 flex justify-center">
               <nav
                 className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
                 aria-label="Pagination"
               >
+                {/* Tombol halaman sebelumnya */}
                 <button
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage === 1}
@@ -327,20 +409,17 @@ const EmployeeHistory = () => {
                   <ChevronLeftIcon className="h-5 w-5" aria-hidden="true" />
                 </button>
 
-                {/* Show first page, current range, and last page with ellipsis */}
+                {/* Tombol halaman, selalu tampilkan halaman pertama, terakhir, dan sekitar halaman aktif */}
                 {Array.from({ length: totalPages })
                   .map((_, i) => {
                     const page = i + 1;
-                    // Always show first and last page
-                    // For other pages, show only if they're within 1 of current page
                     const show =
                       page === 1 ||
                       page === totalPages ||
                       (page >= currentPage - 1 && page <= currentPage + 1);
 
-                    // Show ellipsis for gaps
+                    // Tampilkan ellipsis jika ada gap antar halaman
                     if (!show) {
-                      // Show ellipsis only once in each gap
                       if (page === 2 || page === totalPages - 1) {
                         return (
                           <span
@@ -371,6 +450,7 @@ const EmployeeHistory = () => {
                   })
                   .filter(Boolean)}
 
+                {/* Tombol halaman berikutnya */}
                 <button
                   onClick={() => handlePageChange(currentPage + 1)}
                   disabled={currentPage === totalPages}
@@ -389,6 +469,7 @@ const EmployeeHistory = () => {
         </>
       )}
 
+      {/* Modal Detail Permintaan Barang */}
       <EmployeeRequestDetailModal
         show={showDetail}
         permintaan={selected}
