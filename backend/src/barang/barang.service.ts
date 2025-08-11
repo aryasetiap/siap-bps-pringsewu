@@ -303,7 +303,7 @@ export class BarangService {
               { text: row.kode_barang, alignment: 'center' },
               { text: row.total_digunakan, alignment: 'center' },
               row.satuan,
-              '-', // Keterangan default kosong
+              { text: formatDate(row.tanggal_permintaan), alignment: 'center' }, // ubah jadi tanggal permintaan
             ])
           : [
               [
@@ -377,7 +377,7 @@ export class BarangService {
                   { text: 'Kode Barang', style: 'tableHeader' },
                   { text: 'Jumlah', style: 'tableHeader' },
                   { text: 'Satuan', style: 'tableHeader' },
-                  { text: 'Keterangan', style: 'tableHeader' },
+                  { text: 'Tanggal Permintaan', style: 'tableHeader' }, // ubah header
                 ],
                 ...bodyRows,
               ],
@@ -527,6 +527,7 @@ export class BarangService {
         'b.satuan AS satuan',
         'SUM(dp.jumlah_disetujui) AS total_digunakan',
         'u.unit_kerja AS unit_kerja',
+        'MIN(p.tanggal_permintaan) AS tanggal_permintaan', // ambil tanggal permintaan paling awal
       ])
       .from('detail_permintaan', 'dp')
       .innerJoin('barang', 'b', 'dp.id_barang = b.id')

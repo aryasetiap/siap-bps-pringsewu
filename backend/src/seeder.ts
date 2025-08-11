@@ -204,20 +204,25 @@ async function seedPermintaanDanDetail(
   )[] = ['Menunggu', 'Disetujui', 'Ditolak', 'Disetujui Sebagian'];
   const permintaanArr: Partial<Permintaan>[] = [];
 
-  // Membuat 100 permintaan barang secara acak
   for (let i = 0; i < 100; i++) {
     const user = users[i % users.length];
     const status = statusArr[i % statusArr.length];
 
-    // Generate tanggal permintaan acak dalam 1 tahun terakhir (Agustus 2024 - Juli 2025)
     const startDate = new Date('2024-08-01T00:00:00Z').getTime();
     const endDate = new Date('2025-07-31T23:59:59Z').getTime();
     const randomTime = startDate + Math.random() * (endDate - startDate);
     const tanggal_permintaan = new Date(randomTime);
 
+    // FIX 1: Tambahkan tanggal_verifikasi untuk status yang relevan
+    let tanggal_verifikasi: Date | undefined = undefined;
+    if (status === 'Disetujui' || status === 'Disetujui Sebagian') {
+      tanggal_verifikasi = new Date(tanggal_permintaan.getTime() + 86400000); // +1 hari
+    }
+
     permintaanArr.push({
       id_user_pemohon: user.id,
       tanggal_permintaan,
+      tanggal_verifikasi,
       status,
       catatan: status === 'Ditolak' ? 'Stok tidak cukup' : '',
     });
@@ -227,22 +232,31 @@ async function seedPermintaanDanDetail(
     permintaanRepo.create(permintaanArr),
   );
 
-  // Membuat detail permintaan untuk setiap permintaan (multi-item)
   const detailArr: Partial<DetailPermintaan>[] = [];
   for (let i = 0; i < savedPermintaan.length; i++) {
     const permintaan = savedPermintaan[i];
-    const jumlahItem = Math.floor(Math.random() * 4) + 1; // 1-4 barang per permintaan
+    const jumlahItem = Math.floor(Math.random() * 4) + 1;
 
     for (let j = 0; j < jumlahItem; j++) {
       const barang = barangs[(i + j) % barangs.length];
+      const jumlah_diminta = Math.floor(Math.random() * 5) + 1;
+      let jumlah_disetujui = 0;
+
+      // FIX 2: Logika baru untuk jumlah_disetujui
+      if (permintaan.status === 'Disetujui') {
+        jumlah_disetujui = jumlah_diminta;
+      } else if (permintaan.status === 'Disetujui Sebagian') {
+        jumlah_disetujui = Math.max(
+          1,
+          jumlah_diminta - Math.floor(Math.random() * 2 + 1),
+        );
+      }
+
       detailArr.push({
         id_permintaan: permintaan.id,
         id_barang: barang.id,
-        jumlah_diminta: Math.floor(Math.random() * 5) + 1,
-        jumlah_disetujui:
-          permintaan.status === 'Disetujui'
-            ? Math.floor(Math.random() * 5) + 1
-            : 0,
+        jumlah_diminta,
+        jumlah_disetujui,
       });
     }
   }
