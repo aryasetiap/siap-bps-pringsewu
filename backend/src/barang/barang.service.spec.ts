@@ -378,53 +378,38 @@ describe('BarangService', () => {
   });
 
   /**
-   * Menguji pengambilan barang dengan stok kritis.
+   * Menguji filter barang berdasarkan stok_kritis.
+   *
+   * Parameter:
+   * - query ({ stok_kritis: boolean }): Status kritis barang.
    *
    * Return:
    * - Daftar barang dengan stok di bawah ambang batas kritis.
    */
-  it('should return barang with stok kritis', async () => {
-    const kritisBarang = {
-      ...mockBarang,
-      stok: 5,
-      ambang_batas_kritis: 10,
-      status_aktif: true,
-    };
+  it('should filter barang by stok_kritis', async () => {
     const qb = {
-      where: jest.fn().mockReturnThis(),
       andWhere: jest.fn().mockReturnThis(),
-      getMany: jest.fn().mockResolvedValue([kritisBarang]),
+      getMany: jest.fn().mockResolvedValue([mockBarang]),
     };
-    repo.createQueryBuilder = jest.fn().mockReturnValue(qb);
-    const result = await service.getStokKritis();
-    expect(qb.where).toHaveBeenCalledWith(
+    (repo.createQueryBuilder as jest.Mock).mockReturnValue(qb);
+
+    const result = await service.findAll({ stok_kritis: true });
+    expect(qb.andWhere).toHaveBeenCalledWith(
       'barang.stok <= barang.ambang_batas_kritis',
     );
-    expect(qb.andWhere).toHaveBeenCalledWith('barang.status_aktif = :aktif', {
-      aktif: true,
-    });
-    expect(result).toEqual([kritisBarang]);
+    expect(result).toEqual([mockBarang]);
   });
 
-  /**
-   * Menguji pembuatan buffer PDF untuk laporan penggunaan barang.
-   *
-   * Parameter:
-   * - tanggal_awal (string): Tanggal awal periode laporan.
-   * - tanggal_akhir (string): Tanggal akhir periode laporan.
-   *
-   * Return:
-   * - Buffer PDF laporan penggunaan.
-   */
-  it('should generate PDF buffer for laporan penggunaan', async () => {
-    (repo.query as jest.Mock).mockResolvedValue([
-      { nama_barang: 'Kertas', satuan: 'rim', total_digunakan: 5 },
-    ]);
-    const buffer = await service.generateLaporanPenggunaanPDF(
-      '2024-07-01',
-      '2024-07-31',
-    );
-    expect(Buffer.isBuffer(buffer)).toBe(true);
+  it('should throw BadRequestException if laporan penggunaan start date invalid', async () => {
+    await expect(
+      service.getLaporanPenggunaanJSON('2024-7-01', '2024-07-31'),
+    ).rejects.toThrow('Format tanggal harus YYYY-MM-DD');
+  });
+
+  it('should throw BadRequestException if laporan penggunaan start date > end date', async () => {
+    await expect(
+      service.getLaporanPenggunaanJSON('2024-08-01', '2024-07-31'),
+    ).rejects.toThrow('Tanggal mulai harus <= tanggal akhir');
   });
 
   /**
