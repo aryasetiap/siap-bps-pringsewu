@@ -214,6 +214,23 @@ function App() {
           {/* Routing untuk halaman error dan forbidden */}
           <Route path="/forbidden" element={<Forbidden />} />
           <Route path="*" element={<Error404 />} />
+
+          {/* Add this root route */}
+          <Route
+            path="/"
+            element={
+              <Navigate
+                to={
+                  localStorage.getItem("authToken")
+                    ? localStorage.getItem("userRole") === "admin"
+                      ? "/admin/dashboard"
+                      : "/pegawai/permintaan"
+                    : "/login"
+                }
+                replace
+              />
+            }
+          />
         </Routes>
         {/* Komponen Toast untuk notifikasi */}
         <ToastContainer position="top-right" autoClose={3000} />
