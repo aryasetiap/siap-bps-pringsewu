@@ -1,3 +1,11 @@
+/**
+ * File: permintaan.controller.ts
+ *
+ * Controller untuk mengelola permintaan barang pada aplikasi SIAP.
+ * Berisi endpoint untuk membuat, mengambil, memverifikasi, dan mengelola permintaan barang.
+ * Seluruh endpoint telah dilindungi dengan JWT dan role-based access control.
+ */
+
 import {
   Controller,
   Post,
@@ -20,15 +28,32 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../auth/roles.decorator';
 import { Response } from 'express';
 
+/**
+ * Controller utama untuk pengelolaan permintaan barang.
+ *
+ * Fitur:
+ * - Membuat permintaan barang oleh pegawai
+ * - Mengambil riwayat permintaan user
+ * - Mengambil daftar permintaan masuk (admin)
+ * - Memverifikasi permintaan (admin)
+ * - Mengambil statistik dan tren permintaan (admin)
+ * - Menghasilkan bukti permintaan dalam bentuk PDF
+ * - Mengambil semua permintaan dengan filter dan paginasi (admin)
+ * - Mengambil detail permintaan tertentu
+ */
 @Controller('permintaan')
 export class PermintaanController {
   constructor(private readonly permintaanService: PermintaanService) {}
 
   /**
    * Membuat permintaan baru oleh pegawai.
-   * @param dto Data permintaan yang akan dibuat.
-   * @param req Request yang berisi informasi user login.
-   * @returns Data permintaan yang berhasil dibuat.
+   *
+   * Parameter:
+   * - dto (CreatePermintaanDto): Data permintaan yang akan dibuat
+   * - req (Request): Request yang berisi informasi user login
+   *
+   * Return:
+   * - Promise<any>: Data permintaan yang berhasil dibuat
    */
   @UseGuards(JwtAuthGuard)
   @Roles('pegawai')
@@ -39,8 +64,12 @@ export class PermintaanController {
 
   /**
    * Mengambil riwayat permintaan milik user yang sedang login.
-   * @param req Request yang berisi informasi user login.
-   * @returns Daftar permintaan milik user.
+   *
+   * Parameter:
+   * - req (Request): Request yang berisi informasi user login
+   *
+   * Return:
+   * - Promise<any[]>: Daftar permintaan milik user
    */
   @UseGuards(JwtAuthGuard)
   @Roles('pegawai')
@@ -51,9 +80,15 @@ export class PermintaanController {
 
   /**
    * Mengambil daftar permintaan yang masuk (hanya untuk admin).
-   * @param req Request yang berisi informasi user login.
-   * @returns Daftar permintaan yang menunggu verifikasi.
-   * @throws ForbiddenException Jika user bukan admin.
+   *
+   * Parameter:
+   * - req (Request): Request yang berisi informasi user login
+   *
+   * Return:
+   * - Promise<any[]>: Daftar permintaan yang menunggu verifikasi
+   *
+   * Throws:
+   * - ForbiddenException: Jika user bukan admin
    */
   @UseGuards(JwtAuthGuard)
   @Roles('admin')
@@ -67,21 +102,25 @@ export class PermintaanController {
 
   /**
    * Memverifikasi permintaan (hanya untuk admin).
-   * @param id ID permintaan yang akan diverifikasi.
-   * @param dto Data verifikasi permintaan.
-   * @param req Request yang berisi informasi user login.
-   * @returns Hasil verifikasi permintaan.
+   *
+   * Parameter:
+   * - id (number): ID permintaan yang akan diverifikasi
+   * - dto (VerifikasiPermintaanDto): Data verifikasi permintaan
+   * - req (Request): Request yang berisi informasi user login
+   *
+   * Return:
+   * - Promise<any>: Hasil verifikasi permintaan
    */
   @UseGuards(JwtAuthGuard)
   @Roles('admin')
   @Patch(':id/verifikasi')
   async verifikasi(
-    @Param('id') id: number,
+    @Param('id', ParseIntPipe) id: number,
     @Body() dto: VerifikasiPermintaanDto,
     @Req() req,
   ) {
     return this.permintaanService.verifikasiPermintaan(
-      Number(id),
+      id,
       dto,
       req.user.userId,
     );
@@ -89,7 +128,9 @@ export class PermintaanController {
 
   /**
    * Mengambil statistik dashboard permintaan (hanya untuk admin).
-   * @returns Data statistik permintaan.
+   *
+   * Return:
+   * - Promise<any>: Data statistik permintaan
    */
   @UseGuards(JwtAuthGuard)
   @Roles('admin')
@@ -100,7 +141,9 @@ export class PermintaanController {
 
   /**
    * Mengambil tren permintaan bulanan untuk dashboard (hanya untuk admin).
-   * @returns Data tren permintaan bulanan.
+   *
+   * Return:
+   * - Promise<any>: Data tren permintaan bulanan
    */
   @UseGuards(JwtAuthGuard)
   @Roles('admin')
@@ -111,9 +154,17 @@ export class PermintaanController {
 
   /**
    * Menghasilkan file PDF bukti permintaan berdasarkan ID.
-   * @param id ID permintaan.
-   * @param res Response untuk mengirim file PDF.
-   * @returns File PDF bukti permintaan.
+   *
+   * Parameter:
+   * - id (number): ID permintaan
+   * - res (Response): Response untuk mengirim file PDF
+   * - req (Request): Request yang berisi informasi user login
+   *
+   * Return:
+   * - void: Mengirim file PDF sebagai response
+   *
+   * Throws:
+   * - ForbiddenException: Jika user tidak berhak mengakses PDF
    */
   @UseGuards(JwtAuthGuard)
   @Get(':id/pdf')
@@ -122,7 +173,7 @@ export class PermintaanController {
     @Res() res: Response,
     @Req() req: any,
   ) {
-    // Cek apakah user berhak mengakses PDF ini
+    // Validasi hak akses user terhadap permintaan
     const permintaan = await this.permintaanService.findOneById(id);
     if (
       req.user.role !== 'admin' &&
@@ -136,7 +187,7 @@ export class PermintaanController {
     const pdfBuffer =
       await this.permintaanService.generateBuktiPermintaanPDF(id);
 
-    // Format tanggal untuk nama file
+    // Format tanggal untuk nama file bukti
     const today = new Date();
     const dateStr = `${today.getDate()}-${today.getMonth() + 1}-${today.getFullYear()}`;
 
@@ -149,10 +200,14 @@ export class PermintaanController {
 
   /**
    * Mengambil semua permintaan dengan opsi filter dan paginasi (hanya untuk admin).
-   * @param status Status permintaan yang akan difilter.
-   * @param page Halaman yang akan diambil (default: 1).
-   * @param limit Jumlah data per halaman (default: 20).
-   * @returns Daftar semua permintaan yang sesuai dengan filter.
+   *
+   * Parameter:
+   * - status (string, optional): Status permintaan yang akan difilter
+   * - page (number, default: 1): Halaman yang akan diambil
+   * - limit (number, default: 20): Jumlah data per halaman
+   *
+   * Return:
+   * - Promise<any[]>: Daftar semua permintaan yang sesuai dengan filter
    */
   @UseGuards(JwtAuthGuard)
   @Roles('admin')
@@ -165,6 +220,20 @@ export class PermintaanController {
     return this.permintaanService.getAllPermintaan({ status, page, limit });
   }
 
+  /**
+   * Mengambil detail permintaan berdasarkan ID.
+   *
+   * Parameter:
+   * - req (Request): Request yang berisi informasi user login
+   * - id (string): ID permintaan
+   *
+   * Return:
+   * - Promise<any>: Data permintaan yang ditemukan
+   *
+   * Throws:
+   * - BadRequestException: Jika ID tidak valid
+   * - ForbiddenException: Jika user tidak berhak mengakses data permintaan
+   */
   @UseGuards(JwtAuthGuard)
   @Get(':id')
   async findOne(@Req() req, @Param('id') id: string) {

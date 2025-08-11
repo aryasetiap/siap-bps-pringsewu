@@ -1,3 +1,9 @@
+/**
+ * File: permintaan.service.ts
+ * Service utama untuk pengelolaan permintaan barang persediaan di aplikasi SIAP BPS Pringsewu.
+ * Meliputi pembuatan permintaan, verifikasi, pengambilan riwayat, statistik dashboard, dan pembuatan bukti PDF.
+ */
+
 import {
   Injectable,
   BadRequestException,
@@ -7,15 +13,22 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Permintaan } from '../entities/permintaan.entity';
 import { DetailPermintaan } from '../entities/detail_permintaan.entity';
 import { Barang } from '../entities/barang.entity';
-import { User } from '../entities/user.entity'; // Tambahkan import User
+import { User } from '../entities/user.entity';
 import { Repository, DataSource } from 'typeorm';
 import { CreatePermintaanDto } from './dto/create-permintaan.dto';
 import { VerifikasiPermintaanDto } from './dto/verifikasi-permintaan.dto';
 import * as PdfPrinter from 'pdfmake';
 import * as path from 'path';
 
+/**
+ * Service untuk pengelolaan permintaan barang persediaan.
+ * Menyediakan fungsi CRUD, verifikasi, statistik, dan pembuatan PDF bukti permintaan.
+ */
 @Injectable()
 export class PermintaanService {
+  /**
+   * Konstruktor untuk dependency injection repository dan dataSource.
+   */
   constructor(
     @InjectRepository(Permintaan)
     private permintaanRepo: Repository<Permintaan>,
@@ -23,30 +36,39 @@ export class PermintaanService {
     private detailRepo: Repository<DetailPermintaan>,
     @InjectRepository(Barang)
     private barangRepo: Repository<Barang>,
-    @InjectRepository(User) // Tambahkan ini
-    private userRepo: Repository<User>, // Tambahkan ini
+    @InjectRepository(User)
+    private userRepo: Repository<User>,
     private dataSource: DataSource,
   ) {}
 
   /**
-   * Membuat permintaan barang baru.
-   * @param dto Data permintaan yang berisi daftar barang dan catatan.
-   * @param userId ID user pemohon.
-   * @returns Data permintaan yang telah dibuat beserta detail barang.
-   * @throws BadRequestException jika data tidak valid atau stok tidak mencukupi.
+   * Membuat permintaan barang baru oleh user pemohon.
+   *
+   * Parameter:
+   * - dto (CreatePermintaanDto): Data permintaan berisi daftar barang dan catatan.
+   * - userId (number): ID user pemohon.
+   *
+   * Return:
+   * - Promise<object>: Data permintaan beserta detail barang yang telah dibuat.
+   *
+   * Throws:
+   * - BadRequestException jika data tidak valid atau stok tidak mencukupi.
    */
   async create(dto: CreatePermintaanDto, userId: number) {
     if (!dto.items || dto.items.length === 0) {
       throw new BadRequestException('Items tidak boleh kosong');
     }
-    const barangIds = dto.items.map((i) => i.id_barang);
-    const barangList = (await this.barangRepo.findByIds(barangIds)) ?? [];
+
+    const barangIds = dto.items.map((item) => item.id_barang);
+    const barangList = await this.barangRepo.findByIds(barangIds);
+
     if (barangList.length !== barangIds.length) {
       throw new BadRequestException(
         'Ada barang yang tidak ditemukan atau tidak aktif',
       );
     }
 
+    // Validasi stok dan status barang
     for (const item of dto.items) {
       const barang = barangList.find((b) => b.id === item.id_barang);
       if (!barang) {
@@ -54,7 +76,7 @@ export class PermintaanService {
           `Barang dengan ID ${item.id_barang} tidak ditemukan`,
         );
       }
-      if (barang.status_aktif === false) {
+      if (!barang.status_aktif) {
         throw new BadRequestException(
           `Barang dengan ID ${item.id_barang} tidak aktif`,
         );
@@ -66,6 +88,7 @@ export class PermintaanService {
       }
     }
 
+    // Transaksi pembuatan permintaan dan detail barang
     return await this.dataSource.transaction(async (manager) => {
       const permintaan = this.permintaanRepo.create({
         id_user_pemohon: userId,
@@ -93,9 +116,13 @@ export class PermintaanService {
   }
 
   /**
-   * Mengambil riwayat permintaan berdasarkan user.
-   * @param userId ID user pemohon.
-   * @returns Daftar permintaan beserta detail barang yang pernah diajukan user.
+   * Mengambil riwayat permintaan barang berdasarkan user pemohon.
+   *
+   * Parameter:
+   * - userId (number): ID user pemohon.
+   *
+   * Return:
+   * - Promise<object[]>: Daftar permintaan beserta detail barang yang pernah diajukan user.
    */
   async getRiwayatByUser(userId: number) {
     const riwayat = await this.permintaanRepo.find({
@@ -110,10 +137,16 @@ export class PermintaanService {
   }
 
   /**
-   * Mengambil detail permintaan berdasarkan ID.
-   * @param id ID permintaan.
-   * @returns Data permintaan beserta detail barang.
-   * @throws NotFoundException jika permintaan tidak ditemukan.
+   * Mengambil detail permintaan berdasarkan ID permintaan.
+   *
+   * Parameter:
+   * - id (number): ID permintaan.
+   *
+   * Return:
+   * - Promise<object>: Data permintaan beserta detail barang.
+   *
+   * Throws:
+   * - NotFoundException jika permintaan tidak ditemukan.
    */
   async findOneById(id: number) {
     const permintaan = await this.permintaanRepo.findOne({
@@ -129,7 +162,9 @@ export class PermintaanService {
 
   /**
    * Mengambil daftar permintaan yang masih menunggu verifikasi.
-   * @returns Daftar permintaan dengan status 'Menunggu'.
+   *
+   * Return:
+   * - Promise<Permintaan[]>: Daftar permintaan dengan status 'Menunggu'.
    */
   async getPermintaanMenunggu() {
     return this.permintaanRepo.find({
@@ -140,12 +175,18 @@ export class PermintaanService {
   }
 
   /**
-   * Memverifikasi permintaan barang.
-   * @param id ID permintaan yang akan diverifikasi.
-   * @param dto Data verifikasi (keputusan dan detail barang).
-   * @param verifikatorId ID user verifikator.
-   * @returns Data permintaan yang telah diverifikasi.
-   * @throws BadRequestException atau NotFoundException jika data tidak valid.
+   * Memverifikasi permintaan barang oleh verifikator.
+   *
+   * Parameter:
+   * - id (number): ID permintaan yang akan diverifikasi.
+   * - dto (VerifikasiPermintaanDto): Data verifikasi (keputusan dan detail barang).
+   * - verifikatorId (number): ID user verifikator.
+   *
+   * Return:
+   * - Promise<object>: Data permintaan yang telah diverifikasi.
+   *
+   * Throws:
+   * - BadRequestException atau NotFoundException jika data tidak valid.
    */
   async verifikasiPermintaan(
     id: number,
@@ -162,12 +203,12 @@ export class PermintaanService {
       if (permintaan.status !== 'Menunggu')
         throw new BadRequestException('Permintaan sudah diverifikasi');
 
-      const allowed = ['setuju', 'sebagian', 'tolak'];
-      if (!allowed.includes(dto.keputusan)) {
+      const allowedKeputusan = ['setuju', 'sebagian', 'tolak'];
+      if (!allowedKeputusan.includes(dto.keputusan)) {
         throw new BadRequestException('Keputusan tidak valid');
       }
 
-      let totalDisetujui = 0;
+      // Validasi jumlah disetujui dan stok barang
       for (const item of dto.items) {
         const detail = permintaan.details.find((d) => d.id === item.id_detail);
         if (!detail)
@@ -183,9 +224,9 @@ export class PermintaanService {
           );
         }
         detail.jumlah_disetujui = item.jumlah_disetujui;
-        totalDisetujui += item.jumlah_disetujui;
       }
 
+      // Pengurangan stok barang jika permintaan disetujui/sebagian
       if (dto.keputusan !== 'tolak') {
         for (const item of dto.items) {
           const detail = permintaan.details.find(
@@ -205,6 +246,7 @@ export class PermintaanService {
         }
       }
 
+      // Penentuan status permintaan berdasarkan keputusan
       let status: 'Menunggu' | 'Disetujui' | 'Disetujui Sebagian' | 'Ditolak' =
         'Ditolak';
       if (dto.keputusan === 'setuju') status = 'Disetujui';
@@ -227,7 +269,9 @@ export class PermintaanService {
 
   /**
    * Mengambil statistik dashboard terkait barang dan permintaan.
-   * @returns Statistik total barang, permintaan tertunda, dan barang kritis.
+   *
+   * Return:
+   * - Promise<object>: Statistik total barang, permintaan tertunda, barang kritis, dan user aktif.
    */
   async getDashboardStatistik() {
     const [totalBarang, totalPermintaanTertunda, totalBarangKritis, totalUser] =
@@ -251,7 +295,9 @@ export class PermintaanService {
 
   /**
    * Mengambil tren permintaan bulanan selama 12 bulan terakhir.
-   * @returns Array data jumlah permintaan per bulan.
+   *
+   * Return:
+   * - Promise<{ bulan: string; jumlah: number }[]>: Array data jumlah permintaan per bulan.
    */
   async getTrenPermintaanBulanan() {
     const now = new Date();
@@ -267,6 +313,7 @@ export class PermintaanService {
       .orderBy('bulan', 'ASC')
       .getRawMany();
 
+    // Membentuk array 12 bulan terakhir, isi 0 jika tidak ada data
     const result: { bulan: string; jumlah: number }[] = [];
     for (let i = 0; i < 12; i++) {
       const d = new Date(now.getFullYear(), now.getMonth() - 11 + i, 1);
@@ -279,17 +326,24 @@ export class PermintaanService {
 
   /**
    * Menghasilkan file PDF bukti permintaan barang.
-   * @param id ID permintaan yang akan dibuatkan PDF.
-   * @returns Buffer file PDF.
-   * @throws NotFoundException jika permintaan tidak ditemukan.
+   *
+   * Parameter:
+   * - id (number): ID permintaan yang akan dibuatkan PDF.
+   *
+   * Return:
+   * - Promise<Buffer>: Buffer file PDF.
+   *
+   * Throws:
+   * - NotFoundException jika permintaan tidak ditemukan.
    */
   async generateBuktiPermintaanPDF(id: number): Promise<Buffer> {
     const permintaan = await this.findOneById(id);
 
+    /**
+     * Fungsi untuk memformat tanggal ke format Indonesia.
+     */
     const formatDate = (date: Date): string => {
       if (!date) return '-';
-
-      // Daftar nama bulan dalam bahasa Indonesia
       const namaBulan = [
         'Januari',
         'Februari',
@@ -304,22 +358,17 @@ export class PermintaanService {
         'November',
         'Desember',
       ];
-
       const day = String(date.getDate()).padStart(2, '0');
-      const month = date.getMonth(); // 0-11
+      const month = date.getMonth();
       const year = date.getFullYear();
-
       return `${day} ${namaBulan[month]} ${year}`;
     };
 
-    // Gunakan tanggal saat ini untuk dokumen
     const today = new Date();
     const currentDateString = formatDate(today);
-
-    // Tetap simpan tanggal permintaan untuk referensi
     const permintaanDateString = formatDate(permintaan.tanggal_permintaan);
 
-    // Konfigurasi font
+    // Konfigurasi font dan logo
     const fonts = {
       Roboto: {
         normal: path.join(__dirname, '../assets/fonts/Roboto-Regular.ttf'),
@@ -332,35 +381,25 @@ export class PermintaanService {
       },
     };
     const printer = new PdfPrinter(fonts);
-
-    // Logo BPS
     const logoPath = path.join(
       __dirname,
       '../assets/images/logo-bps-pringsewu.png',
     );
 
-    // Definisi dokumen PDF yang lebih modern
+    /**
+     * Definisi dokumen PDF bukti permintaan barang.
+     * Terdiri dari header, tabel barang, dan footer tanda tangan.
+     */
     const docDefinition = {
       pageSize: 'A4',
       pageMargins: [40, 60, 40, 60],
-
       content: [
-        // Header dengan logo dan judul
         {
           columns: [
-            {
-              width: 170,
-              image: logoPath,
-              fit: [170, 85],
-            },
-            {
-              width: '*',
-              text: '',
-            },
+            { width: 170, image: logoPath, fit: [170, 85] },
+            { width: '*', text: '' },
           ],
         },
-
-        // Judul dokumen
         {
           text: 'Permintaan',
           style: 'header',
@@ -373,15 +412,11 @@ export class PermintaanService {
           alignment: 'center',
           margin: [0, 0, 0, 15],
         },
-
-        // Unit kerja pemohon
         {
           text: permintaan.pemohon?.unit_kerja ?? '-',
           style: 'unitKerja',
           margin: [0, 0, 0, 20],
         },
-
-        // Informasi nomor dan tanggal permintaan
         {
           columns: [
             {
@@ -402,8 +437,6 @@ export class PermintaanService {
           ],
           margin: [0, 0, 0, 10],
         },
-
-        // Tabel data barang dengan styling modern
         {
           table: {
             headerRows: 1,
@@ -428,38 +461,20 @@ export class PermintaanService {
             ],
           },
           layout: {
-            hLineWidth: function (i, node) {
-              return i === 0 || i === 1 || i === node.table.body.length
-                ? 1
-                : 0.5;
-            },
-            vLineWidth: function (i, node) {
-              return 0.5;
-            },
-            hLineColor: function (i, node) {
-              return i === 0 || i === 1 || i === node.table.body.length
+            hLineWidth: (i, node) =>
+              i === 0 || i === 1 || i === node.table.body.length ? 1 : 0.5,
+            vLineWidth: () => 0.5,
+            hLineColor: (i, node) =>
+              i === 0 || i === 1 || i === node.table.body.length
                 ? '#aaaaaa'
-                : '#dddddd';
-            },
-            vLineColor: function (i, node) {
-              return '#aaaaaa';
-            },
-            paddingLeft: function (i, node) {
-              return 8;
-            },
-            paddingRight: function (i, node) {
-              return 8;
-            },
-            paddingTop: function (i, node) {
-              return 8;
-            },
-            paddingBottom: function (i, node) {
-              return 8;
-            },
+                : '#dddddd',
+            vLineColor: () => '#aaaaaa',
+            paddingLeft: () => 8,
+            paddingRight: () => 8,
+            paddingTop: () => 8,
+            paddingBottom: () => 8,
           },
         },
-
-        // Footer dengan tanggal dan tanda tangan
         {
           columns: [
             {
@@ -489,55 +504,36 @@ export class PermintaanService {
           ],
         },
       ],
-
-      // Definisi styles untuk tampilan modern
       styles: {
-        header: {
-          fontSize: 16,
-          bold: true,
-          color: '#000000', // ubah ke warna hitam
-        },
-        unitKerja: {
-          fontSize: 12,
-          bold: true,
-          color: '#000000', // ubah ke warna hitam
-        },
+        header: { fontSize: 16, bold: true, color: '#000000' },
+        unitKerja: { fontSize: 12, bold: true, color: '#000000' },
         tableHeader: {
           bold: true,
           fontSize: 10,
           fillColor: '#f1f5f9',
-          color: '#000000', // ubah ke warna hitam
+          color: '#000000',
           alignment: 'center',
           margin: [0, 4],
         },
-        labelInfo: {
-          fontSize: 10,
-          color: '#000000', // ubah ke warna hitam
-        },
-        valueInfo: {
-          fontSize: 10,
-          bold: true,
-          color: '#000000', // ubah ke warna hitam
-        },
+        labelInfo: { fontSize: 10, color: '#000000' },
+        valueInfo: { fontSize: 10, bold: true, color: '#000000' },
       },
-
-      // Footer halaman (opsional)
       footer: {
         columns: [
           {
             text: 'SIAP BPS Pringsewu',
             alignment: 'center',
             fontSize: 8,
-            color: '#000000', // ubah ke warna hitam
+            color: '#000000',
             margin: [0, 10, 0, 0],
           },
         ],
       },
     };
 
+    // Proses pembuatan PDF dan pengembalian buffer
     const pdfDoc = printer.createPdfKitDocument(docDefinition);
     const chunks: Buffer[] = [];
-
     return new Promise<Buffer>((resolve, reject) => {
       pdfDoc.on('data', (chunk) => chunks.push(chunk));
       pdfDoc.on('end', () => resolve(Buffer.concat(chunks)));
@@ -546,6 +542,17 @@ export class PermintaanService {
     });
   }
 
+  /**
+   * Mengambil seluruh permintaan barang dengan filter status dan paginasi.
+   *
+   * Parameter:
+   * - status (string, optional): Filter status permintaan.
+   * - page (number, optional): Nomor halaman.
+   * - limit (number, optional): Jumlah data per halaman.
+   *
+   * Return:
+   * - Promise<{ data: Permintaan[]; total: number; page: number; limit: number }>: Data permintaan dan info paginasi.
+   */
   async getAllPermintaan({
     status,
     page = 1,
