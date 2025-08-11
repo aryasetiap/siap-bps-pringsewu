@@ -1,3 +1,12 @@
+/**
+ * File: barang.entity.ts
+ *
+ * Entitas Barang digunakan untuk merepresentasikan data barang pada sistem SIAP (Sistem Informasi Administrasi dan Pengelolaan Barang).
+ * Entitas ini berfungsi sebagai model utama untuk pengelolaan inventaris barang, termasuk proses permintaan, verifikasi, dan pelacakan stok.
+ *
+ * Setiap properti pada entitas ini sesuai dengan kolom pada tabel 'barang' di basis data.
+ */
+
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -7,82 +16,98 @@ import {
 } from 'typeorm';
 
 /**
- * Entitas Barang merepresentasikan data barang pada sistem inventaris.
- * Setiap properti pada entitas ini sesuai dengan kolom pada tabel 'barang' di basis data.
+ * Class Barang
+ *
+ * Class ini digunakan untuk mendefinisikan struktur data barang pada sistem SIAP.
+ *
+ * Parameter:
+ * - Tidak ada parameter pada class ini, seluruh properti diatur melalui ORM dan migrasi basis data.
+ *
+ * Output:
+ * - Instance dari Barang yang merepresentasikan satu data barang pada basis data.
  */
 @Entity('barang')
 export class Barang {
   /**
-   * Primary key, auto increment.
+   * id (number): Primary key, auto increment.
+   * Digunakan sebagai identitas unik setiap barang.
    */
   @PrimaryGeneratedColumn()
   id: number;
 
   /**
-   * Kode unik untuk setiap barang.
+   * kode_barang (string): Kode unik untuk setiap barang.
+   * Penting untuk proses identifikasi dan pencarian barang.
    */
   @Column({ unique: true })
   kode_barang: string;
 
   /**
-   * Nama barang.
+   * nama_barang (string): Nama barang.
+   * Digunakan untuk menampilkan nama barang pada sistem.
    */
   @Column()
   nama_barang: string;
 
   /**
-   * Deskripsi barang (opsional).
+   * deskripsi (string | null): Deskripsi barang (opsional).
+   * Menjelaskan detail atau spesifikasi barang.
    */
   @Column({ nullable: true })
-  deskripsi: string;
+  deskripsi?: string;
 
   /**
-   * Satuan barang (misal: pcs, box, dll).
+   * satuan (string): Satuan barang (misal: pcs, box, dll).
+   * Menentukan satuan pengukuran barang.
    */
   @Column()
   satuan: string;
 
   /**
-   * Jumlah stok barang yang tersedia.
-   * Default: 0
+   * stok (number): Jumlah stok barang yang tersedia.
+   * Default: 0. Digunakan untuk pelacakan ketersediaan barang.
    */
   @Column({ default: 0 })
   stok: number;
 
   /**
-   * Ambang batas kritis stok barang.
-   * Default: 0
+   * ambang_batas_kritis (number): Ambang batas kritis stok barang.
+   * Default: 0. Jika stok <= ambang batas, sistem dapat memberikan notifikasi.
    */
   @Column({ default: 0 })
   ambang_batas_kritis: number;
 
   /**
-   * Status aktif barang.
-   * Default: true
+   * status_aktif (boolean): Status aktif barang.
+   * Default: true. Menandakan apakah barang masih digunakan dalam sistem.
    */
   @Column({ default: true })
   status_aktif: boolean;
 
   /**
-   * Path atau URL foto barang (opsional).
+   * foto (string | null): Path atau URL foto barang (opsional).
+   * Digunakan untuk menampilkan gambar barang pada aplikasi.
    */
   @Column({ nullable: true })
-  foto: string;
+  foto?: string;
 
   /**
-   * Kategori barang (opsional).
+   * kategori (string | null): Kategori barang (opsional).
+   * Memudahkan pengelompokan barang dalam sistem.
    */
   @Column({ nullable: true })
-  kategori: string;
+  kategori?: string;
 
   /**
-   * Tanggal dan waktu data barang dibuat (otomatis diisi oleh sistem).
+   * created_at (Date): Tanggal dan waktu data barang dibuat.
+   * Diisi otomatis oleh sistem saat data barang ditambahkan.
    */
   @CreateDateColumn()
   created_at: Date;
 
   /**
-   * Tanggal dan waktu data barang terakhir diperbarui (otomatis diisi oleh sistem).
+   * updated_at (Date): Tanggal dan waktu data barang terakhir diperbarui.
+   * Diisi otomatis oleh sistem setiap kali data barang diubah.
    */
   @UpdateDateColumn()
   updated_at: Date;
