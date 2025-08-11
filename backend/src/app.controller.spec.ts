@@ -61,5 +61,33 @@ describe('AppController', () => {
     it('should return "Hello World!"', (): void => {
       expect(appController.getHello()).toBe('Hello World!');
     });
+
+    it('should return custom message from service', async () => {
+      const mockService = {
+        getHello: jest.fn().mockReturnValue('Custom Message'),
+      };
+      const module: TestingModule = await Test.createTestingModule({
+        controllers: [AppController],
+        providers: [{ provide: AppService, useValue: mockService }],
+      }).compile();
+
+      const controller = module.get<AppController>(AppController);
+      expect(controller.getHello()).toBe('Custom Message');
+    });
+
+    it('should handle error from service', async () => {
+      const mockService = {
+        getHello: jest.fn().mockImplementation(() => {
+          throw new Error('Service error');
+        }),
+      };
+      const module: TestingModule = await Test.createTestingModule({
+        controllers: [AppController],
+        providers: [{ provide: AppService, useValue: mockService }],
+      }).compile();
+
+      const controller = module.get<AppController>(AppController);
+      expect(() => controller.getHello()).toThrow('Service error');
+    });
   });
 });
