@@ -1,3 +1,17 @@
+/**
+ * DashboardChart.jsx
+ *
+ * Komponen ini digunakan untuk menampilkan grafik tren permintaan bulanan pada aplikasi SIAP.
+ * Grafik ini membantu admin atau pengguna memantau jumlah permintaan barang setiap bulan.
+ *
+ * Parameter:
+ * - chartData (Array): Data tren permintaan bulanan, berisi objek { bulan: "YYYY-MM", jumlah: number }
+ * - loading (Boolean): Status loading data, jika true maka akan menampilkan skeleton loading.
+ *
+ * Return:
+ * - React Element: Komponen visual grafik tren permintaan bulanan.
+ */
+
 import React from "react";
 import { Line } from "react-chartjs-2";
 import {
@@ -11,6 +25,7 @@ import {
 } from "chart.js";
 import { FaChartLine } from "react-icons/fa";
 
+// Registrasi elemen ChartJS yang diperlukan
 ChartJS.register(
   LineElement,
   CategoryScale,
@@ -20,22 +35,55 @@ ChartJS.register(
   Legend
 );
 
-const chartGradient = (ctx, area) => {
+/**
+ * Membuat gradient warna untuk area chart.
+ *
+ * Parameter:
+ * - ctx (CanvasRenderingContext2D): Context canvas ChartJS.
+ * - area (Object): Area chart yang digunakan untuk menentukan posisi gradient.
+ *
+ * Return:
+ * - String | CanvasGradient: Warna gradient untuk background chart.
+ */
+function getChartGradient(ctx, area) {
   if (!area) return "rgba(37,99,235,0.25)";
   const gradient = ctx.createLinearGradient(0, area.bottom, 0, area.top);
   gradient.addColorStop(0, "rgba(37,99,235,0.45)");
   gradient.addColorStop(1, "rgba(37,99,235,0.10)");
   return gradient;
-};
+}
 
-const DashboardChart = ({ chartData, loading }) => {
+/**
+ * Mengubah data bulan dari format "YYYY-MM" menjadi "MMM YYYY" (contoh: "Jan 2024").
+ *
+ * Parameter:
+ * - bulan (String): Format bulan "YYYY-MM".
+ *
+ * Return:
+ * - String: Format bulan yang lebih mudah dibaca.
+ */
+function formatBulan(bulan) {
+  const [year, month] = bulan.split("-");
+  return `${new Date(year, month - 1).toLocaleString("id-ID", {
+    month: "short",
+  })} ${year}`;
+}
+
+/**
+ * Komponen utama DashboardChart.
+ * Menampilkan grafik tren permintaan bulanan, skeleton loading, atau pesan jika data kosong.
+ *
+ * Parameter:
+ * - chartData (Array): Data tren permintaan bulanan.
+ * - loading (Boolean): Status loading data.
+ *
+ * Return:
+ * - React Element: Komponen visual sesuai status data.
+ */
+function DashboardChart({ chartData, loading }) {
+  // Data chart yang akan ditampilkan
   const data = {
-    labels: chartData.map((d) => {
-      const [year, month] = d.bulan.split("-");
-      return `${new Date(year, month - 1).toLocaleString("id-ID", {
-        month: "short",
-      })} ${year}`;
-    }),
+    labels: chartData.map((d) => formatBulan(d.bulan)),
     datasets: [
       {
         label: "Jumlah Permintaan",
@@ -44,7 +92,7 @@ const DashboardChart = ({ chartData, loading }) => {
         borderColor: "#2563eb",
         backgroundColor: (context) =>
           context.chart
-            ? chartGradient(context.chart.ctx, context.chart.chartArea)
+            ? getChartGradient(context.chart.ctx, context.chart.chartArea)
             : "rgba(37,99,235,0.1)",
         tension: 0.4,
         pointRadius: 5,
@@ -54,6 +102,7 @@ const DashboardChart = ({ chartData, loading }) => {
     ],
   };
 
+  // Konfigurasi chart agar mudah dibaca dan sesuai branding SIAP
   const options = {
     responsive: true,
     plugins: {
@@ -90,6 +139,7 @@ const DashboardChart = ({ chartData, loading }) => {
     },
   };
 
+  // Skeleton loading saat data sedang diambil dari server
   if (loading) {
     return (
       <div className="bg-white p-8 rounded-2xl shadow-lg mb-6 flex flex-col items-center justify-center animate-pulse aspect-[2/1] min-h-[280px]">
@@ -99,6 +149,7 @@ const DashboardChart = ({ chartData, loading }) => {
     );
   }
 
+  // Pesan jika belum ada data permintaan bulanan
   if (!chartData || chartData.length === 0) {
     return (
       <div className="bg-white p-8 rounded-2xl shadow-lg mb-6 flex flex-col items-center justify-center text-gray-400 aspect-[2/1] min-h-[280px]">
@@ -115,6 +166,7 @@ const DashboardChart = ({ chartData, loading }) => {
     );
   }
 
+  // Tampilan utama grafik tren permintaan bulanan
   return (
     <div className="bg-white p-8 rounded-2xl shadow-lg mb-6 w-full border border-blue-50">
       <div className="flex items-center mb-6">
@@ -130,6 +182,6 @@ const DashboardChart = ({ chartData, loading }) => {
       </div>
     </div>
   );
-};
+}
 
 export default DashboardChart;
