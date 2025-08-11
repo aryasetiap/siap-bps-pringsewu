@@ -1,3 +1,13 @@
+/**
+ * Halaman ManajemenBarang digunakan untuk mengelola data barang pada aplikasi SIAP.
+ * Fitur utama: pencarian, filter, tambah/edit/hapus barang, dan penambahan stok.
+ *
+ * Parameter: Tidak ada parameter langsung, semua state dikelola secara internal.
+ *
+ * Return:
+ * - Komponen React yang menampilkan UI manajemen barang beserta modals dan tabel.
+ */
+
 import React, { useState, useEffect } from "react";
 import { MagnifyingGlassIcon, PlusIcon } from "@heroicons/react/24/outline";
 import BarangTable from "../../components/barang/BarangTable";
@@ -9,12 +19,13 @@ import { toast } from "react-toastify";
 const satuanOptions = ["pcs", "box", "rim", "pack", "unit", "set"];
 
 const ManajemenBarang = () => {
+  // State utama untuk data barang dan filter
   const [barang, setBarang] = useState([]);
   const [filteredBarang, setFilteredBarang] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterKategori, setFilterKategori] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
-  const [filterAktif, setFilterAktif] = useState("aktif"); // baru
+  const [filterAktif, setFilterAktif] = useState("aktif");
   const [showModal, setShowModal] = useState(false);
   const [showStokModal, setShowStokModal] = useState(false);
   const [modalMode, setModalMode] = useState("add");
@@ -23,6 +34,7 @@ const ManajemenBarang = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteBarangId, setDeleteBarangId] = useState(null);
 
+  // State untuk form tambah/edit barang
   const [formData, setFormData] = useState({
     kode: "",
     nama: "",
@@ -33,22 +45,34 @@ const ManajemenBarang = () => {
     deskripsi: "",
   });
 
+  // State untuk form penambahan stok barang
   const [stokData, setStokData] = useState({
     jumlahTambah: "",
     keterangan: "",
   });
 
+  // State untuk pilihan kategori barang
   const [kategoriOptions, setKategoriOptions] = useState([]);
 
-  // Fetch data barang dari API
+  /**
+   * Efek untuk mengambil data barang dari API saat komponen pertama kali di-mount.
+   */
   useEffect(() => {
     fetchBarang();
   }, []);
 
+  /**
+   * Fungsi untuk mengambil data barang dari backend dan mengatur state barang.
+   *
+   * Parameter: Tidak ada
+   *
+   * Return: void
+   */
   const fetchBarang = async () => {
     setLoading(true);
     try {
       const res = await barangService.getAllBarang();
+      // Mapping data API ke struktur yang digunakan di frontend
       const mapped = res.data.map((item) => ({
         id: item.id,
         kode: item.kode_barang,
@@ -64,6 +88,7 @@ const ManajemenBarang = () => {
         updatedAt: item.updated_at,
       }));
       setBarang(mapped);
+      // Ambil semua kategori unik untuk filter
       const kategoriSet = new Set(
         mapped.map((item) => item.kategori).filter(Boolean)
       );
@@ -74,9 +99,16 @@ const ManajemenBarang = () => {
     setLoading(false);
   };
 
-  // Filter dan search
+  /**
+   * Efek untuk melakukan filter dan pencarian pada data barang.
+   *
+   * Parameter: Tidak ada
+   *
+   * Return: void
+   */
   useEffect(() => {
     let filtered = barang;
+    // Filter berdasarkan pencarian nama/kode barang
     if (searchTerm) {
       filtered = filtered.filter(
         (item) =>
@@ -84,9 +116,11 @@ const ManajemenBarang = () => {
           item.kode.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
+    // Filter berdasarkan kategori barang
     if (filterKategori) {
       filtered = filtered.filter((item) => item.kategori === filterKategori);
     }
+    // Filter berdasarkan status stok barang
     if (filterStatus) {
       if (filterStatus === "kritis") {
         filtered = filtered.filter((item) => item.stok <= item.stokMinimum);
@@ -94,6 +128,7 @@ const ManajemenBarang = () => {
         filtered = filtered.filter((item) => item.stok > item.stokMinimum);
       }
     }
+    // Filter berdasarkan status aktif barang
     if (filterAktif === "aktif") {
       filtered = filtered.filter((item) => item.statusAktif);
     } else if (filterAktif === "nonaktif") {
@@ -102,17 +137,39 @@ const ManajemenBarang = () => {
     setFilteredBarang(filtered);
   }, [searchTerm, filterKategori, filterStatus, filterAktif, barang]);
 
-  // Handler input
+  /**
+   * Handler untuk perubahan input pada form tambah/edit barang.
+   *
+   * Parameter:
+   * - e (Event): Event perubahan input
+   *
+   * Return: void
+   */
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
+
+  /**
+   * Handler untuk perubahan input pada form penambahan stok barang.
+   *
+   * Parameter:
+   * - e (Event): Event perubahan input
+   *
+   * Return: void
+   */
   const handleStokChange = (e) => {
     const { name, value } = e.target;
     setStokData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Modal handlers
+  /**
+   * Fungsi untuk membuka modal tambah barang.
+   *
+   * Parameter: Tidak ada
+   *
+   * Return: void
+   */
   const openAddModal = () => {
     setModalMode("add");
     setFormData({
@@ -126,6 +183,15 @@ const ManajemenBarang = () => {
     });
     setShowModal(true);
   };
+
+  /**
+   * Fungsi untuk membuka modal edit barang.
+   *
+   * Parameter:
+   * - item (Object): Data barang yang akan diedit
+   *
+   * Return: void
+   */
   const openEditModal = (item) => {
     setModalMode("edit");
     setSelectedBarang(item);
@@ -140,20 +206,46 @@ const ManajemenBarang = () => {
     });
     setShowModal(true);
   };
+
+  /**
+   * Fungsi untuk membuka modal penambahan stok barang.
+   *
+   * Parameter:
+   * - item (Object): Data barang yang akan ditambah stoknya
+   *
+   * Return: void
+   */
   const openStokModal = (item) => {
     setSelectedBarang(item);
     setStokData({ jumlahTambah: "", keterangan: "" });
     setShowStokModal(true);
   };
+
+  /**
+   * Fungsi untuk membuka modal konfirmasi hapus barang.
+   *
+   * Parameter:
+   * - id (number): ID barang yang akan dihapus
+   *
+   * Return: void
+   */
   const openDeleteModal = (id) => {
     setDeleteBarangId(id);
     setShowDeleteModal(true);
   };
 
-  // CRUD handlers
+  /**
+   * Handler untuk submit form tambah/edit barang.
+   * Melakukan validasi input sebelum mengirim ke backend.
+   *
+   * Parameter:
+   * - e (Event): Event submit form
+   *
+   * Return: void
+   */
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // Validasi manual
+    // Validasi manual untuk field wajib
     if (!formData.kode || !formData.nama || !formData.satuan) {
       toast.error("Semua field wajib diisi!");
       return;
@@ -172,7 +264,7 @@ const ManajemenBarang = () => {
         await barangService.createBarang({
           kode_barang: formData.kode,
           nama_barang: formData.nama,
-          kategori: formData.kategori, // <-- pastikan ini ada!
+          kategori: formData.kategori,
           satuan: formData.satuan,
           stok: parseInt(formData.stok),
           ambang_batas_kritis: parseInt(formData.stokMinimum),
@@ -183,7 +275,7 @@ const ManajemenBarang = () => {
         await barangService.updateBarang(selectedBarang.id, {
           kode_barang: formData.kode,
           nama_barang: formData.nama,
-          kategori: formData.kategori, // <-- pastikan ini ada!
+          kategori: formData.kategori,
           satuan: formData.satuan,
           stok: parseInt(formData.stok),
           ambang_batas_kritis: parseInt(formData.stokMinimum),
@@ -199,6 +291,15 @@ const ManajemenBarang = () => {
     setLoading(false);
   };
 
+  /**
+   * Handler untuk submit form penambahan stok barang.
+   * Melakukan validasi input sebelum mengirim ke backend.
+   *
+   * Parameter:
+   * - e (Event): Event submit form
+   *
+   * Return: void
+   */
   const handleStokSubmit = async (e) => {
     e.preventDefault();
     const jumlahInt = parseInt(stokData.jumlahTambah, 10);
@@ -225,6 +326,13 @@ const ManajemenBarang = () => {
     setLoading(false);
   };
 
+  /**
+   * Handler untuk menghapus (menonaktifkan) barang.
+   *
+   * Parameter: Tidak ada
+   *
+   * Return: void
+   */
   const handleDelete = async () => {
     setLoading(true);
     try {
@@ -239,14 +347,42 @@ const ManajemenBarang = () => {
     setDeleteBarangId(null);
   };
 
-  // Status helpers
+  /**
+   * Fungsi helper untuk menentukan warna status stok barang.
+   *
+   * Parameter:
+   * - stok (number): Jumlah stok barang
+   * - stokMinimum (number): Ambang batas stok kritis
+   *
+   * Return:
+   * - string: Kelas warna Tailwind CSS
+   */
   const getStatusColor = (stok, stokMinimum) =>
     stok <= stokMinimum
       ? "text-red-600 bg-red-100"
       : "text-green-600 bg-green-100";
+
+  /**
+   * Fungsi helper untuk menentukan teks status stok barang.
+   *
+   * Parameter:
+   * - stok (number): Jumlah stok barang
+   * - stokMinimum (number): Ambang batas stok kritis
+   *
+   * Return:
+   * - string: Teks status ("Kritis" atau "Normal")
+   */
   const getStatusText = (stok, stokMinimum) =>
     stok <= stokMinimum ? "Kritis" : "Normal";
 
+  /**
+   * Handler untuk mengaktifkan kembali barang yang telah dinonaktifkan.
+   *
+   * Parameter:
+   * - id (number): ID barang yang akan diaktifkan
+   *
+   * Return: void
+   */
   const handleAktifkan = async (id) => {
     setLoading(true);
     try {
@@ -259,6 +395,7 @@ const ManajemenBarang = () => {
     setLoading(false);
   };
 
+  // UI utama halaman manajemen barang
   return (
     <div className="p-6">
       {/* Header */}
@@ -343,7 +480,7 @@ const ManajemenBarang = () => {
       <BarangTable
         data={filteredBarang}
         onEdit={openEditModal}
-        onDelete={openDeleteModal} // ganti ke openDeleteModal
+        onDelete={openDeleteModal}
         onTambahStok={openStokModal}
         getStatusColor={getStatusColor}
         getStatusText={getStatusText}

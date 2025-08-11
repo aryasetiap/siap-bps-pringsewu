@@ -1,3 +1,11 @@
+/**
+ * File: AdminDashboard.jsx
+ * Halaman dashboard admin untuk aplikasi SIAP BPS Pringsewu.
+ * Menampilkan statistik, grafik, notifikasi stok kritis, dan permintaan barang terbaru.
+ *
+ * Komponen ini mengelola data dashboard dan modal detail permintaan barang.
+ */
+
 import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import DashboardStats from "../../components/dashboard/DashboardStats";
@@ -6,27 +14,59 @@ import DashboardNotifKritis from "../../components/dashboard/DashboardNotifKriti
 import DashboardRecentRequests from "../../components/dashboard/DashboardRecentRequests";
 import * as dashboardService from "../../services/dashboardService";
 
+/**
+ * Komponen utama dashboard admin SIAP.
+ *
+ * Menampilkan statistik barang, grafik permintaan, notifikasi stok kritis, dan daftar permintaan terbaru.
+ * Mengelola state loading, data dashboard, dan modal detail permintaan.
+ *
+ * Return:
+ * - JSX: Tampilan dashboard admin beserta modal detail permintaan barang.
+ */
 const AdminDashboard = () => {
+  // State untuk menyimpan data statistik dashboard
   const [stats, setStats] = useState({
     totalBarang: 0,
     totalPermintaanTertunda: 0,
     totalBarangKritis: 0,
     totalUser: 0,
   });
+
+  // State untuk data grafik permintaan barang
   const [chartData, setChartData] = useState([]);
+
+  // State untuk notifikasi barang dengan stok kritis
   const [notifKritis, setNotifKritis] = useState([]);
+
+  // State untuk daftar permintaan barang terbaru
   const [recentRequests, setRecentRequests] = useState([]);
+
+  // State untuk status loading data dashboard
   const [loading, setLoading] = useState(false);
+
+  // State untuk permintaan barang yang dipilih (detail modal)
   const [selectedRequest, setSelectedRequest] = useState(null);
 
-  // Fetch dashboard data
+  /**
+   * Efek samping untuk mengambil data dashboard saat komponen pertama kali dirender.
+   */
   useEffect(() => {
     fetchDashboard();
   }, []);
 
+  /**
+   * Fungsi untuk mengambil seluruh data dashboard dari backend.
+   *
+   * Parameter: Tidak ada
+   *
+   * Return: Promise<void>
+   * - Mengupdate state stats, chartData, notifKritis, recentRequests, dan loading.
+   * - Menampilkan toast error jika gagal mengambil data.
+   */
   const fetchDashboard = async () => {
     setLoading(true);
     try {
+      // Mengambil data statistik, grafik, notifikasi kritis, dan permintaan terbaru secara paralel
       const [statsRes, chartRes, notifRes, recentRes] = await Promise.all([
         dashboardService.getStats(),
         dashboardService.getChart(),
@@ -43,11 +83,52 @@ const AdminDashboard = () => {
     setLoading(false);
   };
 
+  /**
+   * Fungsi untuk menampilkan detail permintaan barang pada modal.
+   *
+   * Parameter:
+   * - req (Object): Data permintaan barang yang dipilih.
+   *
+   * Return: void
+   * - Mengupdate state selectedRequest.
+   */
   const handleDetailRequest = (req) => {
     setSelectedRequest(req);
   };
 
+  /**
+   * Fungsi untuk menutup modal detail permintaan barang.
+   *
+   * Parameter: Tidak ada
+   *
+   * Return: void
+   * - Mengupdate state selectedRequest menjadi null.
+   */
   const closeModal = () => setSelectedRequest(null);
+
+  /**
+   * Fungsi untuk menentukan kelas status permintaan barang.
+   *
+   * Parameter:
+   * - status (string): Status permintaan barang.
+   *
+   * Return:
+   * - string: Nama kelas CSS untuk status.
+   */
+  const getStatusClass = (status) => {
+    switch ((status || "").toLowerCase()) {
+      case "menunggu":
+        return "bg-yellow-100 text-yellow-700";
+      case "disetujui":
+        return "bg-green-100 text-green-700";
+      case "disetujui sebagian":
+        return "bg-orange-100 text-orange-700";
+      case "ditolak":
+        return "bg-red-100 text-red-700";
+      default:
+        return "bg-gray-100 text-gray-600";
+    }
+  };
 
   return (
     <div className="p-6">
@@ -55,16 +136,20 @@ const AdminDashboard = () => {
       <p className="text-gray-600 mb-6">
         Statistik, grafik, dan notifikasi stok kritis barang persediaan
       </p>
+      {/* Komponen statistik barang */}
       <DashboardStats stats={stats} loading={loading} />
+      {/* Komponen grafik permintaan barang */}
       <DashboardChart chartData={chartData} loading={loading} />
+      {/* Komponen notifikasi barang kritis */}
       <DashboardNotifKritis items={notifKritis} loading={loading} />
+      {/* Komponen daftar permintaan barang terbaru */}
       <DashboardRecentRequests
         requests={recentRequests}
         onDetail={handleDetailRequest}
         loading={loading}
       />
 
-      {/* Modal Detail Permintaan */}
+      {/* Modal Detail Permintaan Barang */}
       {selectedRequest && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-lg relative animate-fadeIn">
@@ -108,20 +193,9 @@ const AdminDashboard = () => {
               <div>
                 <span className="font-medium text-gray-600">Status:</span>{" "}
                 <span
-                  className={`px-2 py-1 rounded-full text-xs font-bold shadow-sm align-middle ${(() => {
-                    switch ((selectedRequest.status || "").toLowerCase()) {
-                      case "menunggu":
-                        return "bg-yellow-100 text-yellow-700";
-                      case "disetujui":
-                        return "bg-green-100 text-green-700";
-                      case "disetujui sebagian":
-                        return "bg-orange-100 text-orange-700";
-                      case "ditolak":
-                        return "bg-red-100 text-red-700";
-                      default:
-                        return "bg-gray-100 text-gray-600";
-                    }
-                  })()}`}
+                  className={`px-2 py-1 rounded-full text-xs font-bold shadow-sm align-middle ${getStatusClass(
+                    selectedRequest.status
+                  )}`}
                 >
                   {selectedRequest.status || "Menunggu"}
                 </span>
@@ -143,6 +217,7 @@ const AdminDashboard = () => {
                   Daftar Barang:
                 </span>
                 <ul className="list-disc ml-6 mt-1 space-y-1">
+                  {/* Menampilkan daftar barang yang diminta */}
                   {selectedRequest.details.map((d) => (
                     <li key={d.id} className="text-gray-800">
                       <span className="font-semibold">

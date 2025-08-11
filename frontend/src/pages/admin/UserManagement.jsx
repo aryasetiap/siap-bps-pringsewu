@@ -1,3 +1,16 @@
+/**
+ * Halaman Manajemen Pengguna SIAP BPS Pringsewu.
+ *
+ * Digunakan untuk mengelola data akun pengguna, termasuk penambahan, pengeditan, penghapusan (nonaktif), dan pengubahan status aktif/nonaktif.
+ * Fitur utama: pencarian, filter, statistik pengguna, dan modal konfirmasi.
+ *
+ * Komponen utama:
+ * - UserTable: Tabel daftar pengguna
+ * - UserFormModal: Modal tambah/edit pengguna
+ *
+ * Konteks bisnis: Pengelolaan akun pegawai/admin untuk akses sistem SIAP (Statistik Integrasi dan Analisis Pringsewu).
+ */
+
 import React, { useState, useEffect } from "react";
 import {
   MagnifyingGlassIcon,
@@ -12,11 +25,13 @@ import UserFormModal from "../../components/user/UserFormModal";
 import * as userService from "../../services/userService";
 import { toast } from "react-toastify";
 
+// Opsi role pengguna
 const roleOptions = [
   { value: "admin", label: "Administrator" },
   { value: "pegawai", label: "Pegawai" },
 ];
 
+// Opsi unit kerja pengguna
 const unitKerjaOptions = [
   "Kepala Kantor",
   "Bagian Umum",
@@ -27,7 +42,26 @@ const unitKerjaOptions = [
   "Integrasi Pengolahan dan Diseminasi Statistik",
 ];
 
+/**
+ * Komponen utama untuk manajemen pengguna.
+ *
+ * State:
+ * - users: Daftar semua pengguna
+ * - filteredUsers: Daftar pengguna setelah filter dan pencarian
+ * - searchTerm: Kata kunci pencarian
+ * - filterRole: Filter berdasarkan role
+ * - filterStatus: Filter berdasarkan status aktif/nonaktif
+ * - showModal: Status modal tambah/edit
+ * - modalMode: Mode modal ("add" atau "edit")
+ * - selectedUser: Data pengguna yang dipilih untuk edit
+ * - loading: Status loading proses
+ * - formData: Data form tambah/edit pengguna
+ * - showConfirmModal: Status modal konfirmasi
+ * - confirmAction: Jenis aksi konfirmasi ("delete" atau "toggle")
+ * - confirmUser: Data pengguna yang dikonfirmasi
+ */
 const UserManagement = () => {
+  // State utama
   const [users, setUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -51,15 +85,24 @@ const UserManagement = () => {
   const [confirmAction, setConfirmAction] = useState(null);
   const [confirmUser, setConfirmUser] = useState(null);
 
-  // Fetch users from API
+  /**
+   * Mengambil data semua pengguna dari API saat komponen pertama kali di-mount.
+   */
   useEffect(() => {
     fetchUsers();
   }, []);
 
+  /**
+   * Fungsi untuk mengambil data pengguna dari API dan mapping ke format frontend.
+   *
+   * Return:
+   * - void
+   */
   const fetchUsers = async () => {
     setLoading(true);
     try {
       const res = await userService.getAllUsers();
+      // Mapping data API ke struktur frontend
       const mapped = res.data.map((u) => ({
         id: u.id,
         nama: u.nama,
@@ -70,7 +113,7 @@ const UserManagement = () => {
         foto: u.foto || "",
         createdAt: u.created_at,
         updatedAt: u.updated_at,
-        lastLogin: u.last_login || "-", // jika ada
+        lastLogin: u.last_login || "-", // default jika tidak ada
       }));
       setUsers(mapped);
     } catch (err) {
@@ -79,7 +122,18 @@ const UserManagement = () => {
     setLoading(false);
   };
 
-  // Filter and search
+  /**
+   * Melakukan filter dan pencarian pada daftar pengguna setiap kali state terkait berubah.
+   *
+   * Parameter:
+   * - searchTerm (string): Kata kunci pencarian
+   * - filterRole (string): Role yang difilter
+   * - filterStatus (string): Status yang difilter
+   * - users (array): Daftar pengguna
+   *
+   * Return:
+   * - void
+   */
   useEffect(() => {
     let filtered = users;
     if (searchTerm) {
@@ -99,13 +153,26 @@ const UserManagement = () => {
     setFilteredUsers(filtered);
   }, [searchTerm, filterRole, filterStatus, users]);
 
-  // Input handler
+  /**
+   * Handler untuk perubahan input form tambah/edit pengguna.
+   *
+   * Parameter:
+   * - e (SyntheticEvent): Event perubahan input
+   *
+   * Return:
+   * - void
+   */
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Modal handlers
+  /**
+   * Membuka modal tambah pengguna dan reset form.
+   *
+   * Return:
+   * - void
+   */
   const openAddModal = () => {
     setModalMode("add");
     setFormData({
@@ -118,6 +185,16 @@ const UserManagement = () => {
     });
     setShowModal(true);
   };
+
+  /**
+   * Membuka modal edit pengguna dan mengambil detail pengguna dari API.
+   *
+   * Parameter:
+   * - user (object): Data pengguna yang akan diedit
+   *
+   * Return:
+   * - void
+   */
   const openEditModal = async (user) => {
     setModalMode("edit");
     setLoading(true);
@@ -141,20 +218,40 @@ const UserManagement = () => {
     setLoading(false);
   };
 
+  /**
+   * Membuka modal konfirmasi untuk aksi delete/toggle status.
+   *
+   * Parameter:
+   * - action (string): Jenis aksi ("delete" atau "toggle")
+   * - user (object): Data pengguna yang akan dikonfirmasi
+   *
+   * Return:
+   * - void
+   */
   const openConfirmModal = (action, user) => {
-    setConfirmAction(action); // "delete" | "toggle"
+    setConfirmAction(action);
     setConfirmUser(user);
     setShowConfirmModal(true);
   };
 
-  // CRUD handlers
+  /**
+   * Handler submit form tambah/edit pengguna.
+   * Melakukan validasi manual sebelum request ke API.
+   *
+   * Parameter:
+   * - e (SyntheticEvent): Event submit form
+   *
+   * Return:
+   * - void
+   */
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // Validasi manual
+    // Validasi field wajib
     if (!formData.nama || !formData.role || !formData.unitKerja) {
       toast.error("Semua field wajib diisi!");
       return;
     }
+    // Validasi field khusus tambah
     if (
       modalMode === "add" &&
       (!formData.username || !formData.password || formData.password.length < 6)
@@ -179,9 +276,9 @@ const UserManagement = () => {
         await userService.createUser(payload);
         toast.success("Pengguna berhasil ditambahkan!");
       } else {
+        // Saat edit, username tidak boleh diubah
         payload = {
           nama: formData.nama,
-          // username: JANGAN dikirim saat edit!
           password: formData.password || undefined,
           role: formData.role,
           unit_kerja: formData.unitKerja,
@@ -201,6 +298,12 @@ const UserManagement = () => {
     setLoading(false);
   };
 
+  /**
+   * Handler untuk menghapus (menonaktifkan) pengguna.
+   *
+   * Return:
+   * - void
+   */
   const handleDeleteUser = async () => {
     setLoading(true);
     try {
@@ -214,6 +317,12 @@ const UserManagement = () => {
     setShowConfirmModal(false);
   };
 
+  /**
+   * Handler untuk mengubah status aktif/nonaktif pengguna.
+   *
+   * Return:
+   * - void
+   */
   const handleToggleStatus = async () => {
     setLoading(true);
     try {
@@ -229,15 +338,43 @@ const UserManagement = () => {
     setShowConfirmModal(false);
   };
 
-  // Badge helpers
+  /**
+   * Mendapatkan warna badge berdasarkan role.
+   *
+   * Parameter:
+   * - role (string): Role pengguna
+   *
+   * Return:
+   * - string: Kelas warna Tailwind
+   */
   const getRoleColor = (role) =>
     role === "admin"
       ? "text-purple-700 bg-purple-100"
       : "text-blue-700 bg-blue-100";
+
+  /**
+   * Mendapatkan warna badge berdasarkan status.
+   *
+   * Parameter:
+   * - status (string): Status pengguna
+   *
+   * Return:
+   * - string: Kelas warna Tailwind
+   */
   const getStatusColor = (status) =>
     status === "aktif"
       ? "text-green-700 bg-green-100"
       : "text-red-700 bg-red-100";
+
+  /**
+   * Format tanggal ke format lokal Indonesia.
+   *
+   * Parameter:
+   * - dateString (string): Tanggal dalam format ISO
+   *
+   * Return:
+   * - string: Tanggal terformat (dd-mm-yyyy)
+   */
   const formatDate = (dateString) => {
     if (dateString === "-") return "-";
     const date = new Date(dateString);
@@ -248,6 +385,7 @@ const UserManagement = () => {
     });
   };
 
+  // Render UI
   return (
     <div className="p-6">
       {/* Header */}
@@ -258,7 +396,7 @@ const UserManagement = () => {
       <p className="text-gray-600 mb-6">
         Kelola akun pengguna sistem SIAP BPS Pringsewu secara efisien dan aman.
       </p>
-      {/* Statistics Cards */}
+      {/* Statistik Pengguna */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
         <div className="bg-white p-6 rounded-xl shadow border flex items-center">
           <div className="flex-1">
@@ -303,7 +441,7 @@ const UserManagement = () => {
           </div>
         </div>
       </div>
-      {/* Controls */}
+      {/* Kontrol Filter dan Tambah */}
       <div className="mb-6 bg-white p-4 rounded-xl shadow flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
         <div className="relative flex-1 md:max-w-md">
           <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -345,7 +483,7 @@ const UserManagement = () => {
           </button>
         </div>
       </div>
-      {/* Table */}
+      {/* Tabel Pengguna */}
       <UserTable
         users={filteredUsers}
         getRoleColor={getRoleColor}
@@ -355,7 +493,7 @@ const UserManagement = () => {
         onToggleStatus={(user) => openConfirmModal("toggle", user)}
         onDelete={(user) => openConfirmModal("delete", user)}
       />
-      {/* Add/Edit Modal */}
+      {/* Modal Tambah/Edit Pengguna */}
       <UserFormModal
         show={showModal}
         mode={modalMode}
@@ -367,7 +505,7 @@ const UserManagement = () => {
         onClose={() => setShowModal(false)}
         onSubmit={handleSubmit}
       />
-      {/* Modal Konfirmasi */}
+      {/* Modal Konfirmasi Aksi */}
       {showConfirmModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 animate-fadeIn">
           <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md relative">

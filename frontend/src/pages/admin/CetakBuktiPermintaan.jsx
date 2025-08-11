@@ -1,3 +1,12 @@
+/**
+ * File CetakBuktiPermintaan.jsx
+ *
+ * Halaman ini digunakan untuk menampilkan dan mengunduh bukti permintaan barang pada aplikasi SIAP.
+ * Fitur utama: menampilkan detail permintaan, mengunduh bukti permintaan dalam format PDF, dan mencetak halaman.
+ *
+ * Konteks bisnis: Digunakan oleh admin untuk verifikasi dan dokumentasi permintaan barang.
+ */
+
 import React, { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import * as permintaanService from "../../services/permintaanService";
@@ -12,23 +21,65 @@ import {
   DocumentArrowDownIcon,
 } from "@heroicons/react/24/outline";
 
+/**
+ * Komponen utama untuk halaman Cetak Bukti Permintaan.
+ *
+ * Menampilkan detail permintaan barang, tombol unduh PDF, dan tombol print.
+ *
+ * Parameter: Tidak menerima parameter langsung, menggunakan useParams untuk mengambil id permintaan.
+ *
+ * Return:
+ * - JSX: Tampilan halaman cetak bukti permintaan.
+ */
 const CetakBuktiPermintaan = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
+  // State untuk menyimpan data permintaan, status loading, error, dan loading PDF
   const [permintaan, setPermintaan] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [pdfLoading, setPdfLoading] = useState(false);
 
-  // Use useCallback to memoize the fetchPermintaan function
+  /**
+   * Fungsi untuk memformat status permintaan agar lebih mudah dipahami oleh admin.
+   *
+   * Parameter:
+   * - status (string): Status asli dari permintaan barang.
+   *
+   * Return:
+   * - string: Status yang sudah diformat untuk tampilan.
+   */
+  const formatStatus = (status) => {
+    if (!status) return "Menunggu";
+    switch (status.toLowerCase()) {
+      case "setuju":
+        return "Disetujui";
+      case "sebagian":
+        return "Disetujui Sebagian";
+      case "tolak":
+        return "Ditolak";
+      default:
+        // Jika status tidak dikenali, tampilkan dengan huruf kapital di awal
+        return status.charAt(0).toUpperCase() + status.slice(1);
+    }
+  };
+
+  /**
+   * Fungsi untuk mengambil detail permintaan barang berdasarkan id.
+   * Data yang diambil akan ditransformasi agar sesuai dengan kebutuhan tampilan.
+   *
+   * Parameter: Tidak ada (menggunakan id dari useParams)
+   *
+   * Return: Tidak ada (mengubah state permintaan, loading, dan error)
+   */
   const fetchPermintaan = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
       const response = await permintaanService.getPermintaanById(id);
 
-      // Transformasi data jika perlu
+      // Transformasi data permintaan agar sesuai dengan kebutuhan preview
       const transformedData = {
         ...response.data,
         nomorPermintaan:
@@ -49,6 +100,7 @@ const CetakBuktiPermintaan = () => {
 
       setPermintaan(transformedData);
     } catch (err) {
+      // Error handling jika gagal mengambil data permintaan
       console.error("Error fetching permintaan:", err);
       setError(
         "Gagal memuat detail permintaan. " +
@@ -60,36 +112,27 @@ const CetakBuktiPermintaan = () => {
     }
   }, [id]);
 
+  // Ambil data permintaan saat komponen pertama kali dirender atau id berubah
   useEffect(() => {
     fetchPermintaan();
   }, [fetchPermintaan]);
 
-  // Format status untuk tampilan yang lebih baik
-  const formatStatus = (status) => {
-    if (!status) return "Menunggu";
-
-    switch (status.toLowerCase()) {
-      case "setuju":
-        return "Disetujui";
-      case "sebagian":
-        return "Disetujui Sebagian";
-      case "tolak":
-        return "Ditolak";
-      default:
-        return status.charAt(0).toUpperCase() + status.slice(1);
-    }
-  };
-
-  // Fungsi untuk mengunduh PDF dari API
+  /**
+   * Fungsi untuk mengunduh bukti permintaan dalam format PDF dari API.
+   *
+   * Parameter: Tidak ada (menggunakan id dari useParams dan data permintaan dari state)
+   *
+   * Return: Tidak ada (mengubah state pdfLoading dan memicu download file)
+   */
   const handleCetakPDF = async () => {
     setPdfLoading(true);
     try {
       const response = await permintaanService.getPermintaanPDF(id);
 
-      // Buat URL untuk download
+      // Membuat URL objek untuk file PDF yang diterima dari API
       const url = window.URL.createObjectURL(new Blob([response.data]));
 
-      // Buat element link untuk download
+      // Membuat elemen link untuk memicu download file PDF
       const link = document.createElement("a");
       link.href = url;
       link.setAttribute(
@@ -101,12 +144,13 @@ const CetakBuktiPermintaan = () => {
       document.body.appendChild(link);
       link.click();
 
-      // Cleanup
+      // Membersihkan URL objek setelah download selesai
       window.URL.revokeObjectURL(url);
       link.remove();
 
       toast.success("PDF berhasil diunduh");
     } catch (err) {
+      // Error handling jika gagal mengunduh PDF
       console.error("Error downloading PDF:", err);
       toast.error(
         "Gagal mengunduh PDF. " + (err.response?.data?.message || err.message)
@@ -116,14 +160,21 @@ const CetakBuktiPermintaan = () => {
     }
   };
 
-  // Fungsi kembali ke halaman sebelumnya
+  /**
+   * Fungsi untuk kembali ke halaman sebelumnya.
+   *
+   * Parameter: Tidak ada
+   *
+   * Return: Tidak ada (navigasi ke halaman sebelumnya)
+   */
   const handleBack = () => {
     navigate(-1);
   };
 
+  // Render UI sesuai dengan status loading, error, dan data permintaan
   return (
     <div className="p-6 space-y-6">
-      {/* Header */}
+      {/* Header halaman */}
       <div className="mb-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
@@ -149,13 +200,14 @@ const CetakBuktiPermintaan = () => {
         </div>
       </div>
 
-      {/* Loading State */}
+      {/* State loading */}
       {loading ? (
         <div className="flex flex-col items-center justify-center p-12 bg-white rounded-xl shadow-lg border border-gray-100 animate-fadeIn">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
           <p className="text-gray-600 font-medium">Memuat data permintaan...</p>
         </div>
       ) : error ? (
+        // State error
         <div className="flex flex-col items-center justify-center p-12 bg-white rounded-xl shadow-lg border border-gray-100 animate-fadeIn">
           <div className="bg-red-100 p-3 rounded-full mb-4">
             <ExclamationCircleIcon className="w-8 h-8 text-red-600" />
@@ -173,13 +225,14 @@ const CetakBuktiPermintaan = () => {
           </button>
         </div>
       ) : permintaan ? (
+        // State data permintaan berhasil diambil
         <div className="space-y-6">
           {/* Preview Bukti Permintaan */}
           <div className="bg-white rounded-xl shadow-lg overflow-hidden">
             <BuktiPermintaanPreview permintaan={permintaan} />
           </div>
 
-          {/* Action Buttons */}
+          {/* Tombol aksi: Unduh PDF dan Print */}
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <button
               onClick={handleCetakPDF}
@@ -231,6 +284,7 @@ const CetakBuktiPermintaan = () => {
           </div>
         </div>
       ) : (
+        // State jika data permintaan tidak ditemukan
         <div className="flex flex-col items-center justify-center p-12 bg-white rounded-xl shadow-lg border border-gray-100 animate-fadeIn">
           <div className="bg-gray-100 p-3 rounded-full mb-4">
             <ExclamationCircleIcon className="w-8 h-8 text-gray-600" />

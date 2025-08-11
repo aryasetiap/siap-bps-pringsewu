@@ -1,3 +1,13 @@
+/**
+ * File: RequestVerification.jsx
+ *
+ * Halaman ini digunakan untuk mengelola dan memverifikasi permintaan barang dari pegawai.
+ * Fitur utama meliputi: pencarian, filter status, statistik dashboard, grafik tren permintaan bulanan,
+ * serta modal detail dan verifikasi permintaan.
+ *
+ * Aplikasi SIAP - Sistem Informasi Administrasi Pengelolaan Barang BPS Pringsewu
+ */
+
 import React, { useState, useEffect, useCallback } from "react";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import RequestTable from "../../components/permintaan/RequestTable";
@@ -15,6 +25,8 @@ import {
   Legend,
 } from "chart.js";
 import { Bar } from "react-chartjs-2";
+
+// Registrasi komponen ChartJS untuk grafik tren permintaan bulanan
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -24,13 +36,28 @@ ChartJS.register(
   Legend
 );
 
-const statusOptions = [
+// Daftar opsi status permintaan barang
+const STATUS_OPTIONS = [
   { value: "Menunggu", label: "Menunggu", color: "yellow" },
   { value: "Disetujui", label: "Disetujui", color: "green" },
   { value: "Disetujui Sebagian", label: "Disetujui Sebagian", color: "orange" },
   { value: "Ditolak", label: "Ditolak", color: "red" },
 ];
 
+/**
+ * Komponen StatCard
+ * Menampilkan kartu statistik dashboard SIAP.
+ *
+ * Parameter:
+ * - color (string): Warna utama kartu
+ * - icon (ReactNode): Ikon yang ditampilkan
+ * - label (string): Label statistik
+ * - value (number|string): Nilai statistik
+ * - info (string): Informasi tambahan
+ *
+ * Return:
+ * - ReactElement: Kartu statistik
+ */
 function StatCard({ color, icon, label, value, info }) {
   const colorMap = {
     blue: "text-blue-700",
@@ -60,7 +87,15 @@ function StatCard({ color, icon, label, value, info }) {
   );
 }
 
+/**
+ * Komponen utama RequestVerification
+ * Mengelola state, fetch data, filter, dan logika verifikasi permintaan barang.
+ *
+ * Return:
+ * - ReactElement: Halaman verifikasi permintaan barang
+ */
 const RequestVerification = () => {
+  // State utama untuk data permintaan, filter, modal, dan statistik
   const [permintaan, setPermintaan] = useState([]);
   const [filteredPermintaan, setFilteredPermintaan] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -70,6 +105,7 @@ const RequestVerification = () => {
   const [selectedPermintaan, setSelectedPermintaan] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  // State untuk data verifikasi permintaan
   const [verifikasiData, setVerifikasiData] = useState({
     keputusan: "",
     catatanVerifikasi: "",
@@ -82,7 +118,15 @@ const RequestVerification = () => {
   const [limit, setLimit] = useState(20);
   const [totalData, setTotalData] = useState(0);
 
-  // Ubah fetchPermintaan menjadi useCallback agar bisa ditambahkan ke dependencies
+  /**
+   * Fungsi fetchPermintaan
+   * Mengambil data permintaan barang dari backend sesuai filter dan pagination.
+   *
+   * Parameter: -
+   *
+   * Return:
+   * - void (mengubah state permintaan dan totalData)
+   */
   const fetchPermintaan = useCallback(async () => {
     setLoading(true);
     try {
@@ -98,6 +142,7 @@ const RequestVerification = () => {
       }
 
       const res = await permintaanService.getAllPermintaan(params);
+      // Mapping data permintaan agar konsisten untuk kebutuhan UI dan modal
       const mapped = (res.data.data || []).map((p) => ({
         ...p,
         items: (p.details || []).map((d) => ({
@@ -128,28 +173,61 @@ const RequestVerification = () => {
       );
     }
     setLoading(false);
-  }, [page, limit, filterStatus]); // Tambahkan dependencies
+  }, [page, limit, filterStatus]);
 
+  /**
+   * Fungsi fetchStatistik
+   * Mengambil data statistik dashboard SIAP dari backend.
+   *
+   * Parameter: -
+   *
+   * Return:
+   * - void (mengubah state statistik)
+   */
   const fetchStatistik = async () => {
     try {
       const res = await permintaanService.getDashboardStatistik();
       setStatistik(res.data);
-    } catch (err) {}
+    } catch (err) {
+      // Error tidak ditampilkan agar UI tetap smooth
+    }
   };
 
+  /**
+   * Fungsi fetchTrenPermintaan
+   * Mengambil data tren permintaan bulanan untuk grafik.
+   *
+   * Parameter: -
+   *
+   * Return:
+   * - void (mengubah state trenPermintaan)
+   */
   const fetchTrenPermintaan = async () => {
     try {
       const res = await permintaanService.getTrenPermintaanBulanan();
       setTrenPermintaan(res.data);
-    } catch (err) {}
+    } catch (err) {
+      // Error tidak ditampilkan agar UI tetap smooth
+    }
   };
 
+  // Fetch data utama saat komponen mount atau filter berubah
   useEffect(() => {
     fetchPermintaan();
     fetchStatistik();
     fetchTrenPermintaan();
-  }, [fetchPermintaan]); // Tambahkan fetchPermintaan sebagai dependency
+  }, [fetchPermintaan]);
 
+  /**
+   * Fungsi handleLimitChange
+   * Mengubah jumlah data per halaman pada tabel permintaan.
+   *
+   * Parameter:
+   * - newLimit (number|string): Jumlah data baru per halaman
+   *
+   * Return:
+   * - void (mengubah state limit dan page)
+   */
   const handleLimitChange = (newLimit) => {
     const limitValue = parseInt(newLimit);
     if (Number.isInteger(limitValue) && limitValue > 0) {
@@ -158,6 +236,14 @@ const RequestVerification = () => {
     }
   };
 
+  /**
+   * Efek filter permintaan berdasarkan pencarian dan status.
+   *
+   * Parameter: -
+   *
+   * Return:
+   * - void (mengubah state filteredPermintaan)
+   */
   useEffect(() => {
     let filtered = permintaan;
     if (searchTerm) {
@@ -181,7 +267,16 @@ const RequestVerification = () => {
     setFilteredPermintaan(filtered);
   }, [searchTerm, filterStatus, permintaan]);
 
-  // Modal handlers
+  /**
+   * Fungsi openDetailModal
+   * Membuka modal detail permintaan barang.
+   *
+   * Parameter:
+   * - item (object): Data permintaan yang dipilih
+   *
+   * Return:
+   * - void (mengubah state selectedPermintaan dan showDetailModal)
+   */
   const openDetailModal = async (item) => {
     const id = Number(item?.id);
     if (!item || !id || !Number.isInteger(id) || id <= 0) {
@@ -191,6 +286,7 @@ const RequestVerification = () => {
     setLoading(true);
     try {
       const res = await permintaanService.getPermintaanById(id);
+      // Mapping detail permintaan agar konsisten untuk modal
       const permintaanDetail = {
         ...res.data,
         items: (res.data.details || res.data.items || []).map((d) => ({
@@ -221,6 +317,16 @@ const RequestVerification = () => {
     setLoading(false);
   };
 
+  /**
+   * Fungsi openVerifikasiModal
+   * Membuka modal verifikasi permintaan barang.
+   *
+   * Parameter:
+   * - item (object): Data permintaan yang dipilih
+   *
+   * Return:
+   * - void (mengubah state selectedPermintaan, verifikasiData, dan showVerifikasiModal)
+   */
   const openVerifikasiModal = async (item) => {
     const id = Number(item?.id);
     if (!item || !id || !Number.isInteger(id) || id <= 0) {
@@ -272,7 +378,16 @@ const RequestVerification = () => {
     setLoading(false);
   };
 
-  // Verifikasi handlers
+  /**
+   * Fungsi handleVerifikasiChange
+   * Mengubah data input pada modal verifikasi (keputusan/catatan).
+   *
+   * Parameter:
+   * - e (SyntheticEvent): Event input
+   *
+   * Return:
+   * - void (mengubah state verifikasiData)
+   */
   const handleVerifikasiChange = (e) => {
     const { name, value } = e.target;
     setVerifikasiData((prev) => ({
@@ -280,6 +395,18 @@ const RequestVerification = () => {
       [name]: value,
     }));
   };
+
+  /**
+   * Fungsi handleItemQuantityChange
+   * Mengubah jumlah disetujui pada item permintaan di modal verifikasi.
+   *
+   * Parameter:
+   * - itemId (number): ID detail barang
+   * - newQuantity (number|string): Jumlah baru yang disetujui
+   *
+   * Return:
+   * - void (mengubah state verifikasiData.items)
+   */
   const handleItemQuantityChange = (itemId, newQuantity) => {
     setVerifikasiData((prev) => ({
       ...prev,
@@ -290,6 +417,17 @@ const RequestVerification = () => {
       ),
     }));
   };
+
+  /**
+   * Fungsi handleKeputusanChange
+   * Mengubah keputusan verifikasi dan update jumlah disetujui pada semua item.
+   *
+   * Parameter:
+   * - keputusan (string): Keputusan verifikasi ("Disetujui", "Ditolak", "Disetujui Sebagian")
+   *
+   * Return:
+   * - void (mengubah state verifikasiData)
+   */
   const handleKeputusanChange = (keputusan) => {
     let apiKeputusan = keputusan;
     if (keputusan === "Disetujui") apiKeputusan = "setuju";
@@ -315,6 +453,17 @@ const RequestVerification = () => {
     }));
   };
 
+  /**
+   * Fungsi handleVerifikasiSubmit
+   * Submit verifikasi permintaan barang ke backend.
+   * Validasi bisnis: jumlah disetujui tidak negatif, tidak melebihi diminta/stok.
+   *
+   * Parameter:
+   * - e (SyntheticEvent): Event submit form
+   *
+   * Return:
+   * - void (mengirim data ke backend, update UI)
+   */
   const handleVerifikasiSubmit = async (e) => {
     e.preventDefault();
     if (!verifikasiData.keputusan) {
@@ -360,8 +509,18 @@ const RequestVerification = () => {
     setLoading(false);
   };
 
+  /**
+   * Fungsi getStatusColor
+   * Mendapatkan warna status permintaan untuk kebutuhan UI.
+   *
+   * Parameter:
+   * - status (string): Status permintaan barang
+   *
+   * Return:
+   * - string: Kelas warna Tailwind
+   */
   const getStatusColor = (status) => {
-    const statusObj = statusOptions.find((s) => s.value === status);
+    const statusObj = STATUS_OPTIONS.find((s) => s.value === status);
     const colorMap = {
       yellow: "text-yellow-700 bg-yellow-100",
       green: "text-green-700 bg-green-100",
@@ -370,6 +529,17 @@ const RequestVerification = () => {
     };
     return colorMap[statusObj?.color] || "text-gray-700 bg-gray-100";
   };
+
+  /**
+   * Fungsi getRowBackgroundColor
+   * Mendapatkan warna latar baris pada modal verifikasi berdasarkan keputusan dan stok.
+   *
+   * Parameter:
+   * - item (object): Data item barang
+   *
+   * Return:
+   * - string: Kelas warna Tailwind
+   */
   const getRowBackgroundColor = (item) => {
     if (verifikasiData.keputusan === "tolak") {
       return "bg-red-50 border-red-200";
@@ -387,6 +557,17 @@ const RequestVerification = () => {
       ? "bg-red-50 border-red-200"
       : "bg-white";
   };
+
+  /**
+   * Fungsi formatDate
+   * Format tanggal permintaan barang ke format Indonesia.
+   *
+   * Parameter:
+   * - dateString (string): Tanggal dalam format ISO
+   *
+   * Return:
+   * - string: Tanggal terformat (DD/MM/YYYY)
+   */
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("id-ID", {
@@ -396,6 +577,7 @@ const RequestVerification = () => {
     });
   };
 
+  // Data untuk grafik tren permintaan bulanan
   const trenChartData = {
     labels: trenPermintaan.map((d) => d.bulan),
     datasets: [
@@ -408,6 +590,7 @@ const RequestVerification = () => {
     ],
   };
 
+  // Render UI utama halaman verifikasi permintaan barang
   return (
     <div className="p-6">
       {/* Header */}
@@ -561,7 +744,7 @@ const RequestVerification = () => {
             className="px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 bg-gray-50"
           >
             <option value="">Semua Status</option>
-            {statusOptions.map((status) => (
+            {STATUS_OPTIONS.map((status) => (
               <option key={status.value} value={status.value}>
                 {status.label}
               </option>
