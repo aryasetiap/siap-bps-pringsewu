@@ -66,46 +66,6 @@ describe('UserService', () => {
     expect(service).toBeDefined();
   });
 
-  describe('create', () => {
-    /**
-     * Fungsi ini menguji pembuatan user baru pada aplikasi SIAP.
-     *
-     * Parameter:
-     * - createUserDto (object): Data user yang akan dibuat.
-     *
-     * Return:
-     * - User: User yang berhasil dibuat.
-     */
-    it('should create a new user successfully', async () => {
-      (repo.findOne as jest.Mock).mockResolvedValue(undefined);
-      (repo.create as jest.Mock).mockReturnValue(mockUser);
-      (repo.save as jest.Mock).mockResolvedValue(mockUser);
-
-      const result = await service.create(createUserDto as any);
-
-      expect(repo.create).toHaveBeenCalled();
-      expect(repo.save).toHaveBeenCalledWith(mockUser);
-      expect(result).toEqual(mockUser);
-    });
-
-    /**
-     * Fungsi ini menguji error jika username sudah terdaftar.
-     *
-     * Parameter:
-     * - createUserDto (object): Data user yang akan dibuat.
-     *
-     * Return:
-     * - Error: BadRequestException jika username sudah ada.
-     */
-    it('should throw BadRequestException if username already exists', async () => {
-      (repo.findOne as jest.Mock).mockResolvedValue(mockUser);
-
-      await expect(service.create(createUserDto as any)).rejects.toThrow(
-        new BadRequestException('Username sudah terdaftar'),
-      );
-    });
-  });
-
   describe('update', () => {
     /**
      * Fungsi ini menguji update data user pada aplikasi SIAP.
@@ -241,6 +201,76 @@ describe('UserService', () => {
 
       const result = await service.update(1, { status_aktif: true } as any);
       expect(result.status_aktif).toBe(true);
+    });
+
+    it('should update multiple fields', async () => {
+      const updatedUser = { ...mockUser, nama: 'Updated', unit_kerja: 'IT' };
+      (repo.findOne as jest.Mock).mockResolvedValue(mockUser);
+      (repo.save as jest.Mock).mockResolvedValue(updatedUser);
+
+      const result = await service.update(1, { nama: 'Updated', unit_kerja: 'IT' } as any);
+      expect(result.nama).toBe('Updated');
+      expect(result.unit_kerja).toBe('IT');
+    });
+
+    it('should update foto field', async () => {
+      const updatedUser = { ...mockUser, foto: '/uploads/profile/1.jpg' };
+      (repo.findOne as jest.Mock).mockResolvedValue(mockUser);
+      (repo.save as jest.Mock).mockResolvedValue(updatedUser);
+
+      const result = await service.update(1, { foto: '/uploads/profile/1.jpg' } as any);
+      expect(result.foto).toBe('/uploads/profile/1.jpg');
+    });
+  });
+
+  describe('create', () => {
+    /**
+     * Fungsi ini menguji pembuatan user baru pada aplikasi SIAP.
+     *
+     * Parameter:
+     * - createUserDto (object): Data user yang akan dibuat.
+     *
+     * Return:
+     * - User: User yang berhasil dibuat.
+     */
+    it('should create a new user successfully', async () => {
+      (repo.findOne as jest.Mock).mockResolvedValue(undefined);
+      (repo.create as jest.Mock).mockReturnValue(mockUser);
+      (repo.save as jest.Mock).mockResolvedValue(mockUser);
+
+      const result = await service.create(createUserDto as any);
+
+      expect(repo.create).toHaveBeenCalled();
+      expect(repo.save).toHaveBeenCalledWith(mockUser);
+      expect(result).toEqual(mockUser);
+    });
+
+    /**
+     * Fungsi ini menguji error jika username sudah terdaftar.
+     *
+     * Parameter:
+     * - createUserDto (object): Data user yang akan dibuat.
+     *
+     * Return:
+     * - Error: BadRequestException jika username sudah ada.
+     */
+    it('should throw BadRequestException if username already exists', async () => {
+      (repo.findOne as jest.Mock).mockResolvedValue(mockUser);
+
+      await expect(service.create(createUserDto as any)).rejects.toThrow(
+        new BadRequestException('Username sudah terdaftar'),
+      );
+    });
+
+    it('should create user with optional fields', async () => {
+      (repo.findOne as jest.Mock).mockResolvedValue(undefined);
+      (repo.create as jest.Mock).mockReturnValue({ ...mockUser, unit_kerja: 'IT', foto: 'foto.jpg' });
+      (repo.save as jest.Mock).mockResolvedValue({ ...mockUser, unit_kerja: 'IT', foto: 'foto.jpg' });
+
+      const dto = { ...createUserDto, unit_kerja: 'IT', foto: 'foto.jpg' };
+      const result = await service.create(dto as any);
+      expect(result.unit_kerja).toBe('IT');
+      expect(result.foto).toBe('foto.jpg');
     });
   });
 

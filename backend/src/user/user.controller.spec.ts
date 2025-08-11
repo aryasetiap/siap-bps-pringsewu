@@ -405,4 +405,37 @@ describe('UserController', () => {
       message: 'Data khusus pegawai',
     });
   });
+
+  it('should soft delete user by username', async () => {
+    service.findByUsername = jest.fn().mockResolvedValue(mockUser);
+    service.softDelete = jest
+      .fn()
+      .mockResolvedValue({ ...mockUser, status_aktif: false });
+    expect(await controller.deleteByUsername({ username: 'testuser' })).toEqual(
+      { ...mockUser, status_aktif: false },
+    );
+    expect(service.findByUsername).toHaveBeenCalledWith('testuser');
+    expect(service.softDelete).toHaveBeenCalledWith(1);
+  });
+
+  it('should return message if user not found by username', async () => {
+    service.findByUsername = jest.fn().mockResolvedValue(null);
+    expect(await controller.deleteByUsername({ username: 'notfound' })).toEqual(
+      { message: 'User tidak ditemukan' },
+    );
+    expect(service.findByUsername).toHaveBeenCalledWith('notfound');
+  });
+
+  it('should upload foto and update user', async () => {
+    const req = { user: { userId: 1 } } as any;
+    const file = { filename: '1-123.jpg' } as any;
+    service.update = jest
+      .fn()
+      .mockResolvedValue({ ...mockUser, foto: '/uploads/profile/1-123.jpg' });
+    const result = await controller.uploadFotoProfile(req, file);
+    expect(result.foto).toBe('/uploads/profile/1-123.jpg');
+    expect(service.update).toHaveBeenCalledWith(1, {
+      foto: '/uploads/profile/1-123.jpg',
+    });
+  });
 });
