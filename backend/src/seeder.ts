@@ -126,6 +126,15 @@ async function seedUsers(dataSource: DataSource): Promise<User[]> {
       status_aktif: true,
       foto: 'https://ui-avatars.com/api/?name=Dewi+Lestari',
     },
+    {
+      nama: 'Nonaktif User',
+      username: 'nonaktif',
+      password: await bcrypt.hash('password', 10),
+      role: 'pegawai',
+      unit_kerja: 'Testing',
+      status_aktif: false,
+      foto: 'https://ui-avatars.com/api/?name=Nonaktif+User',
+    },
   ];
 
   return await userRepo.save(userRepo.create(users));
@@ -155,7 +164,7 @@ async function seedBarang(dataSource: DataSource): Promise<Barang[]> {
       nama_barang: `Barang Contoh ${i}`,
       deskripsi: `Deskripsi barang contoh ke-${i}`,
       satuan: satuanList[i % satuanList.length],
-      stok: Math.floor(Math.random() * 100),
+      stok: i === 5 ? 1 : Math.max(20, Math.floor(Math.random() * 100)), // BRG005 stok 1
       ambang_batas_kritis: Math.floor(Math.random() * 10) + 1,
       status_aktif: true,
       foto: undefined,
