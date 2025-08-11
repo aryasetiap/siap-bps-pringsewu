@@ -7,6 +7,10 @@
 import React, { useState } from "react";
 import { toast } from "react-toastify";
 import {
+  DocumentChartBarIcon,
+  ArrowPathIcon,
+} from "@heroicons/react/24/outline";
+import {
   getLaporanPenggunaanJSON,
   getLaporanPenggunaanPDF,
 } from "../../services/barangService";
@@ -28,6 +32,7 @@ const LaporanPeriodik = () => {
   // State untuk data hasil filter dan status loading
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState(null);
 
   /**
    * Fungsi untuk membangun query parameter dari filter yang dipilih.
@@ -68,6 +73,7 @@ const LaporanPeriodik = () => {
       const queryParams = buildQueryParams(startDate, endDate, unitKerja);
       const response = await getLaporanPenggunaanJSON(queryParams);
       setData(response.data);
+      setLastUpdated(new Date());
 
       // Notifikasi jika data kosong
       if (response.data.length === 0) {
@@ -178,11 +184,47 @@ const LaporanPeriodik = () => {
     }
   };
 
+  /**
+   * Fungsi untuk memformat tanggal menjadi format yang lebih mudah dibaca
+   *
+   * @param {Date} date - Objek tanggal
+   * @return {string} - Tanggal dalam format DD/MM/YYYY HH:MM
+   */
+  const formatDateTime = (date) => {
+    return date.toLocaleString("id-ID", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
   return (
-    <div>
-      <h1 className="text-2xl font-bold mb-4">
-        Laporan Periodik Penggunaan Barang
-      </h1>
+    <div className="animate-fadeIn">
+      {/* Header dengan icon dan judul */}
+      <div className="flex justify-between items-center mb-6">
+        <div className="flex items-center space-x-4">
+          <div className="bg-blue-100 text-blue-600 rounded-full p-3 shadow-md">
+            <DocumentChartBarIcon className="w-6 h-6" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">
+              Laporan Periodik Penggunaan Barang
+            </h1>
+            <p className="text-gray-600 mt-1">
+              Buat dan ekspor laporan penggunaan barang berdasarkan periode
+              waktu
+            </p>
+          </div>
+        </div>
+        {lastUpdated && (
+          <div className="text-sm text-gray-500">
+            Terakhir diperbarui: {formatDateTime(lastUpdated)}
+          </div>
+        )}
+      </div>
+
       {/* Form filter laporan periodik */}
       <LaporanFilterForm
         startDate={startDate}
@@ -195,8 +237,36 @@ const LaporanPeriodik = () => {
         onExportPDF={handleExportPDF}
         loading={loading}
       />
+
       {/* Tabel hasil laporan penggunaan barang */}
-      <LaporanTable data={data} loading={loading} />
+      <div className="mt-6 space-y-4">
+        <div className="flex justify-between items-center">
+          <h2 className="text-lg font-semibold text-gray-800">
+            {data.length > 0 ? (
+              <>
+                Hasil Laporan Penggunaan Barang
+                <span className="ml-2 text-sm font-normal text-gray-500">
+                  ({data.length} item)
+                </span>
+              </>
+            ) : lastUpdated ? (
+              "Tidak ada data penggunaan barang"
+            ) : (
+              "Pilih periode untuk melihat data"
+            )}
+          </h2>
+          {data.length > 0 && (
+            <button
+              onClick={handleFilter}
+              className="flex items-center px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
+            >
+              <ArrowPathIcon className="w-4 h-4 mr-2" />
+              Refresh
+            </button>
+          )}
+        </div>
+        <LaporanTable data={data} loading={loading} />
+      </div>
     </div>
   );
 };

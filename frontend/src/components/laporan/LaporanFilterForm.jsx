@@ -9,6 +9,7 @@
 
 import React, { useEffect, useState } from "react";
 import { getAllUsers } from "../../services/userService";
+import { FunnelIcon, DocumentArrowDownIcon } from "@heroicons/react/24/outline";
 
 /**
  * Komponen LaporanFilterForm
@@ -40,6 +41,7 @@ const LaporanFilterForm = ({
 }) => {
   // State untuk menyimpan daftar unit kerja unik
   const [unitKerjaList, setUnitKerjaList] = useState([]);
+  const [loadingUnitKerja, setLoadingUnitKerja] = useState(false);
 
   /**
    * Efek untuk mengambil daftar unit kerja dari API user.
@@ -56,26 +58,63 @@ const LaporanFilterForm = ({
      * Return: void
      */
     const fetchUnitKerja = async () => {
+      setLoadingUnitKerja(true);
       try {
         // Ambil data user dari API
         const response = await getAllUsers();
         // Ekstrak unit kerja unik dari data user
         const uniqueUnitKerja = [
-          ...new Set(response.data.map((user) => user.unit_kerja)),
-        ];
+          ...new Set(
+            response.data.map((user) => user.unit_kerja).filter(Boolean)
+          ),
+        ].sort();
         setUnitKerjaList(uniqueUnitKerja);
       } catch (error) {
         // Jika terjadi error saat pengambilan data, tampilkan di konsol
         console.error("Error fetching unit kerja list:", error);
+      } finally {
+        setLoadingUnitKerja(false);
       }
     };
 
     fetchUnitKerja();
   }, []);
 
+  // Fungsi untuk mendapatkan tanggal hari ini dalam format ISO
+  const getToday = () => {
+    const today = new Date();
+    return today.toISOString().split("T")[0];
+  };
+
+  // Fungsi untuk mendapatkan tanggal 30 hari yang lalu dalam format ISO
+  const getOneMonthAgo = () => {
+    const date = new Date();
+    date.setDate(date.getDate() - 30);
+    return date.toISOString().split("T")[0];
+  };
+
+  // Handler untuk mengatur rentang 30 hari terakhir
+  const handleLast30Days = () => {
+    setStartDate(getOneMonthAgo());
+    setEndDate(getToday());
+  };
+
+  // Handler untuk mengatur rentang bulan ini
+  const handleThisMonth = () => {
+    const date = new Date();
+    const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
+    setStartDate(firstDay.toISOString().split("T")[0]);
+    setEndDate(getToday());
+  };
+
   return (
-    <div className="bg-white p-4 rounded-md shadow-sm mb-4">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100">
+      <div className="flex items-center mb-4">
+        <FunnelIcon className="h-5 w-5 text-blue-600 mr-2" />
+        <h3 className="text-lg font-semibold text-gray-800">Filter Laporan</h3>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
         {/* Input tanggal mulai */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -85,9 +124,11 @@ const LaporanFilterForm = ({
             type="date"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
-            className="w-full p-2 border rounded"
+            className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+            max={endDate || getToday()}
           />
         </div>
+
         {/* Input tanggal akhir */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -97,9 +138,12 @@ const LaporanFilterForm = ({
             type="date"
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
-            className="w-full p-2 border rounded"
+            className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+            min={startDate}
+            max={getToday()}
           />
         </div>
+
         {/* Dropdown unit kerja */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -108,7 +152,8 @@ const LaporanFilterForm = ({
           <select
             value={unitKerja || ""}
             onChange={(e) => setUnitKerja(e.target.value)}
-            className="w-full p-2 border rounded"
+            className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+            disabled={loadingUnitKerja}
           >
             <option value="">Semua Unit Kerja</option>
             {unitKerjaList.map((unit) => (
@@ -118,21 +163,56 @@ const LaporanFilterForm = ({
             ))}
           </select>
         </div>
+
+        {/* Preset tanggal */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Preset Tanggal
+          </label>
+          <div className="flex space-x-2">
+            <button
+              type="button"
+              onClick={handleLast30Days}
+              className="flex-1 py-2 px-3 bg-gray-100 text-gray-700 text-sm rounded-lg hover:bg-gray-200 transition-colors"
+            >
+              30 Hari Terakhir
+            </button>
+            <button
+              type="button"
+              onClick={handleThisMonth}
+              className="flex-1 py-2 px-3 bg-gray-100 text-gray-700 text-sm rounded-lg hover:bg-gray-200 transition-colors"
+            >
+              Bulan Ini
+            </button>
+          </div>
+        </div>
       </div>
+
       {/* Tombol aksi filter dan ekspor PDF */}
-      <div className="mt-4 flex flex-col sm:flex-row gap-2 justify-end">
+      <div className="flex flex-col sm:flex-row gap-3 justify-end border-t pt-4 mt-2">
         <button
           onClick={onFilter}
-          disabled={loading}
-          className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
+          disabled={loading || !startDate || !endDate}
+          className="flex items-center justify-center py-2 px-4 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
         >
-          {loading ? "Loading..." : "Filter Data"}
+          {loading ? (
+            <>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+              Memproses...
+            </>
+          ) : (
+            <>
+              <FunnelIcon className="h-4 w-4 mr-2" />
+              Filter Data
+            </>
+          )}
         </button>
         <button
           onClick={onExportPDF}
           disabled={loading || !startDate || !endDate}
-          className="bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700"
+          className="flex items-center justify-center py-2 px-4 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
         >
+          <DocumentArrowDownIcon className="h-4 w-4 mr-2" />
           Ekspor PDF
         </button>
       </div>

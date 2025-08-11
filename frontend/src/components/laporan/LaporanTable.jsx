@@ -5,6 +5,7 @@
  */
 
 import React from "react";
+import { DocumentTextIcon } from "@heroicons/react/24/outline";
 
 /**
  * Komponen LaporanTable
@@ -13,60 +14,130 @@ import React from "react";
  * Parameter:
  * - data (Array<Object>): Data array berisi objek barang yang digunakan, setiap objek memiliki properti:
  *   - nama_barang (string): Nama barang yang digunakan.
+ *   - kode_barang (string): Kode barang yang digunakan.
  *   - total_digunakan (number): Jumlah barang yang digunakan.
  *   - satuan (string): Satuan barang.
+ *   - tanggal_permintaan (string): Tanggal permintaan barang.
  * - loading (boolean): Status pemuatan data, jika true maka akan menampilkan indikator loading.
  *
  * Return:
  * - JSX: Tabel laporan penggunaan barang atau pesan jika data kosong/loading.
  */
 const LaporanTable = ({ data, loading }) => {
+  // Fungsi untuk memformat tanggal ke format Indonesia
+  const formatDate = (dateString) => {
+    const options = {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    };
+    return new Date(dateString).toLocaleDateString("id-ID", options);
+  };
+
   // Render loading jika data sedang dimuat
   if (loading) {
     return (
-      <div className="bg-white rounded-lg shadow">
-        <div className="p-8 text-center text-blue-600">Memuat data...</div>
+      <div className="bg-white rounded-xl shadow-md border border-gray-100">
+        <div className="flex flex-col items-center justify-center p-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
+          <p className="text-gray-600 font-medium">Memuat data laporan...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Render empty state jika tidak ada data
+  if (!data.length) {
+    return (
+      <div className="bg-white rounded-xl shadow-md border border-gray-100 p-12 text-center">
+        <div className="flex justify-center mb-4">
+          <div className="bg-gray-100 p-4 rounded-full">
+            <DocumentTextIcon className="h-12 w-12 text-gray-400" />
+          </div>
+        </div>
+        <h3 className="text-lg font-semibold text-gray-800 mb-2">
+          Tidak ada data penggunaan barang
+        </h3>
+        <p className="text-gray-500 max-w-md mx-auto">
+          Tidak ditemukan data penggunaan barang dalam periode yang dipilih.
+          Coba ubah filter atau periode tanggal.
+        </p>
       </div>
     );
   }
 
   // Render tabel laporan penggunaan barang
   return (
-    <div className="bg-white rounded-lg shadow">
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-50">
-          <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-              Nama Barang
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-              Total Digunakan
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-              Satuan
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {/* Jika data kosong, tampilkan pesan tidak ada data */}
-          {data.length === 0 ? (
+    <div className="bg-white rounded-xl overflow-hidden shadow-md border border-gray-100">
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
             <tr>
-              <td colSpan="3" className="px-6 py-12 text-center text-gray-500">
-                Tidak ada data penggunaan barang
-              </td>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16">
+                No
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Nama Barang
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Kode Barang
+              </th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Jumlah
+              </th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Satuan
+              </th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Tanggal Permintaan
+              </th>
             </tr>
-          ) : (
-            // Mapping data barang ke baris tabel
-            data.map((barang, index) => (
-              <tr key={index}>
-                <td className="px-6 py-4">{barang.nama_barang}</td>
-                <td className="px-6 py-4">{barang.total_digunakan}</td>
-                <td className="px-6 py-4">{barang.satuan}</td>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {data.map((barang, index) => (
+              <tr
+                key={index}
+                className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
+              >
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                  {index + 1}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm font-medium text-gray-900">
+                    {barang.nama_barang}
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm text-gray-500 font-mono">
+                    {barang.kode_barang}
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-center">
+                  <div className="text-sm font-medium text-gray-900">
+                    {barang.total_digunakan}
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-center">
+                  <div className="text-sm text-gray-500">{barang.satuan}</div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-center">
+                  <div className="text-sm text-gray-500">
+                    {formatDate(barang.tanggal_permintaan)}
+                  </div>
+                </td>
               </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Footer tabel */}
+      <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+        <div className="text-sm text-gray-700">
+          Menampilkan total <span className="font-medium">{data.length}</span>{" "}
+          item penggunaan barang
+        </div>
+      </div>
     </div>
   );
 };
