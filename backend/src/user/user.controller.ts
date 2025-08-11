@@ -1,3 +1,11 @@
+/**
+ * File: user.controller.ts
+ *
+ * Controller untuk mengelola data user pada aplikasi SIAP.
+ * Berfungsi untuk menangani permintaan terkait user seperti pembuatan, pembaruan, penghapusan, dan pengelolaan profil.
+ * Seluruh endpoint dilindungi oleh autentikasi JWT dan otorisasi berbasis peran (admin/pegawai).
+ */
+
 import {
   Controller,
   Get,
@@ -23,14 +31,26 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import * as path from 'path';
 
+/**
+ * Controller utama untuk pengelolaan user di aplikasi SIAP.
+ * Seluruh endpoint menggunakan guard autentikasi dan otorisasi.
+ */
 @Controller('user')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 export class UserController {
+  /**
+   * Konstruktor untuk inisialisasi service user.
+   *
+   * Parameter:
+   * - userService (UserService): Service untuk operasi data user.
+   */
   constructor(private readonly userService: UserService) {}
 
   /**
-   * Mengambil data khusus untuk admin.
-   * @returns Objek berisi pesan untuk admin.
+   * Endpoint khusus admin untuk mengambil data spesifik admin.
+   *
+   * Return:
+   * - object: Pesan khusus admin.
    */
   @Roles('admin')
   @Get('admin-only')
@@ -39,8 +59,10 @@ export class UserController {
   }
 
   /**
-   * Mengambil data khusus untuk pegawai.
-   * @returns Objek berisi pesan untuk pegawai.
+   * Endpoint khusus pegawai untuk mengambil data spesifik pegawai.
+   *
+   * Return:
+   * - object: Pesan khusus pegawai.
    */
   @Roles('pegawai')
   @Get('pegawai-only')
@@ -50,8 +72,12 @@ export class UserController {
 
   /**
    * Mengambil profil user yang sedang login.
-   * @param req Request dari Express yang berisi user.
-   * @returns Data user yang sedang login.
+   *
+   * Parameter:
+   * - req (Request): Request Express yang berisi data user hasil autentikasi.
+   *
+   * Return:
+   * - object: Data user yang sedang login.
    */
   @Get('profile')
   async getProfile(@Req() req: Request) {
@@ -61,9 +87,13 @@ export class UserController {
 
   /**
    * Memperbarui profil user yang sedang login.
-   * @param req Request dari Express yang berisi user.
-   * @param dto Data untuk memperbarui user.
-   * @returns Data user yang telah diperbarui.
+   *
+   * Parameter:
+   * - req (Request): Request Express yang berisi data user hasil autentikasi.
+   * - dto (UpdateUserDto): Data untuk memperbarui profil user.
+   *
+   * Return:
+   * - object: Data user yang telah diperbarui.
    */
   @Patch('profile')
   async updateProfile(@Req() req: Request, @Body() dto: UpdateUserDto) {
@@ -73,8 +103,12 @@ export class UserController {
 
   /**
    * Membuat user baru (khusus admin).
-   * @param dto Data user baru.
-   * @returns Data user yang telah dibuat.
+   *
+   * Parameter:
+   * - dto (CreateUserDto): Data user baru yang akan dibuat.
+   *
+   * Return:
+   * - object: Data user yang telah dibuat.
    */
   @Roles('admin')
   @Post()
@@ -84,7 +118,9 @@ export class UserController {
 
   /**
    * Mengambil seluruh data user (khusus admin).
-   * @returns Daftar seluruh user.
+   *
+   * Return:
+   * - array: Daftar seluruh user.
    */
   @Roles('admin')
   @Get()
@@ -94,8 +130,12 @@ export class UserController {
 
   /**
    * Mengambil data user berdasarkan ID (khusus admin).
-   * @param id ID user.
-   * @returns Data user yang ditemukan.
+   *
+   * Parameter:
+   * - id (number): ID user yang akan diambil.
+   *
+   * Return:
+   * - object: Data user yang ditemukan.
    */
   @Roles('admin')
   @Get(':id')
@@ -105,9 +145,13 @@ export class UserController {
 
   /**
    * Memperbarui data user berdasarkan ID (khusus admin).
-   * @param id ID user.
-   * @param dto Data yang akan diperbarui.
-   * @returns Data user yang telah diperbarui.
+   *
+   * Parameter:
+   * - id (number): ID user yang akan diperbarui.
+   * - dto (UpdateUserDto): Data yang akan diperbarui.
+   *
+   * Return:
+   * - object: Data user yang telah diperbarui.
    */
   @Roles('admin')
   @Patch(':id')
@@ -120,8 +164,12 @@ export class UserController {
 
   /**
    * Melakukan soft delete user berdasarkan ID (khusus admin).
-   * @param id ID user.
-   * @returns Hasil soft delete user.
+   *
+   * Parameter:
+   * - id (number): ID user yang akan dihapus (soft delete).
+   *
+   * Return:
+   * - object: Hasil soft delete user.
    */
   @Roles('admin')
   @Delete(':id')
@@ -131,8 +179,12 @@ export class UserController {
 
   /**
    * Menghapus user berdasarkan username (khusus admin, untuk testing/dev).
-   * @param body Objek berisi username user yang akan dihapus.
-   * @returns Hasil penghapusan user.
+   *
+   * Parameter:
+   * - body ({ username: string }): Objek berisi username user yang akan dihapus.
+   *
+   * Return:
+   * - object: Hasil penghapusan user.
    */
   @Roles('admin')
   @Delete()
@@ -144,30 +196,41 @@ export class UserController {
 
   /**
    * Mengunggah dan memperbarui foto profil user yang sedang login.
-   * @param req Request dari Express yang berisi user.
-   * @param file File foto profil yang diunggah.
-   * @returns Data user yang telah diperbarui dengan path foto baru.
+   *
+   * Parameter:
+   * - req (Request): Request Express yang berisi data user hasil autentikasi.
+   * - file (Express.Multer.File): File foto profil yang diunggah.
+   *
+   * Return:
+   * - object: Data user yang telah diperbarui dengan path foto baru.
+   *
+   * Catatan:
+   * - Hanya menerima file gambar (jpeg, png, jpg, webp) dengan ukuran maksimal 2MB.
+   * - Path file disimpan pada field 'foto' user.
    */
   @Patch('profile/foto')
   @UseInterceptors(
     FileInterceptor('foto', {
       storage: diskStorage({
         destination: (req, file, cb) => {
+          // Menyimpan file ke folder uploads/profile
           cb(null, path.join(__dirname, '..', 'uploads', 'profile'));
         },
         filename: (req, file, cb) => {
+          // Penamaan file: userId-timestamp.ext
           const userId = (req.user as any)?.userId;
           const ext = path.extname(file.originalname);
           cb(null, `${userId}-${Date.now()}${ext}`);
         },
       }),
       fileFilter: (req, file, cb) => {
+        // Validasi tipe file gambar
         if (!file.mimetype.match(/^image\/(jpeg|png|jpg|webp)$/)) {
-          return cb(new Error('Only image files are allowed!'), false);
+          return cb(new Error('Hanya file gambar yang diperbolehkan!'), false);
         }
         cb(null, true);
       },
-      limits: { fileSize: 2 * 1024 * 1024 },
+      limits: { fileSize: 2 * 1024 * 1024 }, // Maksimal 2MB
     }),
   )
   async uploadFotoProfile(

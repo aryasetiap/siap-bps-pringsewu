@@ -1,3 +1,11 @@
+/**
+ * File ini berisi pengujian unit untuk UserService pada aplikasi SIAP.
+ * UserService bertanggung jawab atas pengelolaan data user, termasuk pembuatan, pembaruan, penghapusan, dan pencarian user.
+ * Pengujian dilakukan menggunakan Jest dan mock repository TypeORM.
+ *
+ * Konteks bisnis: User digunakan untuk mengelola akses aplikasi SIAP, termasuk pengelolaan barang, permintaan, dan verifikasi.
+ */
+
 import { Test, TestingModule } from '@nestjs/testing';
 import { UserService } from './user.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
@@ -6,7 +14,7 @@ import { Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 
-// Mock data user untuk pengujian
+// Data mock user untuk pengujian
 const mockUser = {
   id: 1,
   nama: 'Test User',
@@ -60,8 +68,13 @@ describe('UserService', () => {
 
   describe('create', () => {
     /**
-     * Menguji pembuatan user baru secara sukses.
-     * @returns User yang berhasil dibuat.
+     * Fungsi ini menguji pembuatan user baru pada aplikasi SIAP.
+     *
+     * Parameter:
+     * - createUserDto (object): Data user yang akan dibuat.
+     *
+     * Return:
+     * - User: User yang berhasil dibuat.
      */
     it('should create a new user successfully', async () => {
       (repo.findOne as jest.Mock).mockResolvedValue(undefined);
@@ -76,8 +89,13 @@ describe('UserService', () => {
     });
 
     /**
-     * Menguji error jika username sudah terdaftar.
-     * @throws BadRequestException jika username sudah ada.
+     * Fungsi ini menguji error jika username sudah terdaftar.
+     *
+     * Parameter:
+     * - createUserDto (object): Data user yang akan dibuat.
+     *
+     * Return:
+     * - Error: BadRequestException jika username sudah ada.
      */
     it('should throw BadRequestException if username already exists', async () => {
       (repo.findOne as jest.Mock).mockResolvedValue(mockUser);
@@ -90,8 +108,14 @@ describe('UserService', () => {
 
   describe('update', () => {
     /**
-     * Menguji update data user secara sukses.
-     * @returns User yang sudah diperbarui.
+     * Fungsi ini menguji update data user pada aplikasi SIAP.
+     *
+     * Parameter:
+     * - id (number): ID user yang akan diupdate.
+     * - updateDto (object): Data yang akan diperbarui.
+     *
+     * Return:
+     * - User: User yang sudah diperbarui.
      */
     it('should update user data successfully', async () => {
       const updatedUser = { ...mockUser, nama: 'Updated Name' };
@@ -105,8 +129,14 @@ describe('UserService', () => {
     });
 
     /**
-     * Menguji update user tanpa perubahan data.
-     * @returns User yang sama tanpa perubahan.
+     * Fungsi ini menguji update user tanpa perubahan data.
+     *
+     * Parameter:
+     * - id (number): ID user yang akan diupdate.
+     * - updateDto (object): Data kosong.
+     *
+     * Return:
+     * - User: User yang sama tanpa perubahan.
      */
     it('should update user with no changes', async () => {
       (repo.findOne as jest.Mock).mockResolvedValue(mockUser);
@@ -118,8 +148,14 @@ describe('UserService', () => {
     });
 
     /**
-     * Menguji update user dengan perubahan password, memastikan password di-hash.
-     * @returns User dengan password baru yang sudah di-hash.
+     * Fungsi ini menguji update user dengan perubahan password, memastikan password di-hash.
+     *
+     * Parameter:
+     * - id (number): ID user yang akan diupdate.
+     * - updateDto (object): Data dengan password baru.
+     *
+     * Return:
+     * - User: User dengan password baru yang sudah di-hash.
      */
     it('should update user and hash the new password if provided', async () => {
       const updateDtoWithPassword = { password: 'newpass' };
@@ -135,6 +171,7 @@ describe('UserService', () => {
       expect(result.password).toBeUndefined();
       expect(repo.save).toHaveBeenCalledTimes(1);
 
+      // Pastikan password yang disimpan sudah di-hash
       const savedUser = (repo.save as jest.Mock).mock.calls[0][0];
       expect(savedUser.password).not.toBe('newpass');
 
@@ -146,8 +183,14 @@ describe('UserService', () => {
     });
 
     /**
-     * Menguji error jika user yang akan diupdate tidak ditemukan.
-     * @throws NotFoundException jika user tidak ada.
+     * Fungsi ini menguji error jika user yang akan diupdate tidak ditemukan.
+     *
+     * Parameter:
+     * - id (number): ID user yang akan diupdate.
+     * - updateDto (object): Data yang akan diperbarui.
+     *
+     * Return:
+     * - Error: NotFoundException jika user tidak ada.
      */
     it('should throw NotFoundException if user to update is not found', async () => {
       (repo.findOne as jest.Mock).mockResolvedValue(undefined);
@@ -157,8 +200,14 @@ describe('UserService', () => {
     });
 
     /**
-     * Menguji update status_aktif dengan input string "aktif".
-     * @returns User dengan status_aktif true.
+     * Fungsi ini menguji update status_aktif dengan input string "aktif".
+     *
+     * Parameter:
+     * - id (number): ID user yang akan diupdate.
+     * - updateDto (object): Data dengan status_aktif "aktif".
+     *
+     * Return:
+     * - User: User dengan status_aktif true.
      */
     it('should handle status_aktif as string "aktif"', async () => {
       const userFromDb = { ...mockUser, status_aktif: false };
@@ -173,8 +222,14 @@ describe('UserService', () => {
     });
 
     /**
-     * Menguji update status_aktif dengan input boolean.
-     * @returns User dengan status_aktif true.
+     * Fungsi ini menguji update status_aktif dengan input boolean.
+     *
+     * Parameter:
+     * - id (number): ID user yang akan diupdate.
+     * - updateDto (object): Data dengan status_aktif boolean.
+     *
+     * Return:
+     * - User: User dengan status_aktif true.
      */
     it('should handle status_aktif as boolean', async () => {
       const userFromDb = { ...mockUser, status_aktif: false };
@@ -191,8 +246,13 @@ describe('UserService', () => {
 
   describe('softDelete', () => {
     /**
-     * Menguji soft delete user dengan mengubah status_aktif menjadi false.
-     * @returns User dengan status_aktif false.
+     * Fungsi ini menguji soft delete user dengan mengubah status_aktif menjadi false.
+     *
+     * Parameter:
+     * - id (number): ID user yang akan dihapus.
+     *
+     * Return:
+     * - User: User dengan status_aktif false.
      */
     it('should soft delete a user by setting status_aktif to false', async () => {
       const softDeletedUser = { ...mockUser, status_aktif: false };
@@ -208,8 +268,13 @@ describe('UserService', () => {
     });
 
     /**
-     * Menguji error jika user yang akan dihapus tidak ditemukan.
-     * @throws NotFoundException jika user tidak ada.
+     * Fungsi ini menguji error jika user yang akan dihapus tidak ditemukan.
+     *
+     * Parameter:
+     * - id (number): ID user yang akan dihapus.
+     *
+     * Return:
+     * - Error: NotFoundException jika user tidak ada.
      */
     it('should throw NotFoundException if user to delete is not found', async () => {
       (repo.findOne as jest.Mock).mockResolvedValue(undefined);
@@ -221,8 +286,10 @@ describe('UserService', () => {
 
   describe('findAll', () => {
     /**
-     * Menguji pengambilan seluruh user.
-     * @returns Array user.
+     * Fungsi ini menguji pengambilan seluruh user aktif pada aplikasi SIAP.
+     *
+     * Return:
+     * - User[]: Array user.
      */
     it('should return an array of users', async () => {
       (repo.find as jest.Mock).mockResolvedValue([mockUser]);
@@ -234,9 +301,13 @@ describe('UserService', () => {
 
   describe('findOne', () => {
     /**
-     * Menguji pencarian user berdasarkan id.
-     * @param id ID user yang dicari.
-     * @returns User yang ditemukan.
+     * Fungsi ini menguji pencarian user berdasarkan id.
+     *
+     * Parameter:
+     * - id (number): ID user yang dicari.
+     *
+     * Return:
+     * - User: User yang ditemukan.
      */
     it('should find and return a user by id', async () => {
       (repo.findOne as jest.Mock).mockResolvedValue(mockUser);
@@ -246,8 +317,13 @@ describe('UserService', () => {
     });
 
     /**
-     * Menguji error jika user tidak ditemukan berdasarkan id.
-     * @throws NotFoundException jika user tidak ada.
+     * Fungsi ini menguji error jika user tidak ditemukan berdasarkan id.
+     *
+     * Parameter:
+     * - id (number): ID user yang dicari.
+     *
+     * Return:
+     * - Error: NotFoundException jika user tidak ada.
      */
     it('should throw NotFoundException if user is not found', async () => {
       (repo.findOne as jest.Mock).mockResolvedValue(undefined);
@@ -259,9 +335,13 @@ describe('UserService', () => {
 
   describe('findByUsername', () => {
     /**
-     * Menguji pencarian user berdasarkan username.
-     * @param username Username yang dicari.
-     * @returns User yang ditemukan.
+     * Fungsi ini menguji pencarian user berdasarkan username.
+     *
+     * Parameter:
+     * - username (string): Username yang dicari.
+     *
+     * Return:
+     * - User | null: User yang ditemukan atau null jika tidak ada.
      */
     it('should find and return a user by username', async () => {
       (repo.findOne as jest.Mock).mockResolvedValue(mockUser);
@@ -273,8 +353,13 @@ describe('UserService', () => {
     });
 
     /**
-     * Menguji hasil null jika user tidak ditemukan berdasarkan username.
-     * @returns null jika user tidak ada.
+     * Fungsi ini menguji hasil null jika user tidak ditemukan berdasarkan username.
+     *
+     * Parameter:
+     * - username (string): Username yang dicari.
+     *
+     * Return:
+     * - null: Jika user tidak ada.
      */
     it('should return null if user is not found by username', async () => {
       (repo.findOne as jest.Mock).mockResolvedValue(null);
