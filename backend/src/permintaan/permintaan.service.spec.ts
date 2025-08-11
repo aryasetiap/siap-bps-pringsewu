@@ -8,12 +8,13 @@
 
 import { Test, TestingModule } from '@nestjs/testing';
 import { PermintaanService } from './permintaan.service';
-import { getRepositoryToken } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Permintaan } from '../entities/permintaan.entity';
 import { DetailPermintaan } from '../entities/detail_permintaan.entity';
 import { Barang } from '../entities/barang.entity';
-import { DataSource } from 'typeorm';
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { User } from '../entities/user.entity';
+import { getRepositoryToken } from '@nestjs/typeorm';
 
 /**
  * Membuat mock repository untuk entitas Permintaan.
@@ -41,6 +42,16 @@ const mockDetailRepo = () => ({
 const mockBarangRepo = () => ({
   findByIds: jest.fn(),
   findOne: jest.fn(),
+  count: jest.fn(),
+  createQueryBuilder: jest.fn(),
+});
+
+/**
+ * Membuat mock repository untuk entitas User.
+ */
+const mockUserRepo = () => ({
+  findOne: jest.fn(),
+  find: jest.fn(),
   count: jest.fn(),
   createQueryBuilder: jest.fn(),
 });
@@ -74,6 +85,7 @@ describe('PermintaanService', () => {
           useFactory: mockDetailRepo,
         },
         { provide: getRepositoryToken(Barang), useFactory: mockBarangRepo },
+        { provide: getRepositoryToken(User), useFactory: mockUserRepo }, // Tambahkan ini
         { provide: DataSource, useValue: mockDataSource },
       ],
     }).compile();
@@ -129,7 +141,7 @@ describe('PermintaanService', () => {
      */
     it('should throw BadRequestException if stok kurang', async () => {
       barangRepo.findByIds.mockResolvedValue([
-        { id: 1, stok: 1, nama_barang: 'Barang A' },
+        { id: 1, stok: 1, nama_barang: 'Barang A', status_aktif: true },
       ]);
       const dto = { items: [{ id_barang: 1, jumlah: 2 }] };
       await expect(service.create(dto as any, 1)).rejects.toThrow(
@@ -152,7 +164,7 @@ describe('PermintaanService', () => {
      */
     it('should create permintaan and details in transaction', async () => {
       barangRepo.findByIds.mockResolvedValue([
-        { id: 1, stok: 10, nama_barang: 'Barang A' },
+        { id: 1, stok: 10, nama_barang: 'Barang A', status_aktif: true },
       ]);
       permintaanRepo.create.mockReturnValue({ id: 123, status: 'Menunggu' });
       detailRepo.create.mockReturnValue({ id: 456 });
@@ -568,26 +580,25 @@ describe('PermintaanService', () => {
    * Pengujian pengambilan tren permintaan bulanan.
    */
   describe('getTrenPermintaanBulanan', () => {
-    /**
-     * Fungsi ini menguji pengambilan tren permintaan bulanan.
-     *
-     * Return:
-     * - Promise<Array<{ bulan: string, jumlah: number }>>
-     */
     it('should return tren permintaan bulanan', async () => {
+      // Ambil bulan yang pasti ada dalam 12 bulan terakhir
+      const now = new Date();
+      const bulanTest = new Date(now.getFullYear(), now.getMonth() - 11, 1)
+        .toISOString()
+        .slice(0, 7); // bulan paling awal dari 12 bulan terakhir
       permintaanRepo.createQueryBuilder = jest.fn().mockReturnValue({
         select: jest.fn().mockReturnThis(),
         where: jest.fn().mockReturnThis(),
         groupBy: jest.fn().mockReturnThis(),
         orderBy: jest.fn().mockReturnThis(),
         getRawMany: jest.fn().mockResolvedValue([
-          { bulan: '2024-07', jumlah: 5 },
-          { bulan: '2024-08', jumlah: 2 },
+          { bulan: bulanTest, jumlah: 5 },
+          { bulan: '2024-09', jumlah: 2 },
         ]),
       });
       const result = await service.getTrenPermintaanBulanan();
       expect(Array.isArray(result)).toBe(true);
-      expect(result.some((r) => r.bulan === '2024-07')).toBe(true);
+      expect(result.some((r) => r.bulan === bulanTest)).toBe(true);
     });
   });
 

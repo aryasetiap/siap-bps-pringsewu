@@ -7,7 +7,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PermintaanController } from './permintaan.controller';
 import { PermintaanService } from './permintaan.service';
-import { ForbiddenException } from '@nestjs/common';
+import { ForbiddenException, BadRequestException } from '@nestjs/common';
 import { Response } from 'express';
 
 /**
@@ -152,7 +152,7 @@ describe('PermintaanController', () => {
       const req = { user: { userId: 42, role: 'pegawai' } };
       service.findOneById.mockResolvedValue({ id_user_pemohon: 99 });
 
-      await expect(controller.findOne(req as any, 1)).rejects.toThrow(
+      await expect(controller.findOne(req as any, '1')).rejects.toThrow(
         ForbiddenException,
       );
     });
@@ -165,7 +165,7 @@ describe('PermintaanController', () => {
       const permintaan = { id: 1, id_user_pemohon: 42 };
       service.findOneById.mockResolvedValue(permintaan);
 
-      const result = await controller.findOne(req as any, 1);
+      const result = await controller.findOne(req as any, '1');
 
       expect(service.findOneById).toHaveBeenCalledWith(1);
       expect(result).toEqual(permintaan);
@@ -179,7 +179,7 @@ describe('PermintaanController', () => {
       const permintaan = { id: 1, id_user_pemohon: 42 };
       service.findOneById.mockResolvedValue(permintaan);
 
-      const result = await controller.findOne(req as any, 1);
+      const result = await controller.findOne(req as any, '1');
 
       expect(result).toEqual(permintaan);
     });
@@ -191,7 +191,7 @@ describe('PermintaanController', () => {
       const req = { user: { userId: 1, role: 'admin' } };
 
       await expect(controller.findOne(req as any, 'abc')).rejects.toThrow(
-        'ID permintaan tidak valid',
+        BadRequestException,
       );
     });
   });
@@ -253,7 +253,8 @@ describe('PermintaanController', () => {
         end: jest.fn(),
       } as any;
 
-      await controller.generateBuktiPermintaanPDF(1, res);
+      const req = { user: { userId: 1, role: 'admin' } };
+      await controller.generateBuktiPermintaanPDF(1, res, req);
 
       expect(service.generateBuktiPermintaanPDF).toHaveBeenCalledWith(1);
       expect(res.set).toHaveBeenCalledWith(
@@ -275,8 +276,9 @@ describe('PermintaanController', () => {
         end: jest.fn(),
       } as any;
 
+      const req = { user: { userId: 1, role: 'admin' } };
       await expect(
-        controller.generateBuktiPermintaanPDF(999, res),
+        controller.generateBuktiPermintaanPDF(999, res, req),
       ).rejects.toThrow('Not found');
     });
   });

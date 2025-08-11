@@ -62,7 +62,7 @@ export class PermintaanService {
     const barangIds = dto.items.map((item) => item.id_barang);
     const barangList = await this.barangRepo.findByIds(barangIds);
 
-    if (barangList.length !== barangIds.length) {
+    if (!barangList || barangList.length !== barangIds.length) {
       throw new BadRequestException(
         'Ada barang yang tidak ditemukan atau tidak aktif',
       );
