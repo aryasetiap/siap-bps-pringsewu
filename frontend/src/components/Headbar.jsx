@@ -23,6 +23,7 @@ import {
   BellIcon,
 } from "@heroicons/react/24/outline";
 import * as userService from "../services/userService";
+import * as authService from "../services/authService";
 import { useProfile } from "../context/ProfileContext";
 
 /**
@@ -93,7 +94,12 @@ function Headbar({
    * Fungsi untuk logout user dari aplikasi SIAP.
    * Menghapus data autentikasi dan mengarahkan ke halaman login.
    */
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await authService.logout(); // Panggil API logout
+    } catch (err) {
+      // Optional: tampilkan error jika gagal logout
+    }
     localStorage.removeItem("authToken");
     localStorage.removeItem("userRole");
     localStorage.removeItem("username");
@@ -182,7 +188,10 @@ function Headbar({
         {/* Menu User: Menampilkan info user dan aksi logout */}
         <Menu as="div" className="relative inline-block text-left">
           <div>
-            <Menu.Button className="inline-flex justify-center items-center rounded-lg border border-gray-200 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 focus:ring-blue-500 transition">
+            <Menu.Button
+              className="inline-flex justify-center items-center rounded-lg border border-gray-200 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 focus:ring-blue-500 transition"
+              aria-label="user-menu"
+            >
               {userPhoto ? (
                 <img
                   src={userPhoto}

@@ -8,6 +8,7 @@
  */
 
 import api from "./api";
+import axios from "axios";
 
 /**
  * Melakukan login user ke aplikasi SIAP.
@@ -32,7 +33,14 @@ export const login = (credentials) => {
  * - Promise: Berisi response dari server setelah token user diinvalidasi.
  */
 export const logout = () => {
-  return api.post("/auth/logout");
+  const token = localStorage.getItem("authToken");
+  return axios.post(
+    "/api/auth/logout",
+    {},
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
 };
 
 /**

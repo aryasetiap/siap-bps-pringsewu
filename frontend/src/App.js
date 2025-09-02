@@ -41,6 +41,7 @@ import { ProfileProvider } from "./context/ProfileContext";
  */
 function PrivateRoute({ children, roles }) {
   const [isAuthenticated, setIsAuthenticated] = useState(null);
+  const [isForbidden, setIsForbidden] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -54,18 +55,21 @@ function PrivateRoute({ children, roles }) {
 
       if (!token) {
         setIsAuthenticated(false);
+        setIsForbidden(false);
         setIsLoading(false);
         return;
       }
 
       try {
-        // Jika ingin menambah verifikasi token ke server, tambahkan di sini.
         setIsAuthenticated(true);
 
         // Validasi role pengguna terhadap role yang diizinkan
         if (roles && !roles.includes(userRole)) {
           toast.error("Anda tidak memiliki akses ke halaman ini");
+          setIsForbidden(true);
           setIsAuthenticated(false);
+        } else {
+          setIsForbidden(false);
         }
       } catch (error) {
         // Jika terjadi error (misal token expired), hapus data autentikasi
@@ -73,6 +77,7 @@ function PrivateRoute({ children, roles }) {
         localStorage.removeItem("userRole");
         localStorage.removeItem("username");
         setIsAuthenticated(false);
+        setIsForbidden(false);
         toast.error("Sesi login telah berakhir, silakan login kembali");
       } finally {
         setIsLoading(false);
@@ -89,6 +94,11 @@ function PrivateRoute({ children, roles }) {
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     );
+  }
+
+  if (isForbidden) {
+    // Tampilkan halaman forbidden jika akses ditolak
+    return <Navigate to="/forbidden" replace />;
   }
 
   if (!isAuthenticated) {
