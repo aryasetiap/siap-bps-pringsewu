@@ -100,12 +100,12 @@ const EmployeeRequestForm = ({
                   {/* Input jumlah barang yang diminta, validasi agar tidak melebihi stok */}
                   <input
                     type="number"
-                    min="1"
                     max={item.stok}
                     value={item.jumlah}
                     onChange={(e) => onItemChange(item.id, e.target.value)}
                     className={`w-20 px-2 py-1 border rounded text-center ${
-                      parseInt(item.jumlah) > item.stok
+                      parseInt(item.jumlah) > item.stok ||
+                      parseInt(item.jumlah) < 1
                         ? "border-red-500 bg-red-50"
                         : "border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                     }`}
@@ -164,8 +164,10 @@ const EmployeeRequestForm = ({
    * Return:
    * - void
    */
-  const handleSubmit = () => {
-    onSubmit();
+  const handleSubmit = (e) => {
+    if (typeof onSubmit === "function") {
+      onSubmit(e);
+    }
   };
 
   return (
@@ -202,10 +204,10 @@ const EmployeeRequestForm = ({
       <div className="flex justify-end">
         <button
           onClick={handleSubmit}
-          disabled={loading || items.length === 0}
+          disabled={loading} // Hanya disabled saat loading, bukan saat keranjang kosong
           className={`flex items-center px-6 py-2.5 ${
             items.length === 0
-              ? "bg-gray-400 cursor-not-allowed"
+              ? "bg-gray-400 hover:bg-gray-500" // Bisa diklik meski keranjang kosong
               : "bg-blue-600 hover:bg-blue-700"
           } text-white font-medium rounded-lg transition shadow-sm`}
         >

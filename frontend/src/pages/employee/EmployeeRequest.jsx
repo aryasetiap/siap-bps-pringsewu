@@ -163,7 +163,7 @@ const EmployeeRequestPage = () => {
         item.id === id
           ? {
               ...item,
-              jumlah: Math.max(1, Math.min(item.stok, parseInt(jumlah) || 1)),
+              jumlah: parseInt(jumlah) || 0, // Biarkan 0 untuk validasi
             }
           : item
       )
