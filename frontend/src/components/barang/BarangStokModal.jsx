@@ -48,7 +48,8 @@ const BarangStokModal = ({
   if (!show || !barang) return null;
 
   // Hitung stok setelah penambahan untuk preview
-  const stokSetelahTambah = barang.stok + parseInt(stokData.jumlahTambah || 0);
+  const stokSetelahTambah =
+    barang.stok + (parseInt(stokData.jumlahTambah, 10) || 0);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 animate-fadeIn">
@@ -91,7 +92,7 @@ const BarangStokModal = ({
           </div>
         </div>
         {/* Form penambahan stok */}
-        <form onSubmit={onSubmit} className="space-y-4">
+        <form onSubmit={onSubmit} className="space-y-4" noValidate>
           {/* Input jumlah penambahan */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1">
@@ -145,6 +146,10 @@ const BarangStokModal = ({
               type="submit"
               disabled={loading}
               className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition"
+              onClick={(e) => {
+                // Pastikan validasi JS tetap dijalankan
+                if (typeof onSubmit === "function") onSubmit(e);
+              }}
             >
               {loading ? "Menambah..." : "Tambah Stok"}
             </button>

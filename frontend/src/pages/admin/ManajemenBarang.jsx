@@ -18,6 +18,23 @@ import { toast } from "react-toastify";
 
 const satuanOptions = ["pcs", "box", "rim", "pack", "unit", "set"];
 
+const defaultKategoriOptions = [
+  "ATK",
+  "Elektronik",
+  "Komputer & Printer",
+  "Konsumsi",
+  "Dokumen & Arsip",
+  "Peralatan Survey",
+  "Peralatan Kebersihan",
+  "Peralatan Rumah Tangga",
+  "Peralatan Listrik",
+  "Peralatan Jaringan",
+  "Peralatan Komunikasi",
+  "Furniture",
+  "Kendaraan",
+  "Lainnya",
+];
+
 const ManajemenBarang = () => {
   // State utama untuk data barang dan filter
   const [barang, setBarang] = useState([]);
@@ -52,7 +69,9 @@ const ManajemenBarang = () => {
   });
 
   // State untuk pilihan kategori barang
-  const [kategoriOptions, setKategoriOptions] = useState([]);
+  const [kategoriOptions, setKategoriOptions] = useState(
+    defaultKategoriOptions
+  );
 
   /**
    * Efek untuk mengambil data barang dari API saat komponen pertama kali di-mount.
@@ -89,9 +108,10 @@ const ManajemenBarang = () => {
       }));
       setBarang(mapped);
       // Ambil semua kategori unik untuk filter
-      const kategoriSet = new Set(
-        mapped.map((item) => item.kategori).filter(Boolean)
-      );
+      const kategoriSet = new Set([
+        ...defaultKategoriOptions,
+        ...mapped.map((item) => item.kategori).filter(Boolean),
+      ]);
       setKategoriOptions(Array.from(kategoriSet));
     } catch (err) {
       toast.error("Gagal memuat data barang.");
@@ -338,7 +358,7 @@ const ManajemenBarang = () => {
     try {
       await barangService.deleteBarang(deleteBarangId);
       toast.success("Barang berhasil dihapus!");
-      fetchBarang();
+      await fetchBarang(); // pastikan fetchBarang menunggu data terbaru
     } catch (err) {
       toast.error(err?.response?.data?.message || "Gagal menghapus barang.");
     }
@@ -439,6 +459,7 @@ const ManajemenBarang = () => {
             />
           </div>
           <select
+            name="kategori" // Tambahkan ini
             value={filterKategori}
             onChange={(e) => setFilterKategori(e.target.value)}
             className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition text-sm"

@@ -1,9 +1,9 @@
 /**
  * BarangTable.jsx
- * 
+ *
  * Komponen tabel untuk menampilkan daftar barang pada aplikasi SIAP.
  * Digunakan untuk pengelolaan barang, termasuk aksi edit, tambah stok, hapus, dan aktivasi barang.
- * 
+ *
  * Parameter:
  * - data (Array<Object>): Data array barang yang akan ditampilkan.
  * - onEdit (Function): Fungsi callback ketika tombol edit barang diklik.
@@ -12,7 +12,7 @@
  * - onAktifkan (Function): Fungsi callback ketika tombol aktifkan barang diklik.
  * - getStatusColor (Function): Fungsi untuk mendapatkan warna status barang (tidak digunakan di sini, bisa dioptimalkan).
  * - getStatusText (Function): Fungsi untuk mendapatkan teks status barang (tidak digunakan di sini, bisa dioptimalkan).
- * 
+ *
  * Return:
  * - React.Element: Komponen tabel barang yang interaktif.
  */
@@ -27,7 +27,7 @@ import {
 /**
  * Komponen BarangTable
  * Menampilkan data barang dalam bentuk tabel beserta aksi pengelolaan barang.
- * 
+ *
  * Parameter:
  * - data (Array<Object>): Data barang yang akan ditampilkan.
  * - onEdit (Function): Callback untuk aksi edit barang.
@@ -36,7 +36,7 @@ import {
  * - onAktifkan (Function): Callback untuk aksi aktivasi barang.
  * - getStatusColor (Function): Fungsi untuk mendapatkan warna status barang (opsional, tidak digunakan).
  * - getStatusText (Function): Fungsi untuk mendapatkan teks status barang (opsional, tidak digunakan).
- * 
+ *
  * Return:
  * - React.Element: Tabel barang dengan fitur aksi.
  */
@@ -47,23 +47,25 @@ const BarangTable = ({
   onTambahStok,
   onAktifkan,
   getStatusColor, // Belum digunakan, bisa dioptimalkan jika diperlukan
-  getStatusText,  // Belum digunakan, bisa dioptimalkan jika diperlukan
+  getStatusText, // Belum digunakan, bisa dioptimalkan jika diperlukan
 }) => {
   /**
    * Fungsi renderBarisBarang
    * Membantu merender setiap baris data barang agar kode lebih modular dan mudah dibaca.
-   * 
+   *
    * Parameter:
    * - item (Object): Data barang per baris.
    * - idx (number): Index baris barang.
-   * 
+   *
    * Return:
    * - React.Element: Baris tabel barang.
    */
   const renderBarisBarang = (item, idx) => (
     <tr
       key={item.id}
-      className={`transition hover:bg-blue-50 ${idx % 2 === 0 ? "bg-white" : "bg-gray-50"}`}
+      className={`transition hover:bg-blue-50 ${
+        idx % 2 === 0 ? "bg-white" : "bg-gray-50"
+      }`}
     >
       <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
         {item.kode}
@@ -78,9 +80,7 @@ const BarangTable = ({
             />
           )}
           <div>
-            <div className="text-sm font-bold text-gray-900">
-              {item.nama}
-            </div>
+            <div className="text-sm font-bold text-gray-900">{item.nama}</div>
             <div className="text-xs text-gray-500">{item.satuan}</div>
           </div>
         </div>
