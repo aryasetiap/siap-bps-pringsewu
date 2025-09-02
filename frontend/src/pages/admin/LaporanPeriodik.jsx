@@ -25,9 +25,16 @@ import LaporanTable from "../../components/laporan/LaporanTable";
  * - JSX: Tampilan halaman laporan periodik
  */
 const LaporanPeriodik = () => {
+  const getToday = () => new Date().toISOString().split("T")[0];
+  const getOneMonthAgo = () => {
+    const date = new Date();
+    date.setDate(date.getDate() - 30);
+    return date.toISOString().split("T")[0];
+  };
+
   // State untuk filter tanggal mulai, tanggal akhir, dan unit kerja
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [startDate, setStartDate] = useState(getOneMonthAgo());
+  const [endDate, setEndDate] = useState(getToday());
   const [unitKerja, setUnitKerja] = useState("");
   // State untuk data hasil filter dan status loading
   const [data, setData] = useState([]);
@@ -176,11 +183,13 @@ const LaporanPeriodik = () => {
     } catch (err) {
       console.error("PDF download error:", err);
       toast.dismiss("pdf-loading");
-      toast.error(
-        err?.response?.data?.message ||
-          err.message ||
-          "Gagal mengunduh PDF. Silakan coba lagi."
-      );
+      let errorMsg =
+        typeof err?.response?.data === "string"
+          ? err.response.data
+          : err?.response?.data?.message ||
+            err.message ||
+            "Gagal mengunduh PDF. Silakan coba lagi.";
+      toast.error(errorMsg);
     }
   };
 
