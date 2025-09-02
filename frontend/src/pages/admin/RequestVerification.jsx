@@ -366,7 +366,7 @@ const RequestVerification = () => {
           id: itm.id,
           namaBarang: itm.namaBarang,
           jumlahDiminta: itm.jumlahDiminta,
-          jumlahDisetujui: itm.jumlahDiminta,
+          jumlahDisetujui: 0, // Ubah ke 0 agar tidak auto-fill
           stokTersedia: itm.stokTersedia,
           satuan: itm.satuan,
         })),
@@ -446,6 +446,8 @@ const RequestVerification = () => {
         jumlahDisetujui: 0,
       }));
     }
+    // Untuk "sebagian", JANGAN ubah jumlahDisetujui secara otomatis
+
     setVerifikasiData((prev) => ({
       ...prev,
       keputusan: apiKeputusan,
@@ -470,6 +472,8 @@ const RequestVerification = () => {
       toast.error("Pilih keputusan verifikasi!");
       return;
     }
+
+    // Validasi jumlah disetujui vs stok
     for (const item of verifikasiData.items) {
       if (item.jumlahDisetujui < 0) {
         toast.error("Jumlah disetujui tidak boleh negatif.");
@@ -481,6 +485,7 @@ const RequestVerification = () => {
         );
         return;
       }
+      // Pastikan validasi stok berjalan
       if (item.jumlahDisetujui > item.stokTersedia) {
         toast.error(
           `Jumlah disetujui untuk ${item.namaBarang} melebihi stok tersedia.`
@@ -488,6 +493,7 @@ const RequestVerification = () => {
         return;
       }
     }
+
     setLoading(true);
     try {
       await permintaanService.verifikasiPermintaan(selectedPermintaan.id, {
