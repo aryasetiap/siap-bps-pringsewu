@@ -32,13 +32,15 @@ export const useProfile = () => useContext(ProfileContext);
  */
 export const ProfileProvider = ({ children }) => {
   // State untuk menyimpan data profil user
-  const [profileData, setProfileData] = useState(null);
+  const [profile, setProfile] = useState(null);
   // State untuk menandakan proses loading data profil
   const [loading, setLoading] = useState(false);
 
   /**
-   * Fungsi untuk mengambil data profil user dari backend.
-   * Data foto juga disimpan di localStorage untuk akses cepat.
+   * Fungsi ini digunakan untuk mengambil data profil user dari backend.
+   * Data foto juga disimpan di localStorage untuk akses cepat pada fitur lain.
+   *
+   * Parameter: Tidak ada.
    *
    * Return:
    * - void
@@ -47,7 +49,7 @@ export const ProfileProvider = ({ children }) => {
     setLoading(true);
     try {
       const response = await userService.getProfile();
-      setProfileData(response.data);
+      setProfile(response.data);
 
       // Simpan foto di localStorage untuk akses cepat pada fitur lain
       if (response.data.foto) {
@@ -62,7 +64,7 @@ export const ProfileProvider = ({ children }) => {
   };
 
   /**
-   * Fungsi untuk memperbarui foto profil user.
+   * Fungsi ini digunakan untuk memperbarui foto profil user.
    * Foto baru juga diupdate di localStorage agar sinkron dengan data terbaru.
    *
    * Parameter:
@@ -78,7 +80,7 @@ export const ProfileProvider = ({ children }) => {
     setLoading(true);
     try {
       const response = await userService.updateProfilePhoto(formData);
-      setProfileData(response.data);
+      setProfile(response.data);
 
       // Update foto di localStorage agar konsisten di seluruh aplikasi
       if (response.data.foto) {
@@ -94,15 +96,22 @@ export const ProfileProvider = ({ children }) => {
     }
   };
 
-  // Ambil data profil saat komponen pertama kali di-mount
+  /**
+   * useEffect ini digunakan untuk mengambil data profil saat komponen pertama kali di-mount.
+   * Penting untuk memastikan data user tersedia pada fitur pengelolaan barang, permintaan, dan verifikasi.
+   */
   useEffect(() => {
     fetchProfile();
   }, []);
 
+  /**
+   * Provider ini membungkus children dan menyediakan state serta fungsi terkait profil user.
+   * State dan fungsi ini dapat digunakan pada fitur pengelolaan barang, permintaan, dan verifikasi.
+   */
   return (
     <ProfileContext.Provider
       value={{
-        profile: profileData,
+        profile,
         loading,
         fetchProfile,
         updateProfilePhoto,

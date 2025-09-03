@@ -1,7 +1,7 @@
 /**
- * Hook useAuth untuk aplikasi SIAP.
+ * useAuth.js
  *
- * Fungsi ini digunakan untuk mengelola status autentikasi pengguna pada aplikasi SIAP,
+ * Hook ini digunakan untuk mengelola status autentikasi pengguna pada aplikasi SIAP,
  * termasuk peran pengguna (admin/pegawai), username, dan status loading.
  * Cocok digunakan pada aplikasi pengelolaan barang, permintaan, dan verifikasi di SIAP.
  *
@@ -18,13 +18,51 @@
 import { useEffect, useState } from "react";
 
 /**
- * useAuth
- *
- * Hook utama untuk mengelola autentikasi pengguna SIAP.
- * Mengambil data dari localStorage dan menyediakan fungsi logout serta penentuan halaman utama.
+ * Mengambil data autentikasi dari localStorage.
  *
  * Return:
- * - Object: { isAuthenticated, userRole, username, loading, logout, getHomePage }
+ * - Object:
+ *   - token (string|null): Token autentikasi pengguna.
+ *   - role (string|null): Peran pengguna ('admin' atau 'pegawai').
+ *   - username (string|null): Nama pengguna yang sedang login.
+ */
+function getAuthData() {
+  const token = localStorage.getItem("authToken");
+  const role = localStorage.getItem("userRole");
+  const username = localStorage.getItem("username");
+  return { token, role, username };
+}
+
+/**
+ * Menghapus data autentikasi dari localStorage.
+ *
+ * Tidak menerima parameter.
+ *
+ * Return:
+ * - void
+ */
+function clearAuthData() {
+  localStorage.removeItem("authToken");
+  localStorage.removeItem("userRole");
+  localStorage.removeItem("username");
+}
+
+/**
+ * Hook utama untuk mengelola autentikasi pengguna SIAP.
+ *
+ * Fungsi ini digunakan untuk:
+ * - Mengambil status autentikasi dari localStorage.
+ * - Menyediakan fungsi logout.
+ * - Menentukan halaman utama sesuai peran pengguna.
+ *
+ * Return:
+ * - Object:
+ *   - isAuthenticated (boolean): Status autentikasi pengguna.
+ *   - userRole (string|null): Peran pengguna ('admin' atau 'pegawai').
+ *   - username (string|null): Nama pengguna yang sedang login.
+ *   - loading (boolean): Status loading saat mengambil data autentikasi.
+ *   - logout (function): Fungsi untuk logout dan menghapus data autentikasi.
+ *   - getHomePage (function): Fungsi untuk mendapatkan halaman utama sesuai peran.
  */
 export function useAuth() {
   // State untuk status autentikasi
@@ -37,16 +75,11 @@ export function useAuth() {
   const [loading, setLoading] = useState(true);
 
   /**
-   * useEffect
-   *
    * Efek samping untuk mengambil data autentikasi dari localStorage saat komponen pertama kali dirender.
    * Data yang diambil: token autentikasi, peran pengguna, dan username.
    */
   useEffect(() => {
-    const token = localStorage.getItem("authToken");
-    const role = localStorage.getItem("userRole");
-    const user = localStorage.getItem("username");
-
+    const { token, role, username: user } = getAuthData();
     setIsAuthenticated(Boolean(token));
     setUserRole(role);
     setUsername(user);
@@ -54,9 +87,7 @@ export function useAuth() {
   }, []);
 
   /**
-   * logout
-   *
-   * Fungsi ini digunakan untuk menghapus data autentikasi dari localStorage dan mengubah state menjadi logout.
+   * Fungsi untuk logout dan menghapus data autentikasi dari localStorage.
    *
    * Tidak menerima parameter.
    *
@@ -64,18 +95,14 @@ export function useAuth() {
    * - void
    */
   const logout = () => {
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("userRole");
-    localStorage.removeItem("username");
+    clearAuthData();
     setIsAuthenticated(false);
     setUserRole(null);
     setUsername(null);
   };
 
   /**
-   * getHomePage
-   *
-   * Fungsi ini digunakan untuk menentukan halaman utama yang sesuai dengan peran pengguna.
+   * Fungsi untuk menentukan halaman utama yang sesuai dengan peran pengguna.
    *
    * Tidak menerima parameter.
    *

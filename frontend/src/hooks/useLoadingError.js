@@ -8,10 +8,11 @@
  * Author: [Nama Anda]
  */
 
-import { useState, useCallback } from "react";
-
 /**
  * Hook custom untuk mengelola state loading dan error.
+ *
+ * Fungsi ini digunakan untuk mengatur status loading dan error secara konsisten
+ * pada proses pengelolaan barang, permintaan, dan verifikasi di aplikasi SIAP.
  *
  * Parameter:
  * - initialLoading (boolean): Status awal loading, default false.
@@ -27,12 +28,27 @@ import { useState, useCallback } from "react";
  *   - stopLoading (function): Menghentikan proses loading dan set error.
  *   - withLoading (function): Membungkus async function dengan state loading dan error.
  */
+import { useState, useCallback } from "react";
+
+/**
+ * Fungsi utama hook useLoadingError.
+ *
+ * Parameter:
+ * - initialLoading (boolean): Status awal loading.
+ * - initialError (string|null): Pesan error awal.
+ *
+ * Return:
+ * - Object utilitas pengelolaan loading dan error.
+ */
 const useLoadingError = (initialLoading = false, initialError = null) => {
   const [loading, setLoading] = useState(initialLoading);
   const [error, setError] = useState(initialError);
 
   /**
    * Memulai proses loading dan mereset pesan error.
+   *
+   * Fungsi ini digunakan untuk menandai bahwa proses sedang berlangsung
+   * dan menghapus pesan error sebelumnya.
    *
    * Return:
    * - void
@@ -44,6 +60,9 @@ const useLoadingError = (initialLoading = false, initialError = null) => {
 
   /**
    * Menghentikan proses loading dan mengatur pesan error jika ada.
+   *
+   * Fungsi ini digunakan untuk menandai bahwa proses telah selesai,
+   * dan jika terjadi error, pesan error dapat diatur.
    *
    * Parameter:
    * - errorMsg (string|null): Pesan error yang ingin ditampilkan, default null.
@@ -58,6 +77,9 @@ const useLoadingError = (initialLoading = false, initialError = null) => {
 
   /**
    * Membungkus fungsi async dengan state loading dan error.
+   *
+   * Fungsi ini digunakan untuk menjalankan proses async (misal: API call)
+   * dengan otomatis mengatur status loading dan error.
    * Cocok digunakan pada proses pengelolaan barang, permintaan, dan verifikasi
    * agar status loading dan error terupdate secara otomatis.
    *
@@ -90,7 +112,8 @@ const useLoadingError = (initialLoading = false, initialError = null) => {
         }
 
         stopLoading(errorMessage);
-        throw err; // Error tetap dilempar agar bisa ditangani di komponen pemanggil
+        // Error tetap dilempar agar bisa ditangani di komponen pemanggil
+        throw err;
       }
     },
     [startLoading, stopLoading]
