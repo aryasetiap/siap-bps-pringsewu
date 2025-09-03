@@ -100,13 +100,19 @@ const CetakBuktiPermintaan = () => {
 
       setPermintaan(transformedData);
     } catch (err) {
-      // Error handling jika gagal mengambil data permintaan
-      console.error("Error fetching permintaan:", err);
-      setError(
-        "Gagal memuat detail permintaan. " +
-          (err.response?.data?.message || err.message)
-      );
-      toast.error("Gagal memuat detail permintaan.");
+      // Tambahkan penanganan khusus untuk 404
+      if (err.response?.status === 404) {
+        setPermintaan(null);
+        setError(null);
+      } else {
+        // Error handling jika gagal mengambil data permintaan
+        console.error("Error fetching permintaan:", err);
+        setError(
+          "Gagal memuat detail permintaan. " +
+            (err.response?.data?.message || err.message)
+        );
+        toast.error("Gagal memuat detail permintaan.");
+      }
     } finally {
       setLoading(false);
     }
