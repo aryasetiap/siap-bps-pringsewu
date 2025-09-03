@@ -1,17 +1,20 @@
 /**
  * authService.js
  *
- * Modul ini menyediakan service untuk autentikasi dan manajemen user pada aplikasi SIAP.
+ * Modul ini menyediakan service untuk autentikasi dan manajemen user pada aplikasi SIAP BPS Pringsewu.
  * Digunakan untuk login, logout, verifikasi token, dan mengambil data user yang sedang login.
  *
- * Konteks bisnis: Digunakan dalam pengelolaan barang, permintaan, dan verifikasi user pada aplikasi SIAP BPS Pringsewu.
+ * Konteks bisnis:
+ * - Pengelolaan barang
+ * - Permintaan barang
+ * - Verifikasi user pada aplikasi SIAP BPS Pringsewu
  */
 
 import api from "./api";
 import axios from "axios";
 
 /**
- * Melakukan login user ke aplikasi SIAP.
+ * Fungsi untuk melakukan login user ke aplikasi SIAP.
  *
  * Parameter:
  * - credentials (Object): Berisi data login user, seperti username dan password.
@@ -24,7 +27,8 @@ export const login = (credentials) => {
 };
 
 /**
- * Melakukan logout user dari aplikasi SIAP.
+ * Fungsi untuk melakukan logout user dari aplikasi SIAP.
+ * Token autentikasi user akan diinvalidasi oleh server.
  *
  * Parameter:
  * - Tidak ada.
@@ -34,6 +38,7 @@ export const login = (credentials) => {
  */
 export const logout = () => {
   const token = localStorage.getItem("authToken");
+  // Pastikan token tersedia sebelum melakukan request logout
   return axios.post(
     "/api/auth/logout",
     {},
@@ -44,7 +49,8 @@ export const logout = () => {
 };
 
 /**
- * Memverifikasi apakah token autentikasi user masih valid.
+ * Fungsi untuk memverifikasi apakah token autentikasi user masih valid.
+ * Digunakan untuk memastikan user masih memiliki akses ke fitur aplikasi SIAP.
  *
  * Parameter:
  * - Tidak ada.
@@ -57,13 +63,14 @@ export const verifyToken = () => {
 };
 
 /**
- * Mengambil data user yang sedang login di aplikasi SIAP.
+ * Fungsi untuk mengambil data user yang sedang login di aplikasi SIAP.
+ * Data user meliputi nama, peran, dan hak akses yang digunakan dalam pengelolaan barang dan permintaan.
  *
  * Parameter:
  * - Tidak ada.
  *
  * Return:
- * - Promise: Berisi data user yang sedang login, seperti nama, peran, dan hak akses.
+ * - Promise: Berisi data user yang sedang login.
  */
 export const getCurrentUser = () => {
   return api.get("/auth/me");

@@ -11,10 +11,8 @@ import { toast } from "react-toastify";
 /**
  * Membuat instance axios dengan konfigurasi default untuk komunikasi API SIAP.
  *
- * Parameter: Tidak ada
- *
  * Return:
- * - axios instance: Instance axios yang sudah dikonfigurasi
+ * - axios instance: Instance axios yang sudah dikonfigurasi untuk komunikasi dengan backend SIAP
  */
 const api = axios.create({
   baseURL: "/api", // Base URL API SIAP
@@ -34,6 +32,15 @@ const api = axios.create({
  * - object: Konfigurasi request yang sudah ditambahkan header Authorization jika token tersedia
  */
 api.interceptors.request.use(
+  /**
+   * Fungsi ini digunakan untuk menambahkan header Authorization ke setiap request jika token tersedia.
+   *
+   * Parameter:
+   * - config (object): Konfigurasi request axios
+   *
+   * Return:
+   * - object: Konfigurasi request yang sudah ditambahkan header Authorization jika token tersedia
+   */
   (config) => {
     const token = localStorage.getItem("authToken");
     if (token) {
@@ -41,6 +48,15 @@ api.interceptors.request.use(
     }
     return config;
   },
+  /**
+   * Fungsi ini digunakan untuk menangani error pada saat request sebelum dikirim ke server.
+   *
+   * Parameter:
+   * - error (object): Error dari axios
+   *
+   * Return:
+   * - Promise: Promise yang menolak error
+   */
   (error) => Promise.reject(error)
 );
 
@@ -56,22 +72,38 @@ api.interceptors.request.use(
  * - object: Response jika sukses, atau Promise.reject(error) jika gagal
  */
 api.interceptors.response.use(
+  /**
+   * Fungsi ini digunakan untuk mengembalikan response jika request berhasil.
+   *
+   * Parameter:
+   * - response (object): Response dari server
+   *
+   * Return:
+   * - object: Response dari server
+   */
   (response) => response,
+  /**
+   * Fungsi ini digunakan untuk menangani error response dari server secara global.
+   * Menampilkan notifikasi error dan melakukan redirect sesuai status error.
+   *
+   * Parameter:
+   * - error (object): Error dari server atau jaringan
+   *
+   * Return:
+   * - Promise: Promise yang menolak error
+   */
   (error) => {
-    // Pesan error default
     let errorMessage = "Terjadi kesalahan. Silakan coba lagi.";
 
-    // Jika ada response dari server
     if (error.response) {
       const { status, data } = error.response;
 
       /**
        * Penanganan error berdasarkan status kode HTTP.
-       * - 400: Validasi input barang/permintaan/verifikasi gagal
+       * - 400/422: Validasi input barang/permintaan/verifikasi gagal
        * - 401: Token tidak valid/expired, sesi login berakhir
        * - 403: User tidak punya akses ke fitur tertentu
        * - 404: Data barang/permintaan/verifikasi tidak ditemukan
-       * - 422: Validasi data gagal
        * - 429: Terlalu banyak permintaan ke server
        * - 500: Error server
        */

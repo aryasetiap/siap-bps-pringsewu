@@ -17,6 +17,8 @@ const API_URL = "/user";
 /**
  * Membuat user baru oleh admin.
  *
+ * Fungsi ini digunakan untuk membuat user baru pada sistem SIAP.
+ *
  * Parameter:
  * - data (Object): Data user baru yang akan dibuat (misal: username, password, role, dll).
  *
@@ -27,6 +29,8 @@ export const createUser = (data) => api.post(API_URL, data);
 
 /**
  * Mengambil daftar seluruh user (hanya untuk admin).
+ *
+ * Fungsi ini digunakan untuk mendapatkan seluruh data user yang terdaftar di sistem SIAP.
  *
  * Parameter:
  * - Tidak ada.
@@ -39,6 +43,8 @@ export const getAllUsers = () => api.get(API_URL);
 /**
  * Mengambil data user berdasarkan ID (hanya untuk admin).
  *
+ * Fungsi ini digunakan untuk mendapatkan detail user berdasarkan ID unik.
+ *
  * Parameter:
  * - id (string|number): ID unik dari user yang ingin diambil datanya.
  *
@@ -49,6 +55,8 @@ export const getUserById = (id) => api.get(`${API_URL}/${id}`);
 
 /**
  * Memperbarui data user berdasarkan ID (hanya untuk admin).
+ *
+ * Fungsi ini digunakan untuk memperbarui data user tertentu berdasarkan ID.
  *
  * Parameter:
  * - id (string|number): ID unik dari user yang ingin diperbarui.
@@ -61,7 +69,8 @@ export const updateUser = (id, data) => api.patch(`${API_URL}/${id}`, data);
 
 /**
  * Melakukan soft delete user berdasarkan ID (hanya untuk admin).
- * Soft delete berarti user tidak dihapus permanen, hanya dinonaktifkan.
+ *
+ * Fungsi ini digunakan untuk menonaktifkan user tanpa menghapus data secara permanen.
  *
  * Parameter:
  * - id (string|number): ID unik dari user yang ingin dihapus.
@@ -73,6 +82,8 @@ export const deleteUserById = (id) => api.delete(`${API_URL}/${id}`);
 
 /**
  * Menghapus user berdasarkan username (khusus untuk testing/dev oleh admin).
+ *
+ * Fungsi ini digunakan untuk menghapus user berdasarkan username, biasanya untuk keperluan pengujian.
  *
  * Parameter:
  * - username (string): Username dari user yang ingin dihapus.
@@ -86,6 +97,8 @@ export const deleteUserByUsername = (username) =>
 /**
  * Mengambil profil user yang sedang login.
  *
+ * Fungsi ini digunakan untuk mendapatkan data profil user yang sedang login pada aplikasi SIAP.
+ *
  * Parameter:
  * - Tidak ada.
  *
@@ -97,6 +110,8 @@ export const getProfile = () => api.get(`${API_URL}/profile`);
 /**
  * Memperbarui profil user yang sedang login.
  *
+ * Fungsi ini digunakan untuk memperbarui data profil user yang sedang login.
+ *
  * Parameter:
  * - data (Object): Data baru untuk profil user (misal: nama, email, dll).
  *
@@ -107,6 +122,9 @@ export const updateProfile = (data) => api.patch(`${API_URL}/profile`, data);
 
 /**
  * Mengunggah atau memperbarui foto profil user yang sedang login.
+ *
+ * Fungsi ini digunakan untuk mengunggah atau memperbarui foto profil user.
+ * Pastikan parameter berupa FormData yang berisi file gambar.
  *
  * Parameter:
  * - formData (FormData): Data foto profil dalam format FormData.
@@ -121,7 +139,8 @@ export const updateProfilePhoto = (formData) =>
 
 /**
  * Mengambil data khusus yang hanya dapat diakses oleh admin.
- * Biasanya digunakan untuk verifikasi hak akses atau data sensitif.
+ *
+ * Fungsi ini digunakan untuk mendapatkan data sensitif atau khusus yang hanya boleh diakses oleh admin.
  *
  * Parameter:
  * - Tidak ada.
@@ -133,7 +152,8 @@ export const getAdminOnlyData = () => api.get(`${API_URL}/admin-only`);
 
 /**
  * Mengambil data khusus yang hanya dapat diakses oleh pegawai.
- * Digunakan untuk membatasi akses data sesuai peran user.
+ *
+ * Fungsi ini digunakan untuk membatasi akses data sesuai peran user (pegawai).
  *
  * Parameter:
  * - Tidak ada.
