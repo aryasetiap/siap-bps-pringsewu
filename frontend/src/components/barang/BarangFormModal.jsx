@@ -74,7 +74,7 @@ const BarangFormModal = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 animate-fadeIn">
-      <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-lg relative">
+      <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-lg relative barang-form-modal">
         {/* Tombol tutup modal */}
         <button
           className="absolute top-3 right-3 text-gray-400 hover:text-red-500 text-2xl font-bold transition"
@@ -127,40 +127,44 @@ const BarangFormModal = ({
               required
             />
           </div>
-          {/* Select kategori barang */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">
-              Kategori
-            </label>
-            <select
-              name="kategori"
-              value={formData.kategori}
-              onChange={onChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              required
-            >
-              <option value="">Pilih Kategori</option>
-              {renderKategoriOptions()}
-            </select>
+          {/* Grid responsive untuk kategori dan satuan */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Select kategori barang */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">
+                Kategori
+              </label>
+              <select
+                name="kategori"
+                value={formData.kategori}
+                onChange={onChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                required
+                data-testid="kategori-select"
+              >
+                <option value="">Pilih Kategori</option>
+                {renderKategoriOptions()}
+              </select>
+            </div>
+            {/* Select satuan barang */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">
+                Satuan
+              </label>
+              <select
+                name="satuan"
+                value={formData.satuan}
+                onChange={onChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                required
+              >
+                <option value="">Pilih Satuan</option>
+                {renderSatuanOptions()}
+              </select>
+            </div>
           </div>
-          {/* Select satuan barang */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">
-              Satuan
-            </label>
-            <select
-              name="satuan"
-              value={formData.satuan}
-              onChange={onChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              required
-            >
-              <option value="">Pilih Satuan</option>
-              {renderSatuanOptions()}
-            </select>
-          </div>
-          {/* Input stok awal dan stok minimum */}
-          <div className="grid grid-cols-2 gap-4">
+          {/* Input stok awal dan stok minimum - responsive grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">
                 Stok Awal

@@ -227,7 +227,10 @@ function Sidebar({ isOpenMobile, onCloseMobile, isCollapsed }) {
               leaveFrom="translate-x-0"
               leaveTo="-translate-x-full"
             >
-              <Dialog.Panel className="relative flex w-full max-w-xs flex-1 flex-col bg-gradient-to-b from-blue-800 to-blue-900 pb-4 pt-5 shadow-xl">
+              <Dialog.Panel
+                className="relative flex w-full max-w-xs flex-1 flex-col bg-gradient-to-b from-blue-800 to-blue-900 pb-4 pt-5 shadow-xl"
+                data-testid="mobile-sidebar"
+              >
                 <div className="absolute top-0 right-0 -mr-12 pt-2">
                   <button
                     type="button"
@@ -246,8 +249,18 @@ function Sidebar({ isOpenMobile, onCloseMobile, isCollapsed }) {
                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10 backdrop-blur-sm mb-3 shadow-lg">
                     <h2 className="text-2xl font-extrabold text-white">S</h2>
                   </div>
-                  <h2 className="text-2xl font-bold text-white mb-1">SIAP</h2>
-                  <p className="text-xs text-blue-200 mb-4">BPS Pringsewu</p>
+                  <h2
+                    className="text-2xl font-bold text-white mb-1"
+                    data-testid="sidebar-title"
+                  >
+                    SIAP
+                  </h2>
+                  <p
+                    className="text-xs text-blue-200 mb-4"
+                    data-testid="sidebar-subtitle"
+                  >
+                    BPS Pringsewu
+                  </p>
                 </div>
                 {/* User profile section */}
                 <div className="mx-3 mb-6 rounded-lg bg-blue-700/40 p-3">
@@ -288,6 +301,7 @@ function Sidebar({ isOpenMobile, onCloseMobile, isCollapsed }) {
           "hidden md:flex flex-shrink-0 bg-gradient-to-b from-blue-800 to-blue-900 shadow-lg transition-all duration-300 ease-in-out h-full fixed top-0 left-0 pt-5 pb-4 z-40 flex flex-col",
           isCollapsed ? "w-20" : "w-64"
         )}
+        data-testid="desktop-sidebar"
       >
         {/* Logo Section */}
         <LogoHeader collapsed={isCollapsed} />

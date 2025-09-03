@@ -234,12 +234,12 @@ const CetakBuktiPermintaan = () => {
         // State data permintaan berhasil diambil
         <div className="space-y-6">
           {/* Preview Bukti Permintaan */}
-          <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+          <div className="bg-white rounded-xl shadow-lg overflow-hidden print-area">
             <BuktiPermintaanPreview permintaan={permintaan} />
           </div>
 
           {/* Tombol aksi: Unduh PDF dan Print */}
-          <div className="flex flex-col sm:flex-row justify-center gap-4">
+          <div className="flex flex-col sm:flex-row justify-center gap-4 no-print">
             <button
               onClick={handleCetakPDF}
               disabled={pdfLoading}

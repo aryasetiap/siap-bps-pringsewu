@@ -265,8 +265,15 @@ const ManajemenBarang = () => {
    */
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // Validasi manual untuk field wajib
-    if (!formData.kode || !formData.nama || !formData.satuan) {
+    // Validasi field wajib
+    if (
+      !formData.kode ||
+      !formData.nama ||
+      !formData.kategori ||
+      !formData.satuan ||
+      formData.stok === "" ||
+      formData.stokMinimum === ""
+    ) {
       toast.error("Semua field wajib diisi!");
       return;
     }
