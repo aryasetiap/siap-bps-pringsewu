@@ -1,19 +1,24 @@
 /**
+ * File: ProfilePage.jsx
+ *
  * Halaman ProfilePage untuk aplikasi SIAP.
  *
  * Digunakan untuk menampilkan dan mengelola data profil pengguna, termasuk:
  * - Melihat detail profil (nama, username, unit kerja, role, foto)
+ *
  * - Mengubah data profil
  * - Mengubah password
  * - Mengunggah foto profil
  *
- * Parameter: Tidak ada parameter langsung (menggunakan state dan props internal)
+ * Konteks bisnis: SIAP adalah aplikasi pengelolaan barang, permintaan, dan verifikasi di lingkungan BPS Pringsewu.
+ *
+ * Tidak menerima parameter langsung, menggunakan state dan props internal.
  *
  * Return:
- * - Komponen React yang menampilkan halaman profil pengguna
+ * - Komponen React yang menampilkan halaman profil pengguna.
  */
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import ProfileForm from "../components/common/ProfileForm";
 import { toast } from "react-toastify";
 import * as userService from "../services/userService";
@@ -31,6 +36,9 @@ import {
  * - loading: Status loading untuk proses fetch/update
  * - error: Pesan error jika terjadi kegagalan
  * - photoLoading: Status loading khusus untuk upload foto
+ *
+ * Return:
+ * - Komponen halaman profil pengguna
  */
 const ProfilePage = () => {
   const [profile, setProfile] = useState(null);
@@ -38,20 +46,15 @@ const ProfilePage = () => {
   const [error, setError] = useState(null);
   const [photoLoading, setPhotoLoading] = useState(false);
 
-  // Fetch data profil saat komponen pertama kali di-mount
-  useEffect(() => {
-    fetchProfile();
-  }, []);
-
   /**
-   * Mengambil data profil pengguna dari API.
+   * Fungsi untuk mengambil data profil pengguna dari API.
    *
    * Parameter: Tidak ada
    *
    * Return:
    * - void (mengubah state profile, loading, error)
    */
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -70,31 +73,49 @@ const ProfilePage = () => {
 
       setProfile(userData);
     } catch (err) {
-      console.error("Error fetching profile:", err);
-      setError("Gagal memuat data profil");
-
-      // Penanganan error spesifik sesuai status kode API
-      if (err.response) {
-        if (err.response.status === 401) {
-          toast.error("Sesi login Anda telah berakhir. Silakan login kembali.");
-          // window.location.href = "/login"; // Redirect jika diperlukan
-        } else if (err.response.status === 403) {
-          toast.error("Anda tidak memiliki izin untuk mengakses data ini.");
-        } else {
-          toast.error(err.response.data?.message || "Gagal memuat profil.");
-        }
-      } else if (err.request) {
-        toast.error("Tidak dapat terhubung ke server. Periksa koneksi Anda.");
-      } else {
-        toast.error("Terjadi kesalahan saat memuat profil.");
-      }
+      handleProfileError(err);
     } finally {
       setLoading(false);
+    }
+  }, []); // Empty dependency array karena tidak ada dependencies
+
+  // Ambil data profil saat komponen pertama kali di-mount
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
+
+  /**
+   * Fungsi untuk menangani error saat mengambil data profil.
+   *
+   * Parameter:
+   * - err (Object): Error object dari request
+   *
+   * Return:
+   * - void (mengubah state error dan menampilkan toast)
+   */
+  const handleProfileError = (err) => {
+    console.error("Error fetching profile:", err);
+    setError("Gagal memuat data profil");
+
+    // Penanganan error spesifik sesuai status kode API
+    if (err.response) {
+      if (err.response.status === 401) {
+        toast.error("Sesi login Anda telah berakhir. Silakan login kembali.");
+        // window.location.href = "/login"; // Redirect jika diperlukan
+      } else if (err.response.status === 403) {
+        toast.error("Anda tidak memiliki izin untuk mengakses data ini.");
+      } else {
+        toast.error(err.response.data?.message || "Gagal memuat profil.");
+      }
+    } else if (err.request) {
+      toast.error("Tidak dapat terhubung ke server. Periksa koneksi Anda.");
+    } else {
+      toast.error("Terjadi kesalahan saat memuat profil.");
     }
   };
 
   /**
-   * Mengupdate data profil pengguna ke API.
+   * Fungsi untuk mengupdate data profil pengguna ke API.
    *
    * Parameter:
    * - data (Object): Data profil yang akan diupdate (nama, unitKerja)
@@ -114,31 +135,41 @@ const ProfilePage = () => {
       toast.success("Profil berhasil diperbarui!");
       fetchProfile(); // Reload data profil setelah update
     } catch (err) {
-      console.error("Error updating profile:", err);
-
-      // Penanganan error spesifik sesuai status kode API
-      if (err.response) {
-        if (err.response.status === 400) {
-          toast.error(err.response.data?.message || "Data profil tidak valid.");
-        } else if (err.response.status === 401) {
-          toast.error("Sesi login Anda telah berakhir. Silakan login kembali.");
-        } else {
-          toast.error(
-            err.response.data?.message || "Gagal memperbarui profil."
-          );
-        }
-      } else if (err.request) {
-        toast.error("Tidak dapat terhubung ke server. Periksa koneksi Anda.");
-      } else {
-        toast.error("Terjadi kesalahan saat memperbarui profil.");
-      }
+      handleUpdateError(err);
     } finally {
       setLoading(false);
     }
   };
 
   /**
-   * Mengubah password pengguna melalui API.
+   * Fungsi untuk menangani error saat update profil.
+   *
+   * Parameter:
+   * - err (Object): Error object dari request
+   *
+   * Return:
+   * - void (menampilkan toast error)
+   */
+  const handleUpdateError = (err) => {
+    console.error("Error updating profile:", err);
+
+    if (err.response) {
+      if (err.response.status === 400) {
+        toast.error(err.response.data?.message || "Data profil tidak valid.");
+      } else if (err.response.status === 401) {
+        toast.error("Sesi login Anda telah berakhir. Silakan login kembali.");
+      } else {
+        toast.error(err.response.data?.message || "Gagal memperbarui profil.");
+      }
+    } else if (err.request) {
+      toast.error("Tidak dapat terhubung ke server. Periksa koneksi Anda.");
+    } else {
+      toast.error("Terjadi kesalahan saat memperbarui profil.");
+    }
+  };
+
+  /**
+   * Fungsi untuk mengubah password pengguna melalui API.
    *
    * Parameter:
    * - data (Object): Data berisi password baru
@@ -152,29 +183,41 @@ const ProfilePage = () => {
       await userService.updateProfile({ password: data.passwordBaru });
       toast.success("Password berhasil diubah!");
     } catch (err) {
-      console.error("Error changing password:", err);
-
-      // Penanganan error spesifik sesuai status kode API
-      if (err.response) {
-        if (err.response.status === 400) {
-          toast.error(err.response.data?.message || "Password tidak valid.");
-        } else if (err.response.status === 401) {
-          toast.error("Sesi login Anda telah berakhir. Silakan login kembali.");
-        } else {
-          toast.error(err.response.data?.message || "Gagal mengubah password.");
-        }
-      } else if (err.request) {
-        toast.error("Tidak dapat terhubung ke server. Periksa koneksi Anda.");
-      } else {
-        toast.error("Terjadi kesalahan saat mengubah password.");
-      }
+      handlePasswordError(err);
     } finally {
       setLoading(false);
     }
   };
 
   /**
-   * Mengunggah foto profil pengguna ke API.
+   * Fungsi untuk menangani error saat mengubah password.
+   *
+   * Parameter:
+   * - err (Object): Error object dari request
+   *
+   * Return:
+   * - void (menampilkan toast error)
+   */
+  const handlePasswordError = (err) => {
+    console.error("Error changing password:", err);
+
+    if (err.response) {
+      if (err.response.status === 400) {
+        toast.error(err.response.data?.message || "Password tidak valid.");
+      } else if (err.response.status === 401) {
+        toast.error("Sesi login Anda telah berakhir. Silakan login kembali.");
+      } else {
+        toast.error(err.response.data?.message || "Gagal mengubah password.");
+      }
+    } else if (err.request) {
+      toast.error("Tidak dapat terhubung ke server. Periksa koneksi Anda.");
+    } else {
+      toast.error("Terjadi kesalahan saat mengubah password.");
+    }
+  };
+
+  /**
+   * Fungsi untuk mengunggah foto profil pengguna ke API.
    *
    * Parameter:
    * - e (Event): Event input file dari user
@@ -209,19 +252,32 @@ const ProfilePage = () => {
       toast.success("Foto profil berhasil diperbarui!");
       fetchProfile(); // Reload data profil setelah upload foto
     } catch (err) {
-      console.error("Error uploading photo:", err);
-
-      if (err.response) {
-        if (err.response.status === 400) {
-          toast.error(err.response.data?.message || "File tidak valid.");
-        } else {
-          toast.error(err.response.data?.message || "Gagal mengunggah foto.");
-        }
-      } else {
-        toast.error("Terjadi kesalahan saat mengunggah foto.");
-      }
+      handlePhotoError(err);
     } finally {
       setPhotoLoading(false);
+    }
+  };
+
+  /**
+   * Fungsi untuk menangani error saat upload foto profil.
+   *
+   * Parameter:
+   * - err (Object): Error object dari request
+   *
+   * Return:
+   * - void (menampilkan toast error)
+   */
+  const handlePhotoError = (err) => {
+    console.error("Error uploading photo:", err);
+
+    if (err.response) {
+      if (err.response.status === 400) {
+        toast.error(err.response.data?.message || "File tidak valid.");
+      } else {
+        toast.error(err.response.data?.message || "Gagal mengunggah foto.");
+      }
+    } else {
+      toast.error("Terjadi kesalahan saat mengunggah foto.");
     }
   };
 

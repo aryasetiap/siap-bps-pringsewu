@@ -1,7 +1,19 @@
 /**
- * File ini merupakan halaman Laporan Periodik Penggunaan Barang pada aplikasi SIAP.
- * Digunakan untuk menampilkan laporan penggunaan barang berdasarkan rentang tanggal dan unit kerja.
- * Fitur utama: filter data, ekspor PDF, dan menampilkan tabel laporan.
+ * ============================================================
+ * File: LaporanPeriodik.jsx
+ * Halaman Laporan Periodik Penggunaan Barang - SIAP BPS Pringsewu
+ *
+ * Deskripsi:
+ * Halaman ini digunakan untuk menampilkan laporan penggunaan barang
+ * berdasarkan rentang tanggal dan unit kerja. Fitur utama meliputi:
+ * - Filter data laporan
+ * - Ekspor laporan ke PDF
+ * - Tabel hasil laporan
+ *
+ * Konteks bisnis:
+ * Digunakan oleh admin untuk monitoring penggunaan barang, permintaan,
+ * dan verifikasi pada aplikasi SIAP (Sistem Informasi Administrasi Pengelolaan Barang).
+ * ============================================================
  */
 
 import React, { useState } from "react";
@@ -18,20 +30,73 @@ import LaporanFilterForm from "../../components/laporan/LaporanFilterForm";
 import LaporanTable from "../../components/laporan/LaporanTable";
 
 /**
- * Komponen utama untuk halaman laporan periodik penggunaan barang.
- * Mengelola state filter, data laporan, dan loading.
+ * Fungsi utilitas untuk mendapatkan tanggal hari ini dalam format YYYY-MM-DD.
+ *
+ * Return:
+ * - string: Tanggal hari ini (YYYY-MM-DD)
+ */
+const getToday = () => new Date().toISOString().split("T")[0];
+
+/**
+ * Fungsi utilitas untuk mendapatkan tanggal satu bulan yang lalu dari hari ini.
+ *
+ * Return:
+ * - string: Tanggal satu bulan lalu (YYYY-MM-DD)
+ */
+const getOneMonthAgo = () => {
+  const date = new Date();
+  date.setDate(date.getDate() - 30);
+  return date.toISOString().split("T")[0];
+};
+
+/**
+ * Fungsi untuk membangun query parameter dari filter yang dipilih.
+ *
+ * Parameter:
+ * - startDate (string): Tanggal mulai
+ * - endDate (string): Tanggal akhir
+ * - unitKerja (string): Nama unit kerja
+ *
+ * Return:
+ * - URLSearchParams: Query parameter untuk request API
+ */
+const buildQueryParams = (startDate, endDate, unitKerja) => {
+  const queryParams = new URLSearchParams();
+  queryParams.append("start", startDate);
+  queryParams.append("end", endDate);
+  if (unitKerja) {
+    queryParams.append("unit_kerja", unitKerja);
+  }
+  return queryParams;
+};
+
+/**
+ * Fungsi untuk memformat tanggal menjadi format yang mudah dibaca.
+ *
+ * Parameter:
+ * - date (Date): Objek tanggal
+ *
+ * Return:
+ * - string: Tanggal dalam format DD/MM/YYYY HH:MM
+ */
+const formatDateTime = (date) => {
+  return date.toLocaleString("id-ID", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+/**
+ * Komponen utama halaman laporan periodik penggunaan barang.
+ * Mengelola state filter, data laporan, dan status loading.
  *
  * Return:
  * - JSX: Tampilan halaman laporan periodik
  */
 const LaporanPeriodik = () => {
-  const getToday = () => new Date().toISOString().split("T")[0];
-  const getOneMonthAgo = () => {
-    const date = new Date();
-    date.setDate(date.getDate() - 30);
-    return date.toISOString().split("T")[0];
-  };
-
   // State untuk filter tanggal mulai, tanggal akhir, dan unit kerja
   const [startDate, setStartDate] = useState(getOneMonthAgo());
   const [endDate, setEndDate] = useState(getToday());
@@ -40,27 +105,6 @@ const LaporanPeriodik = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(null);
-
-  /**
-   * Fungsi untuk membangun query parameter dari filter yang dipilih.
-   *
-   * Parameter:
-   * - startDate (string): Tanggal mulai
-   * - endDate (string): Tanggal akhir
-   * - unitKerja (string): Nama unit kerja
-   *
-   * Return:
-   * - URLSearchParams: Query parameter untuk request API
-   */
-  const buildQueryParams = (startDate, endDate, unitKerja) => {
-    const queryParams = new URLSearchParams();
-    queryParams.append("start", startDate);
-    queryParams.append("end", endDate);
-    if (unitKerja) {
-      queryParams.append("unit_kerja", unitKerja);
-    }
-    return queryParams;
-  };
 
   /**
    * Fungsi untuk memproses filter dan mengambil data laporan penggunaan barang.
@@ -109,7 +153,7 @@ const LaporanPeriodik = () => {
     try {
       const queryParams = buildQueryParams(startDate, endDate, unitKerja);
 
-      // Add loading indicator
+      // Tampilkan indikator loading pada toast
       toast.info("Sedang mengunduh PDF...", {
         autoClose: false,
         toastId: "pdf-loading",
@@ -117,24 +161,23 @@ const LaporanPeriodik = () => {
 
       const res = await getLaporanPenggunaanPDF(queryParams);
 
-      // Dismiss loading toast
+      // Hilangkan loading toast
       toast.dismiss("pdf-loading");
 
-      // Check if response is valid - ensure proper blob type and size
+      // Validasi response blob PDF
       if (!res.data || !(res.data instanceof Blob)) {
         throw new Error("PDF data tidak valid");
       }
 
-      // If the blob is empty or too small, it might be an error response
+      // Jika blob terlalu kecil, kemungkinan error response
       if (res.data.size < 100) {
-        // Try to read the blob as text to check for error messages
         const text = await res.data.text();
         if (text && (text.includes("error") || text.includes("tidak"))) {
           throw new Error(text || "PDF data tidak valid");
         }
       }
 
-      // Create download link
+      // Proses download PDF
       const url = window.URL.createObjectURL(
         new Blob([res.data], { type: "application/pdf" })
       );
@@ -148,16 +191,14 @@ const LaporanPeriodik = () => {
       );
       document.body.appendChild(link);
 
-      // For IDM compatibility, add a small delay
+      // Kompatibilitas dengan IDM (Internet Download Manager)
       setTimeout(() => {
         link.click();
 
-        // Add a flag to detect if download manager is being used
+        // Deteksi jika download manager mengintersep download
         let downloadIntercepted = false;
         setTimeout(() => {
-          // If URL wasn't revoked, assume download manager took over
           try {
-            // Try to access the URL - if it's still valid, a download manager likely intercepted it
             const testAccess = new XMLHttpRequest();
             testAccess.open("HEAD", url, false);
             testAccess.send();
@@ -165,17 +206,16 @@ const LaporanPeriodik = () => {
               downloadIntercepted = true;
             }
           } catch (e) {
-            // Error means URL was properly revoked, normal browser download happened
+            // Jika error, berarti URL sudah direvoke (download normal)
           }
 
-          // Always show success if we got this far
           toast.success(
             downloadIntercepted
               ? "PDF diunduh oleh download manager"
               : "PDF berhasil diunduh"
           );
 
-          // Clean up
+          // Bersihkan resource
           window.URL.revokeObjectURL(url);
           link.remove();
         }, 500);
@@ -191,22 +231,6 @@ const LaporanPeriodik = () => {
             "Gagal mengunduh PDF. Silakan coba lagi.";
       toast.error(errorMsg);
     }
-  };
-
-  /**
-   * Fungsi untuk memformat tanggal menjadi format yang lebih mudah dibaca
-   *
-   * @param {Date} date - Objek tanggal
-   * @return {string} - Tanggal dalam format DD/MM/YYYY HH:MM
-   */
-  const formatDateTime = (date) => {
-    return date.toLocaleString("id-ID", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
   };
 
   return (

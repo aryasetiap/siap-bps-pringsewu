@@ -1,7 +1,7 @@
 /**
  * File: AdminDashboard.jsx
  * Halaman dashboard admin untuk aplikasi SIAP BPS Pringsewu.
- * Menampilkan statistik, grafik, notifikasi stok kritis, dan permintaan barang terbaru.
+ * Menampilkan statistik, grafik permintaan barang, notifikasi stok kritis, dan permintaan barang terbaru.
  *
  * Komponen ini mengelola data dashboard dan modal detail permintaan barang.
  */
@@ -49,13 +49,17 @@ const AdminDashboard = () => {
 
   /**
    * Efek samping untuk mengambil data dashboard saat komponen pertama kali dirender.
+   *
+   * Parameter: Tidak ada
+   *
+   * Return: void
    */
   useEffect(() => {
-    fetchDashboard();
+    fetchDashboardData();
   }, []);
 
   /**
-   * Fungsi untuk mengambil seluruh data dashboard dari backend.
+   * Fungsi ini digunakan untuk mengambil seluruh data dashboard dari backend secara paralel.
    *
    * Parameter: Tidak ada
    *
@@ -63,10 +67,9 @@ const AdminDashboard = () => {
    * - Mengupdate state stats, chartData, notifKritis, recentRequests, dan loading.
    * - Menampilkan toast error jika gagal mengambil data.
    */
-  const fetchDashboard = async () => {
+  const fetchDashboardData = async () => {
     setLoading(true);
     try {
-      // Mengambil data statistik, grafik, notifikasi kritis, dan permintaan terbaru secara paralel
       const [statsRes, chartRes, notifRes, recentRes] = await Promise.all([
         dashboardService.getStats(),
         dashboardService.getChart(),
@@ -79,12 +82,13 @@ const AdminDashboard = () => {
       setRecentRequests(recentRes.data);
     } catch (err) {
       toast.error("Gagal memuat data dashboard.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   /**
-   * Fungsi untuk menampilkan detail permintaan barang pada modal.
+   * Fungsi ini digunakan untuk menampilkan detail permintaan barang pada modal.
    *
    * Parameter:
    * - req (Object): Data permintaan barang yang dipilih.
@@ -97,7 +101,7 @@ const AdminDashboard = () => {
   };
 
   /**
-   * Fungsi untuk menutup modal detail permintaan barang.
+   * Fungsi ini digunakan untuk menutup modal detail permintaan barang.
    *
    * Parameter: Tidak ada
    *
@@ -107,7 +111,7 @@ const AdminDashboard = () => {
   const closeModal = () => setSelectedRequest(null);
 
   /**
-   * Fungsi untuk menentukan kelas status permintaan barang.
+   * Fungsi ini digunakan untuk menentukan kelas status permintaan barang.
    *
    * Parameter:
    * - status (string): Status permintaan barang.

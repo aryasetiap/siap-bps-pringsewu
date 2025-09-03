@@ -1,8 +1,8 @@
 /**
- * Halaman ManajemenBarang digunakan untuk mengelola data barang pada aplikasi SIAP.
+ * File: ManajemenBarang.jsx
+ * Halaman ini digunakan untuk mengelola data barang pada aplikasi SIAP.
  * Fitur utama: pencarian, filter, tambah/edit/hapus barang, dan penambahan stok.
- *
- * Parameter: Tidak ada parameter langsung, semua state dikelola secara internal.
+ * Semua state dikelola secara internal.
  *
  * Return:
  * - Komponen React yang menampilkan UI manajemen barang beserta modals dan tabel.
@@ -16,8 +16,10 @@ import BarangStokModal from "../../components/barang/BarangStokModal";
 import * as barangService from "../../services/barangService";
 import { toast } from "react-toastify";
 
+// Pilihan satuan barang
 const satuanOptions = ["pcs", "box", "rim", "pack", "unit", "set"];
 
+// Pilihan kategori default barang
 const defaultKategoriOptions = [
   "ATK",
   "Elektronik",
@@ -35,6 +37,13 @@ const defaultKategoriOptions = [
   "Lainnya",
 ];
 
+/**
+ * Komponen utama halaman manajemen barang.
+ * Mengelola state, pengambilan data, filter, dan aksi CRUD barang.
+ *
+ * Return:
+ * - JSX: UI halaman manajemen barang
+ */
 const ManajemenBarang = () => {
   // State utama untuk data barang dan filter
   const [barang, setBarang] = useState([]);
@@ -83,9 +92,10 @@ const ManajemenBarang = () => {
   /**
    * Fungsi untuk mengambil data barang dari backend dan mengatur state barang.
    *
-   * Parameter: Tidak ada
+   * Tidak menerima parameter.
    *
-   * Return: void
+   * Return:
+   * - void
    */
   const fetchBarang = async () => {
     setLoading(true);
@@ -107,6 +117,7 @@ const ManajemenBarang = () => {
         updatedAt: item.updated_at,
       }));
       setBarang(mapped);
+
       // Ambil semua kategori unik untuk filter
       const kategoriSet = new Set([
         ...defaultKategoriOptions,
@@ -121,13 +132,16 @@ const ManajemenBarang = () => {
 
   /**
    * Efek untuk melakukan filter dan pencarian pada data barang.
+   * Filter berdasarkan pencarian, kategori, status stok, dan status aktif barang.
    *
-   * Parameter: Tidak ada
+   * Tidak menerima parameter.
    *
-   * Return: void
+   * Return:
+   * - void
    */
   useEffect(() => {
     let filtered = barang;
+
     // Filter berdasarkan pencarian nama/kode barang
     if (searchTerm) {
       filtered = filtered.filter(
@@ -136,10 +150,12 @@ const ManajemenBarang = () => {
           item.kode.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
+
     // Filter berdasarkan kategori barang
     if (filterKategori) {
       filtered = filtered.filter((item) => item.kategori === filterKategori);
     }
+
     // Filter berdasarkan status stok barang
     if (filterStatus) {
       if (filterStatus === "kritis") {
@@ -148,12 +164,15 @@ const ManajemenBarang = () => {
         filtered = filtered.filter((item) => item.stok > item.stokMinimum);
       }
     }
+
     // Filter berdasarkan status aktif barang
     if (filterAktif === "aktif") {
       filtered = filtered.filter((item) => item.statusAktif);
     } else if (filterAktif === "nonaktif") {
       filtered = filtered.filter((item) => !item.statusAktif);
     }
+    // Jika "all", tampilkan semua barang tanpa filter status aktif
+
     setFilteredBarang(filtered);
   }, [searchTerm, filterKategori, filterStatus, filterAktif, barang]);
 
@@ -163,7 +182,8 @@ const ManajemenBarang = () => {
    * Parameter:
    * - e (Event): Event perubahan input
    *
-   * Return: void
+   * Return:
+   * - void
    */
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -176,7 +196,8 @@ const ManajemenBarang = () => {
    * Parameter:
    * - e (Event): Event perubahan input
    *
-   * Return: void
+   * Return:
+   * - void
    */
   const handleStokChange = (e) => {
     const { name, value } = e.target;
@@ -185,10 +206,12 @@ const ManajemenBarang = () => {
 
   /**
    * Fungsi untuk membuka modal tambah barang.
+   * Mengatur mode modal ke "add" dan reset form.
    *
-   * Parameter: Tidak ada
+   * Tidak menerima parameter.
    *
-   * Return: void
+   * Return:
+   * - void
    */
   const openAddModal = () => {
     setModalMode("add");
@@ -206,11 +229,13 @@ const ManajemenBarang = () => {
 
   /**
    * Fungsi untuk membuka modal edit barang.
+   * Mengatur mode modal ke "edit" dan mengisi form dengan data barang terpilih.
    *
    * Parameter:
    * - item (Object): Data barang yang akan diedit
    *
-   * Return: void
+   * Return:
+   * - void
    */
   const openEditModal = (item) => {
     setModalMode("edit");
@@ -229,11 +254,13 @@ const ManajemenBarang = () => {
 
   /**
    * Fungsi untuk membuka modal penambahan stok barang.
+   * Mengatur barang terpilih dan reset form stok.
    *
    * Parameter:
    * - item (Object): Data barang yang akan ditambah stoknya
    *
-   * Return: void
+   * Return:
+   * - void
    */
   const openStokModal = (item) => {
     setSelectedBarang(item);
@@ -243,11 +270,13 @@ const ManajemenBarang = () => {
 
   /**
    * Fungsi untuk membuka modal konfirmasi hapus barang.
+   * Menyimpan ID barang yang akan dihapus.
    *
    * Parameter:
    * - id (number): ID barang yang akan dihapus
    *
-   * Return: void
+   * Return:
+   * - void
    */
   const openDeleteModal = (id) => {
     setDeleteBarangId(id);
@@ -261,10 +290,12 @@ const ManajemenBarang = () => {
    * Parameter:
    * - e (Event): Event submit form
    *
-   * Return: void
+   * Return:
+   * - void
    */
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     // Validasi field wajib
     if (
       !formData.kode ||
@@ -285,6 +316,7 @@ const ManajemenBarang = () => {
       toast.error("Stok minimum harus angka positif!");
       return;
     }
+
     setLoading(true);
     try {
       if (modalMode === "add") {
@@ -325,11 +357,13 @@ const ManajemenBarang = () => {
    * Parameter:
    * - e (Event): Event submit form
    *
-   * Return: void
+   * Return:
+   * - void
    */
   const handleStokSubmit = async (e) => {
     e.preventDefault();
     const jumlahInt = parseInt(stokData.jumlahTambah, 10);
+
     if (
       !stokData.jumlahTambah ||
       isNaN(jumlahInt) ||
@@ -339,6 +373,7 @@ const ManajemenBarang = () => {
       toast.error("Jumlah penambahan harus angka bulat positif!");
       return;
     }
+
     setLoading(true);
     try {
       await barangService.tambahStok(selectedBarang.id, jumlahInt);
@@ -355,17 +390,19 @@ const ManajemenBarang = () => {
 
   /**
    * Handler untuk menghapus (menonaktifkan) barang.
+   * Barang tidak dihapus permanen, hanya dinonaktifkan.
    *
-   * Parameter: Tidak ada
+   * Tidak menerima parameter.
    *
-   * Return: void
+   * Return:
+   * - void
    */
   const handleDelete = async () => {
     setLoading(true);
     try {
       await barangService.deleteBarang(deleteBarangId);
       toast.success("Barang berhasil dihapus!");
-      await fetchBarang(); // pastikan fetchBarang menunggu data terbaru
+      await fetchBarang(); // Pastikan data barang terbaru diambil
     } catch (err) {
       toast.error(err?.response?.data?.message || "Gagal menghapus barang.");
     }
@@ -376,6 +413,7 @@ const ManajemenBarang = () => {
 
   /**
    * Fungsi helper untuk menentukan warna status stok barang.
+   * Digunakan untuk menampilkan status stok kritis/normal pada tabel.
    *
    * Parameter:
    * - stok (number): Jumlah stok barang
@@ -391,6 +429,7 @@ const ManajemenBarang = () => {
 
   /**
    * Fungsi helper untuk menentukan teks status stok barang.
+   * Digunakan untuk menampilkan label status pada tabel.
    *
    * Parameter:
    * - stok (number): Jumlah stok barang
@@ -404,11 +443,13 @@ const ManajemenBarang = () => {
 
   /**
    * Handler untuk mengaktifkan kembali barang yang telah dinonaktifkan.
+   * Barang yang dihapus dapat diaktifkan kembali.
    *
    * Parameter:
    * - id (number): ID barang yang akan diaktifkan
    *
-   * Return: void
+   * Return:
+   * - void
    */
   const handleAktifkan = async (id) => {
     setLoading(true);
@@ -455,6 +496,7 @@ const ManajemenBarang = () => {
       {/* Filter & Actions */}
       <div className="mb-4">
         <div className="flex flex-wrap gap-3 items-center bg-white rounded-xl shadow border border-gray-100 px-4 py-3">
+          {/* Input pencarian barang */}
           <div className="relative flex-1 min-w-[220px]">
             <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
             <input
@@ -465,8 +507,9 @@ const ManajemenBarang = () => {
               className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition text-sm"
             />
           </div>
+          {/* Filter kategori barang */}
           <select
-            name="kategori" // Tambahkan ini
+            name="kategori"
             value={filterKategori}
             onChange={(e) => setFilterKategori(e.target.value)}
             className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition text-sm"
@@ -478,6 +521,7 @@ const ManajemenBarang = () => {
               </option>
             ))}
           </select>
+          {/* Filter status stok barang */}
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
@@ -487,6 +531,7 @@ const ManajemenBarang = () => {
             <option value="normal">Normal</option>
             <option value="kritis">Stok Kritis</option>
           </select>
+          {/* Filter status aktif barang */}
           <select
             value={filterAktif}
             onChange={(e) => setFilterAktif(e.target.value)}
@@ -496,6 +541,7 @@ const ManajemenBarang = () => {
             <option value="nonaktif">Barang Nonaktif</option>
             <option value="all">Semua Barang</option>
           </select>
+          {/* Tombol tambah barang */}
           <button
             onClick={openAddModal}
             className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 shadow transition text-sm"
@@ -505,6 +551,7 @@ const ManajemenBarang = () => {
         </div>
       </div>
       <div className="mb-2 border-b border-gray-100"></div>
+      {/* Tabel barang */}
       <BarangTable
         data={filteredBarang}
         onEdit={openEditModal}
@@ -514,6 +561,7 @@ const ManajemenBarang = () => {
         getStatusText={getStatusText}
         onAktifkan={handleAktifkan}
       />
+      {/* Modal tambah/edit barang */}
       <BarangFormModal
         show={showModal}
         mode={modalMode}
@@ -525,6 +573,7 @@ const ManajemenBarang = () => {
         onClose={() => setShowModal(false)}
         onSubmit={handleSubmit}
       />
+      {/* Modal penambahan stok barang */}
       <BarangStokModal
         show={showStokModal}
         barang={selectedBarang}

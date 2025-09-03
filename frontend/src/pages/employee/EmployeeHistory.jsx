@@ -1,13 +1,8 @@
 /**
- * Halaman EmployeeHistory.jsx
+ * File: EmployeeHistory.jsx
  *
  * Halaman ini digunakan untuk menampilkan riwayat permintaan barang oleh pegawai pada aplikasi SIAP.
  * Fitur utama meliputi pencarian, filter status, pagination, dan detail permintaan.
- *
- * Komponen utama:
- * - EmployeeHistory: Komponen utama halaman riwayat permintaan.
- * - EmployeeRequestHistoryTable: Tabel daftar permintaan.
- * - EmployeeRequestDetailModal: Modal detail permintaan.
  *
  * Konteks bisnis: Pengelolaan permintaan barang, verifikasi, dan dokumentasi permintaan.
  */
@@ -27,7 +22,7 @@ import * as permintaanService from "../../services/permintaanService";
 import EmployeeRequestHistoryTable from "../../components/employee/EmployeeRequestHistoryTable";
 import EmployeeRequestDetailModal from "../../components/employee/EmployeeRequestDetailModal";
 
-// Opsi status permintaan barang
+// Konstanta opsi status permintaan barang
 const STATUS_OPTIONS = [
   { value: "", label: "Semua Status" },
   { value: "Menunggu", label: "Menunggu" },
@@ -63,7 +58,7 @@ const EmployeeHistory = () => {
   const [pdfLoading, setPdfLoading] = useState(false); // Status loading PDF
 
   /**
-   * Mengambil data riwayat permintaan barang dari backend.
+   * Fungsi untuk mengambil data riwayat permintaan barang dari backend.
    *
    * Parameter:
    * - page (number): Nomor halaman yang ingin diambil.
@@ -128,19 +123,21 @@ const EmployeeHistory = () => {
     [filterStatus, searchTerm, limit]
   );
 
-  // Load data pertama kali dan setiap kali filter/pagination berubah
+  /**
+   * Efek untuk memuat data pertama kali dan setiap kali filter/pagination berubah.
+   *
+   * Return:
+   * - void: Memanggil fetchData pada halaman pertama.
+   */
   useEffect(() => {
     fetchData(1);
   }, [fetchData]);
 
   /**
-   * Melakukan filter dan pencarian pada data permintaan.
-   *
-   * Parameter:
-   * - Tidak ada (menggunakan state permintaan, searchTerm, filterStatus)
+   * Efek untuk melakukan filter dan pencarian pada data permintaan.
    *
    * Return:
-   * - void: Mengupdate state filtered.
+   * - void: Mengupdate state filtered sesuai searchTerm dan filterStatus.
    */
   useEffect(() => {
     let data = permintaan;
@@ -160,7 +157,7 @@ const EmployeeHistory = () => {
   }, [searchTerm, filterStatus, permintaan]);
 
   /**
-   * Memformat tanggal ke format Indonesia.
+   * Fungsi untuk memformat tanggal ke format Indonesia.
    *
    * Parameter:
    * - dateString (string): Tanggal dalam format ISO atau string.
@@ -184,7 +181,7 @@ const EmployeeHistory = () => {
   };
 
   /**
-   * Mendapatkan warna status permintaan untuk badge.
+   * Fungsi untuk mendapatkan warna status permintaan untuk badge.
    *
    * Parameter:
    * - status (string): Status permintaan barang.

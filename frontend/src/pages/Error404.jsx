@@ -7,6 +7,9 @@
  * Komponen ini memanfaatkan ErrorPage sebagai tampilan utama.
  */
 
+/**
+ * Import React dan komponen serta ikon yang diperlukan.
+ */
 import React from "react";
 import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 import ErrorPage from "../components/common/ErrorPage";
@@ -21,7 +24,7 @@ import ErrorPage from "../components/common/ErrorPage";
  * - Tidak ada parameter yang diterima.
  *
  * Return:
- * - JSX: Komponen ErrorPage dengan konfigurasi error 404.
+ * - JSX: Komponen ErrorPage yang menampilkan pesan error 404 beserta ikon dan detailnya.
  */
 const Error404 = () => {
   return (

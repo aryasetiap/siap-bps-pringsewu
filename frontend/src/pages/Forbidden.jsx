@@ -15,9 +15,46 @@ import {
 import ErrorPage from "../components/common/ErrorPage";
 
 /**
+ * Fungsi getAuthenticationStatus
+ *
+ * Fungsi ini digunakan untuk memeriksa status autentikasi user pada aplikasi SIAP.
+ *
+ * Parameter:
+ * - Tidak ada
+ *
+ * Return:
+ * - boolean: True jika user terautentikasi, false jika tidak.
+ */
+const getAuthenticationStatus = () => {
+  return Boolean(localStorage.getItem("authToken"));
+};
+
+/**
+ * Fungsi handleLogout
+ *
+ * Fungsi ini digunakan untuk menghapus data autentikasi user dari localStorage
+ * dan mengarahkan user ke halaman login aplikasi SIAP.
+ *
+ * Parameter:
+ * - navigate (function): Fungsi untuk melakukan navigasi ke halaman lain.
+ *
+ * Return:
+ * - void: Tidak mengembalikan nilai.
+ */
+const handleLogout = (navigate) => {
+  // Hapus semua data autentikasi terkait user SIAP
+  localStorage.removeItem("authToken");
+  localStorage.removeItem("userRole");
+  localStorage.removeItem("username");
+
+  // Redirect ke halaman login aplikasi SIAP
+  navigate("/login");
+};
+
+/**
  * Komponen Forbidden
  *
- * Komponen ini menampilkan halaman error 403 Forbidden.
+ * Komponen ini menampilkan halaman error 403 Forbidden pada aplikasi SIAP.
  * Jika user terautentikasi, tombol logout akan muncul untuk menghapus data autentikasi dan mengarahkan ke halaman login.
  *
  * Return:
@@ -25,28 +62,7 @@ import ErrorPage from "../components/common/ErrorPage";
  */
 const Forbidden = () => {
   const navigate = useNavigate();
-
-  // Mendapatkan status autentikasi user dari localStorage
-  const isAuthenticated = Boolean(localStorage.getItem("authToken"));
-
-  /**
-   * Fungsi handleLogout
-   *
-   * Fungsi ini digunakan untuk menghapus data autentikasi user dari localStorage dan mengarahkan ke halaman login.
-   *
-   * Parameter: Tidak ada
-   *
-   * Return: Tidak ada
-   */
-  const handleLogout = () => {
-    // Hapus semua data autentikasi terkait user SIAP
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("userRole");
-    localStorage.removeItem("username");
-
-    // Redirect ke halaman login aplikasi SIAP
-    navigate("/login");
-  };
+  const isAuthenticated = getAuthenticationStatus();
 
   return (
     <ErrorPage
@@ -60,7 +76,7 @@ const Forbidden = () => {
       {/* Tampilkan tombol logout hanya jika user terautentikasi */}
       {isAuthenticated && (
         <button
-          onClick={handleLogout}
+          onClick={() => handleLogout(navigate)}
           className="flex items-center justify-center px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 shadow-md transition-colors"
         >
           <ArrowRightOnRectangleIcon className="w-5 h-5 mr-2" />

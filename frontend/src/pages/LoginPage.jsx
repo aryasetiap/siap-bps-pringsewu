@@ -1,16 +1,19 @@
 /**
+ * ============================================
+ * File: LoginPage.jsx
+ * --------------------------------------------
  * Halaman Login SIAP (Sistem Aplikasi Pengelolaan Aset & Persediaan)
  *
  * Digunakan untuk autentikasi user (admin/pegawai) sebelum mengakses fitur pengelolaan barang dan permintaan.
- *
- * Komponen ini terdiri dari dua bagian utama:
+ * Terdiri dari dua bagian utama:
  * - Branding aplikasi (kiri, desktop)
  * - Form login (kanan)
  *
- * Parameter: Tidak ada (menggunakan state internal dan hook React)
+ * Tidak menerima parameter eksternal, menggunakan state internal dan hook React.
  *
  * Return:
  * - JSX: Tampilan halaman login SIAP
+ * ============================================
  */
 
 import React, { useState, useEffect } from "react";
@@ -74,6 +77,11 @@ function LoginPage() {
   /**
    * Efek untuk melakukan pengecekan token autentikasi saat komponen mount.
    * Jika user sudah login, redirect ke halaman sesuai role.
+   *
+   * Tidak menerima parameter.
+   *
+   * Return:
+   * - void
    */
   useEffect(() => {
     const token = localStorage.getItem("authToken");
@@ -92,13 +100,14 @@ function LoginPage() {
   /**
    * Handler perubahan input form login.
    *
+   * Fungsi ini digunakan untuk mengupdate state formData sesuai input user,
+   * serta mereset error pada field yang diubah dan error umum jika ada.
+   *
    * Parameter:
    * - e (SyntheticEvent): Event perubahan input
    *
-   * Efek:
-   * - Update state formData sesuai input
-   * - Reset error pada field yang diubah
-   * - Reset error umum jika ada
+   * Return:
+   * - void
    */
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -124,11 +133,13 @@ function LoginPage() {
   /**
    * Fungsi validasi form login sebelum submit.
    *
+   * Fungsi ini digunakan untuk memastikan input username dan password sudah sesuai aturan.
+   * Jika ada error, akan mengisi state errors.
+   *
+   * Tidak menerima parameter.
+   *
    * Return:
    * - boolean: true jika valid, false jika ada error
-   *
-   * Efek:
-   * - Set state errors jika ada input yang tidak valid
    */
   const validateForm = () => {
     const newErrors = {};
@@ -150,15 +161,14 @@ function LoginPage() {
   /**
    * Handler submit form login.
    *
+   * Fungsi ini digunakan untuk memproses login user ke backend, menyimpan token,
+   * dan melakukan redirect sesuai role user. Menangani error login dan menampilkan notifikasi.
+   *
    * Parameter:
    * - e (SyntheticEvent): Event submit form
    *
-   * Efek:
-   * - Validasi input
-   * - Proses autentikasi ke backend
-   * - Simpan token dan data user di localStorage
-   * - Redirect ke halaman sesuai role
-   * - Tampilkan notifikasi sukses/gagal
+   * Return:
+   * - Promise<void>
    */
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -195,6 +205,7 @@ function LoginPage() {
       // Penanganan error login
       console.error("Login error:", err);
 
+      // Penjelasan: Penanganan error dibagi menjadi error dari response server, error koneksi, dan error lain.
       if (err.response) {
         // Error dari response server
         const status = err.response.status;
@@ -233,7 +244,9 @@ function LoginPage() {
     }
   };
 
-  // --- UI tidak diubah sesuai instruksi ---
+  // =========================
+  // UI: Branding & Form Login
+  // =========================
   return (
     <div className="min-h-screen flex flex-col md:flex-row overflow-hidden">
       {/* Left Section - Branding SIAP */}

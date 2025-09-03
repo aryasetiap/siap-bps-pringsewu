@@ -1,4 +1,6 @@
 /**
+ * File: EmployeeRequest.jsx
+ *
  * Halaman EmployeeRequestPage digunakan untuk pengajuan permintaan barang oleh pegawai.
  * Pegawai dapat memilih barang dari daftar, menambahkannya ke keranjang, mengatur jumlah,
  * menambahkan catatan, dan mengirim permintaan ke admin untuk diverifikasi.
@@ -31,7 +33,7 @@ import * as employeeRequestService from "../../services/employeeRequestService";
  * - JSX: Tampilan halaman permintaan barang
  */
 const EmployeeRequestPage = () => {
-  // State untuk data barang, filter, keranjang, dan loading
+  // State utama untuk data barang, filter, keranjang, dan loading
   const [barang, setBarang] = useState([]);
   const [filteredBarang, setFilteredBarang] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -66,7 +68,12 @@ const EmployeeRequestPage = () => {
     setLoading(false);
   };
 
-  // Fetch barang saat komponen pertama kali di-mount
+  /**
+   * Efek untuk mengambil data barang saat komponen pertama kali di-mount.
+   *
+   * Return:
+   * - void
+   */
   useEffect(() => {
     fetchBarang();
   }, []);

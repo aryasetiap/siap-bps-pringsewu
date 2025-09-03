@@ -22,11 +22,64 @@ import {
 } from "@heroicons/react/24/outline";
 
 /**
- * Komponen utama untuk halaman Cetak Bukti Permintaan.
+ * Fungsi formatStatus
  *
- * Menampilkan detail permintaan barang, tombol unduh PDF, dan tombol print.
+ * Fungsi ini digunakan untuk memformat status permintaan agar lebih mudah dipahami oleh admin.
  *
- * Parameter: Tidak menerima parameter langsung, menggunakan useParams untuk mengambil id permintaan.
+ * Parameter:
+ * - status (string): Status asli dari permintaan barang.
+ *
+ * Return:
+ * - string: Status yang sudah diformat untuk tampilan.
+ */
+const formatStatus = (status) => {
+  if (!status) return "Menunggu";
+  switch (status.toLowerCase()) {
+    case "setuju":
+      return "Disetujui";
+    case "sebagian":
+      return "Disetujui Sebagian";
+    case "tolak":
+      return "Ditolak";
+    default:
+      // Jika status tidak dikenali, tampilkan dengan huruf kapital di awal
+      return status.charAt(0).toUpperCase() + status.slice(1);
+  }
+};
+
+/**
+ * Fungsi transformPermintaanData
+ *
+ * Fungsi ini digunakan untuk mentransformasi data permintaan dari API agar sesuai dengan kebutuhan tampilan preview.
+ *
+ * Parameter:
+ * - data (object): Data permintaan asli dari API.
+ *
+ * Return:
+ * - object: Data permintaan yang sudah ditransformasi.
+ */
+const transformPermintaanData = (data) => ({
+  ...data,
+  nomorPermintaan: data.nomor_permintaan || `#${data.id}`,
+  tanggalPermintaan: data.tanggal_permintaan,
+  pemohon: data.pemohon,
+  status: formatStatus(data.status),
+  catatan: data.catatan_admin,
+  items:
+    data.items?.map((item) => ({
+      id: item.id,
+      namaBarang: item.barang?.nama_barang || "Barang tidak diketahui",
+      jumlahDiminta: item.jumlah_diminta,
+      jumlahDisetujui: item.jumlah_disetujui,
+      satuan: item.barang?.satuan || "Pcs",
+    })) || [],
+});
+
+/**
+ * Komponen utama CetakBuktiPermintaan
+ *
+ * Komponen ini digunakan untuk menampilkan detail permintaan barang, tombol unduh PDF, dan tombol print.
+ * Menggunakan useParams untuk mengambil id permintaan dari URL.
  *
  * Return:
  * - JSX: Tampilan halaman cetak bukti permintaan.
@@ -42,31 +95,9 @@ const CetakBuktiPermintaan = () => {
   const [pdfLoading, setPdfLoading] = useState(false);
 
   /**
-   * Fungsi untuk memformat status permintaan agar lebih mudah dipahami oleh admin.
+   * Fungsi fetchPermintaan
    *
-   * Parameter:
-   * - status (string): Status asli dari permintaan barang.
-   *
-   * Return:
-   * - string: Status yang sudah diformat untuk tampilan.
-   */
-  const formatStatus = (status) => {
-    if (!status) return "Menunggu";
-    switch (status.toLowerCase()) {
-      case "setuju":
-        return "Disetujui";
-      case "sebagian":
-        return "Disetujui Sebagian";
-      case "tolak":
-        return "Ditolak";
-      default:
-        // Jika status tidak dikenali, tampilkan dengan huruf kapital di awal
-        return status.charAt(0).toUpperCase() + status.slice(1);
-    }
-  };
-
-  /**
-   * Fungsi untuk mengambil detail permintaan barang berdasarkan id.
+   * Fungsi ini digunakan untuk mengambil detail permintaan barang berdasarkan id.
    * Data yang diambil akan ditransformasi agar sesuai dengan kebutuhan tampilan.
    *
    * Parameter: Tidak ada (menggunakan id dari useParams)
@@ -78,34 +109,14 @@ const CetakBuktiPermintaan = () => {
     setError(null);
     try {
       const response = await permintaanService.getPermintaanById(id);
-
-      // Transformasi data permintaan agar sesuai dengan kebutuhan preview
-      const transformedData = {
-        ...response.data,
-        nomorPermintaan:
-          response.data.nomor_permintaan || `#${response.data.id}`,
-        tanggalPermintaan: response.data.tanggal_permintaan,
-        pemohon: response.data.pemohon,
-        status: formatStatus(response.data.status),
-        catatan: response.data.catatan_admin,
-        items:
-          response.data.items?.map((item) => ({
-            id: item.id,
-            namaBarang: item.barang?.nama_barang || "Barang tidak diketahui",
-            jumlahDiminta: item.jumlah_diminta,
-            jumlahDisetujui: item.jumlah_disetujui,
-            satuan: item.barang?.satuan || "Pcs",
-          })) || [],
-      };
-
-      setPermintaan(transformedData);
+      setPermintaan(transformPermintaanData(response.data));
     } catch (err) {
-      // Tambahkan penanganan khusus untuk 404
+      // Penanganan khusus untuk error 404 (data tidak ditemukan)
       if (err.response?.status === 404) {
         setPermintaan(null);
         setError(null);
       } else {
-        // Error handling jika gagal mengambil data permintaan
+        // Penanganan error umum
         console.error("Error fetching permintaan:", err);
         setError(
           "Gagal memuat detail permintaan. " +
@@ -124,7 +135,9 @@ const CetakBuktiPermintaan = () => {
   }, [fetchPermintaan]);
 
   /**
-   * Fungsi untuk mengunduh bukti permintaan dalam format PDF dari API.
+   * Fungsi handleCetakPDF
+   *
+   * Fungsi ini digunakan untuk mengunduh bukti permintaan dalam format PDF dari API.
    *
    * Parameter: Tidak ada (menggunakan id dari useParams dan data permintaan dari state)
    *
@@ -156,7 +169,7 @@ const CetakBuktiPermintaan = () => {
 
       toast.success("PDF berhasil diunduh");
     } catch (err) {
-      // Error handling jika gagal mengunduh PDF
+      // Penanganan error saat mengunduh PDF
       console.error("Error downloading PDF:", err);
       toast.error(
         "Gagal mengunduh PDF. " + (err.response?.data?.message || err.message)
@@ -167,7 +180,9 @@ const CetakBuktiPermintaan = () => {
   };
 
   /**
-   * Fungsi untuk kembali ke halaman sebelumnya.
+   * Fungsi handleBack
+   *
+   * Fungsi ini digunakan untuk kembali ke halaman sebelumnya.
    *
    * Parameter: Tidak ada
    *
