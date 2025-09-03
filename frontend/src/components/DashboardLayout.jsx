@@ -14,9 +14,9 @@ import Headbar from "./Headbar";
 import Sidebar from "./Sidebar";
 
 /**
- * DashboardLayout
+ * Komponen DashboardLayout
  *
- * Komponen ini digunakan untuk membungkus seluruh halaman dashboard SIAP.
+ * Komponen ini digunakan sebagai pembungkus utama halaman dashboard SIAP.
  * Mengatur tampilan sidebar (desktop & mobile), headbar, dan konten utama.
  *
  * Parameter:
@@ -26,46 +26,60 @@ import Sidebar from "./Sidebar";
  * - JSX.Element: Struktur layout dashboard dengan sidebar, headbar, dan konten utama.
  */
 function DashboardLayout({ children }) {
-  // State untuk mengatur visibilitas sidebar pada mode mobile (overlay)
+  /**
+   * State untuk mengatur visibilitas sidebar pada mode mobile (overlay).
+   * Default: sidebar tertutup pada mobile.
+   */
   const [isSidebarMobileOpen, setIsSidebarMobileOpen] = useState(false);
 
-  // State untuk mengatur status collapse sidebar pada mode desktop
+  /**
+   * State untuk mengatur status collapse sidebar pada mode desktop.
+   * Default: sidebar tidak ter-collapse.
+   */
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   /**
-   * toggleSidebarMobile
+   * Fungsi toggleSidebarMobile
    *
    * Fungsi ini digunakan untuk membuka atau menutup sidebar pada mode mobile.
    *
    * Parameter: -
-   *
    * Return: void
    */
-  const toggleSidebarMobile = () => setIsSidebarMobileOpen((prev) => !prev);
+  const toggleSidebarMobile = () => {
+    setIsSidebarMobileOpen((prev) => !prev);
+  };
 
   /**
-   * closeSidebarMobile
+   * Fungsi closeSidebarMobile
    *
    * Fungsi ini digunakan untuk menutup sidebar pada mode mobile.
    *
    * Parameter: -
-   *
    * Return: void
    */
-  const closeSidebarMobile = () => setIsSidebarMobileOpen(false);
+  const closeSidebarMobile = () => {
+    setIsSidebarMobileOpen(false);
+  };
 
   /**
-   * toggleSidebarCollapse
+   * Fungsi toggleSidebarCollapse
    *
    * Fungsi ini digunakan untuk mengubah status collapse sidebar pada mode desktop.
    *
    * Parameter: -
-   *
    * Return: void
    */
-  const toggleSidebarCollapse = () => setIsSidebarCollapsed((prev) => !prev);
+  const toggleSidebarCollapse = () => {
+    setIsSidebarCollapsed((prev) => !prev);
+  };
 
-  // Penyesuaian margin kiri konten utama berdasarkan status collapse sidebar
+  /**
+   * Variabel mainContentMargin
+   *
+   * Digunakan untuk menyesuaikan margin kiri konten utama berdasarkan status collapse sidebar.
+   * Jika sidebar ter-collapse, margin lebih kecil.
+   */
   const mainContentMargin = isSidebarCollapsed ? "md:ml-20" : "md:ml-64";
 
   return (

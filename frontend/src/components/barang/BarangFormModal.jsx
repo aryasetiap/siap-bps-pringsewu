@@ -23,10 +23,47 @@ import React from "react";
 import { PlusIcon, PencilIcon } from "@heroicons/react/24/outline";
 
 /**
+ * Fungsi renderKategoriOptions
+ *
+ * Fungsi ini digunakan untuk menghasilkan elemen <option> pada select kategori barang.
+ *
+ * Parameter:
+ * - kategoriOptions (array): Daftar kategori barang yang tersedia.
+ *
+ * Return:
+ * - array: Array elemen <option> untuk select kategori.
+ */
+const renderKategoriOptions = (kategoriOptions) =>
+  kategoriOptions.map((kategori) => (
+    <option key={kategori} value={kategori}>
+      {kategori}
+    </option>
+  ));
+
+/**
+ * Fungsi renderSatuanOptions
+ *
+ * Fungsi ini digunakan untuk menghasilkan elemen <option> pada select satuan barang.
+ *
+ * Parameter:
+ * - satuanOptions (array): Daftar satuan barang yang tersedia.
+ *
+ * Return:
+ * - array: Array elemen <option> untuk select satuan.
+ */
+const renderSatuanOptions = (satuanOptions) =>
+  satuanOptions.map((satuan) => (
+    <option key={satuan} value={satuan}>
+      {satuan}
+    </option>
+  ));
+
+/**
  * Komponen BarangFormModal
  *
- * Modal form untuk input data barang pada aplikasi SIAP.
- * Menampilkan form input dengan field kode barang, nama barang, kategori, satuan, stok awal, stok minimum, dan deskripsi.
+ * Komponen ini digunakan untuk menampilkan modal form input data barang pada aplikasi SIAP.
+ * Modal ini mendukung proses tambah barang baru maupun edit data barang yang sudah ada.
+ * Form terdiri dari input kode barang, nama barang, kategori, satuan, stok awal, stok minimum, dan deskripsi.
  *
  * Parameter:
  * - show (boolean): Status visibilitas modal.
@@ -56,21 +93,14 @@ const BarangFormModal = ({
   // Jika modal tidak ditampilkan, return null
   if (!show) return null;
 
-  // Helper untuk render opsi select kategori
-  const renderKategoriOptions = () =>
-    kategoriOptions.map((kategori) => (
-      <option key={kategori} value={kategori}>
-        {kategori}
-      </option>
-    ));
-
-  // Helper untuk render opsi select satuan
-  const renderSatuanOptions = () =>
-    satuanOptions.map((satuan) => (
-      <option key={satuan} value={satuan}>
-        {satuan}
-      </option>
-    ));
+  // Penentuan ikon dan judul modal berdasarkan mode (add/edit)
+  const modalIcon =
+    mode === "add" ? (
+      <PlusIcon className="h-6 w-6" />
+    ) : (
+      <PencilIcon className="h-6 w-6" />
+    );
+  const modalTitle = mode === "add" ? "Tambah Barang Baru" : "Edit Barang";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 animate-fadeIn">
@@ -86,15 +116,9 @@ const BarangFormModal = ({
         {/* Header modal: ikon dan judul sesuai mode */}
         <div className="flex items-center mb-4">
           <div className="bg-blue-100 text-blue-600 rounded-full p-2 mr-3 shadow">
-            {mode === "add" ? (
-              <PlusIcon className="h-6 w-6" />
-            ) : (
-              <PencilIcon className="h-6 w-6" />
-            )}
+            {modalIcon}
           </div>
-          <h3 className="text-xl font-bold text-gray-800">
-            {mode === "add" ? "Tambah Barang Baru" : "Edit Barang"}
-          </h3>
+          <h3 className="text-xl font-bold text-gray-800">{modalTitle}</h3>
         </div>
         {/* Form input data barang */}
         <form onSubmit={onSubmit} className="space-y-4">
@@ -143,7 +167,7 @@ const BarangFormModal = ({
                 data-testid="kategori-select"
               >
                 <option value="">Pilih Kategori</option>
-                {renderKategoriOptions()}
+                {renderKategoriOptions(kategoriOptions)}
               </select>
             </div>
             {/* Select satuan barang */}
@@ -159,7 +183,7 @@ const BarangFormModal = ({
                 required
               >
                 <option value="">Pilih Satuan</option>
-                {renderSatuanOptions()}
+                {renderSatuanOptions(satuanOptions)}
               </select>
             </div>
           </div>

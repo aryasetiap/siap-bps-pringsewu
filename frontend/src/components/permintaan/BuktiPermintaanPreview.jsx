@@ -1,14 +1,10 @@
 /**
- * Komponen BuktiPermintaanPreview
+ * File: BuktiPermintaanPreview.jsx
  *
  * Komponen ini digunakan untuk menampilkan bukti permintaan barang pada aplikasi SIAP BPS Pringsewu.
  * Menampilkan informasi umum permintaan, status, catatan, serta daftar item barang yang diminta dan disetujui.
  *
- * Parameter:
- * - permintaan (Object): Data permintaan barang, berisi informasi pemohon, tanggal, status, catatan, dan daftar item.
- *
- * Return:
- * - JSX Element: Tampilan preview bukti permintaan barang.
+ * Digunakan dalam proses pengelolaan dan verifikasi permintaan barang oleh unit kerja.
  */
 
 import React from "react";
@@ -23,7 +19,7 @@ import {
 /**
  * Fungsi getStatusColor
  *
- * Fungsi ini digunakan untuk menentukan warna latar dan teks berdasarkan status permintaan barang.
+ * Fungsi ini digunakan untuk menentukan kelas warna Tailwind CSS berdasarkan status permintaan barang.
  * Warna digunakan untuk membedakan status seperti "Disetujui", "Ditolak", "Menunggu", dll.
  *
  * Parameter:
@@ -53,10 +49,15 @@ const getStatusColor = (status) => {
  *
  * Parameter:
  * - item (Object): Data item barang.
+ *   - id (string|number): ID unik barang.
+ *   - namaBarang (string): Nama barang.
+ *   - jumlahDiminta (number): Jumlah barang yang diminta.
+ *   - jumlahDisetujui (number|null): Jumlah barang yang disetujui.
+ *   - satuan (string): Satuan barang.
  * - index (number): Index item pada array.
  *
  * Return:
- * - JSX Element: Baris tabel untuk satu item barang.
+ * - JSX.Element: Baris tabel untuk satu item barang.
  */
 const renderItemRow = (item, index) => (
   <tr key={item.id} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
@@ -92,12 +93,25 @@ const renderItemRow = (item, index) => (
 );
 
 /**
- * Komponen utama BuktiPermintaanPreview
+ * Komponen BuktiPermintaanPreview
  *
- * Menampilkan seluruh informasi permintaan barang, termasuk header, tabel item, dan footer.
+ * Komponen utama untuk menampilkan seluruh informasi permintaan barang, termasuk header, tabel item, dan footer.
+ * Digunakan untuk proses verifikasi dan dokumentasi permintaan barang di aplikasi SIAP BPS Pringsewu.
+ *
+ * Parameter:
+ * - permintaan (Object): Data permintaan barang.
+ *   - nomorPermintaan (string): Nomor permintaan barang.
+ *   - tanggalPermintaan (string): Tanggal permintaan barang.
+ *   - pemohon (Object): Data pemohon (nama, unitKerja).
+ *   - status (string): Status permintaan barang.
+ *   - catatan (string): Catatan tambahan permintaan.
+ *   - items (Array): Daftar item barang yang diminta.
+ *
+ * Return:
+ * - JSX.Element: Tampilan preview bukti permintaan barang.
  */
 const BuktiPermintaanPreview = ({ permintaan }) => {
-  // Validasi data permintaan agar tidak error jika data tidak lengkap
+  // Destrukturisasi data permintaan dengan nilai default agar tidak error jika data tidak lengkap
   const {
     nomorPermintaan = "",
     tanggalPermintaan = "",

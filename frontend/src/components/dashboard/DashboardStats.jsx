@@ -1,18 +1,11 @@
 /**
- * Komponen DashboardStats digunakan untuk menampilkan statistik utama pada dashboard aplikasi SIAP.
- * Statistik yang ditampilkan meliputi total barang, permintaan tertunda, barang kritis, dan total pengguna.
- * Komponen ini mendukung tampilan loading dan visualisasi dengan ikon serta warna yang berbeda untuk setiap statistik.
+ * DashboardStats.jsx
  *
- * Parameter:
- * - stats (Object): Objek berisi data statistik, terdiri dari:
- *   - totalBarang (number): Total barang yang terdaftar.
- *   - totalPermintaanTertunda (number): Jumlah permintaan barang yang belum diproses.
- *   - totalBarangKritis (number): Jumlah barang yang dalam kondisi kritis (stok rendah).
- *   - totalUser (number): Total pengguna yang terdaftar di sistem.
- * - loading (boolean): Status loading untuk menampilkan animasi saat data belum tersedia.
+ * Komponen ini digunakan untuk menampilkan statistik utama pada dashboard aplikasi SIAP.
+ * Statistik meliputi total barang, permintaan tertunda, barang kritis, dan total pengguna.
+ * Komponen mendukung tampilan loading, visualisasi ikon, warna berbeda, dan penjelasan singkat tiap statistik.
  *
- * Return:
- * - JSX: Grid berisi card statistik dashboard SIAP.
+ * Konteks bisnis: SIAP adalah aplikasi pengelolaan barang, permintaan, dan verifikasi di lingkungan BPS Pringsewu.
  */
 
 import React from "react";
@@ -24,8 +17,15 @@ import {
 } from "@heroicons/react/24/outline";
 
 /**
- * Konfigurasi statistik yang akan ditampilkan pada dashboard.
- * Setiap item berisi label, value, warna, ikon, dan warna teks.
+ * Konfigurasi statistik dashboard SIAP.
+ *
+ * Setiap objek berisi:
+ * - key: Kunci data statistik pada props stats.
+ * - label: Nama statistik yang ditampilkan.
+ * - color: Warna gradien background ikon.
+ * - icon: Ikon visualisasi statistik.
+ * - textClass: Warna teks nilai statistik.
+ * - description: Penjelasan singkat statistik.
  */
 const STAT_CONFIG = [
   {
@@ -64,47 +64,64 @@ const STAT_CONFIG = [
 ];
 
 /**
- * Komponen utama untuk menampilkan statistik dashboard SIAP.
+ * Komponen DashboardStats
+ *
+ * Fungsi ini digunakan untuk menampilkan statistik utama dashboard SIAP dalam bentuk grid card.
  *
  * Parameter:
- * - stats (Object): Data statistik dashboard.
- * - loading (boolean): Status loading data.
+ * - stats (Object): Data statistik dashboard, berisi total barang, permintaan tertunda, barang kritis, dan total pengguna.
+ * - loading (boolean): Status loading data, jika true maka animasi loading ditampilkan.
  *
  * Return:
- * - JSX: Card statistik dalam grid.
+ * - JSX: Grid berisi card statistik dashboard SIAP.
  */
-const DashboardStats = ({ stats, loading }) => (
-  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-8">
-    {STAT_CONFIG.map((stat) => (
+const DashboardStats = ({ stats, loading }) => {
+  /**
+   * Fungsi renderStatCard
+   *
+   * Fungsi ini digunakan untuk merender satu card statistik berdasarkan konfigurasi.
+   *
+   * Parameter:
+   * - stat (Object): Konfigurasi statistik dari STAT_CONFIG.
+   *
+   * Return:
+   * - JSX: Card statistik dengan ikon, label, dan nilai.
+   */
+  const renderStatCard = (stat) => (
+    <div
+      key={stat.label}
+      className="bg-white rounded-xl shadow-md border border-gray-100 flex flex-col items-center p-6 group transition-all hover:shadow-lg hover:-translate-y-1"
+    >
+      {/* Ikon dengan background gradien untuk visualisasi statistik */}
       <div
-        key={stat.label}
-        className="bg-white rounded-xl shadow-md border border-gray-100 flex flex-col items-center p-6 group transition-all hover:shadow-lg hover:-translate-y-1"
+        className={`mb-4 bg-gradient-to-br ${stat.color} rounded-full w-16 h-16 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform`}
       >
-        {/* Ikon dan background gradien untuk visualisasi statistik */}
-        <div
-          className={`mb-4 bg-gradient-to-br ${stat.color} rounded-full w-16 h-16 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform`}
-        >
-          <span className="text-white">{stat.icon}</span>
-        </div>
-        <div className="flex-1 flex flex-col items-center">
-          {/* Label statistik */}
-          <p className="text-xs font-semibold text-gray-500 mb-1 tracking-wide uppercase">
-            {stat.label}
-          </p>
-          {/* Nilai statistik, tampilkan animasi jika loading */}
-          <p
-            className={`text-4xl font-extrabold ${stat.textClass} tracking-tight`}
-          >
-            {loading ? (
-              <span className="animate-pulse">...</span>
-            ) : (
-              stats[stat.key]
-            )}
-          </p>
-        </div>
+        <span className="text-white">{stat.icon}</span>
       </div>
-    ))}
-  </div>
-);
+      <div className="flex-1 flex flex-col items-center">
+        {/* Label statistik */}
+        <p className="text-xs font-semibold text-gray-500 mb-1 tracking-wide uppercase">
+          {stat.label}
+        </p>
+        {/* Nilai statistik, tampilkan animasi jika loading */}
+        <p
+          className={`text-4xl font-extrabold ${stat.textClass} tracking-tight`}
+        >
+          {loading ? (
+            <span className="animate-pulse">...</span>
+          ) : (
+            stats[stat.key]
+          )}
+        </p>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+      {STAT_CONFIG.map(renderStatCard)}
+    </div>
+  );
+};
 
 export default DashboardStats;

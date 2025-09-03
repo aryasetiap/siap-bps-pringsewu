@@ -24,8 +24,49 @@ import React from "react";
 import { MagnifyingGlassIcon, FunnelIcon } from "@heroicons/react/24/outline";
 
 /**
+ * Fungsi untuk mengecek apakah barang sudah ada di keranjang permintaan pegawai.
+ *
+ * Parameter:
+ * - item (Object): Data barang yang akan dicek.
+ * - keranjang (Array): Daftar barang yang sudah ditambahkan ke keranjang.
+ *
+ * Return:
+ * - boolean: True jika barang sudah ada di keranjang, false jika belum.
+ */
+function isBarangInKeranjang(item, keranjang) {
+  return keranjang?.some((cartItem) => cartItem.id === item.id);
+}
+
+/**
+ * Fungsi untuk mengecek ketersediaan stok barang.
+ *
+ * Parameter:
+ * - item (Object): Data barang yang akan dicek.
+ *
+ * Return:
+ * - boolean: True jika stok barang > 0, false jika stok kosong.
+ */
+function isStokTersedia(item) {
+  return item.stok > 0;
+}
+
+/**
  * Komponen EmployeeBarangTable
  * Menampilkan tabel barang beserta fitur pencarian, filter kategori, dan aksi tambah ke keranjang.
+ *
+ * Parameter:
+ * - barang (Array): Daftar barang yang akan ditampilkan.
+ * - searchTerm (string): Kata kunci pencarian barang.
+ * - filterKategori (string): Kategori barang yang sedang difilter.
+ * - kategoriOptions (Array): Pilihan kategori barang.
+ * - onSearchChange (function): Handler perubahan input pencarian.
+ * - onFilterKategoriChange (function): Handler perubahan filter kategori.
+ * - onAddItem (function): Handler penambahan barang ke keranjang.
+ * - keranjang (Array): Daftar barang yang sudah ditambahkan ke keranjang.
+ * - loading (boolean): Status loading data barang.
+ *
+ * Return:
+ * - React Element: Komponen tabel barang beserta fitur pencarian, filter, dan aksi tambah.
  */
 const EmployeeBarangTable = ({
   barang,
@@ -39,27 +80,97 @@ const EmployeeBarangTable = ({
   loading,
 }) => {
   /**
-   * Fungsi untuk menentukan apakah barang sudah ada di keranjang.
+   * Fungsi renderBarisBarang digunakan untuk menghasilkan baris tabel barang.
    *
    * Parameter:
-   * - item (Object): Data barang yang dicek.
+   * - item (Object): Data barang yang akan ditampilkan.
    *
    * Return:
-   * - boolean: True jika barang sudah ada di keranjang, false jika belum.
+   * - React Element: Baris tabel barang beserta tombol aksi.
    */
-  const isBarangInKeranjang = (item) =>
-    keranjang?.some((cartItem) => cartItem.id === item.id);
+  function renderBarisBarang(item) {
+    const inKeranjang = isBarangInKeranjang(item, keranjang);
+    const stokTersedia = isStokTersedia(item);
+
+    return (
+      <tr
+        key={item.id}
+        className={`hover:bg-gray-50 transition-colors ${
+          inKeranjang ? "bg-blue-50" : ""
+        }`}
+      >
+        <td className="px-4 py-3 font-mono text-sm">{item.kode}</td>
+        <td className="px-4 py-3 font-medium">{item.nama}</td>
+        <td className="px-4 py-3 text-center">
+          <span className="px-2 py-1 bg-blue-50 text-blue-600 rounded-full text-xs">
+            {item.kategori || "-"}
+          </span>
+        </td>
+        <td
+          className={`px-4 py-3 text-right font-medium ${
+            item.stok <= 5 ? "text-red-600" : "text-gray-900"
+          }`}
+        >
+          {item.stok}
+        </td>
+        <td className="px-4 py-3 text-center text-gray-500">{item.satuan}</td>
+        <td className="px-4 py-3 text-center">
+          {/* Tombol aksi tambah barang ke keranjang */}
+          <button
+            onClick={() => onAddItem(item)}
+            disabled={inKeranjang || !stokTersedia}
+            className={`px-3 py-1 rounded-lg transition-all ${
+              inKeranjang
+                ? "bg-green-100 text-green-700 border border-green-200"
+                : !stokTersedia
+                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                : "bg-blue-500 text-white hover:bg-blue-600 shadow-sm"
+            }`}
+          >
+            {inKeranjang
+              ? "Ditambahkan"
+              : stokTersedia
+              ? "Tambah"
+              : "Stok Kosong"}
+          </button>
+        </td>
+      </tr>
+    );
+  }
 
   /**
-   * Fungsi untuk menentukan apakah stok barang tersedia.
-   *
-   * Parameter:
-   * - item (Object): Data barang yang dicek.
+   * Fungsi renderBodyTabel digunakan untuk menampilkan isi tabel barang sesuai status loading dan data.
    *
    * Return:
-   * - boolean: True jika stok > 0, false jika stok kosong.
+   * - React Element: Isi tabel barang (loading, kosong, atau daftar barang).
    */
-  const isStokTersedia = (item) => item.stok > 0;
+  function renderBodyTabel() {
+    if (loading) {
+      // State loading data barang
+      return (
+        <tr>
+          <td colSpan="6" className="px-6 py-12 text-center">
+            <div className="flex justify-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+            </div>
+            <div className="mt-2 text-gray-500">Memuat data barang...</div>
+          </td>
+        </tr>
+      );
+    }
+    if (barang.length === 0) {
+      // State tidak ada barang ditemukan
+      return (
+        <tr>
+          <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
+            Tidak ada barang ditemukan
+          </td>
+        </tr>
+      );
+    }
+    // Mapping data barang ke baris tabel
+    return barang.map(renderBarisBarang);
+  }
 
   return (
     <div className="bg-white rounded-xl shadow-lg mb-6 border border-gray-100 overflow-hidden">
@@ -124,82 +235,7 @@ const EmployeeBarangTable = ({
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {/* Loading State */}
-            {loading ? (
-              <tr>
-                <td colSpan="6" className="px-6 py-12 text-center">
-                  <div className="flex justify-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-                  </div>
-                  <div className="mt-2 text-gray-500">
-                    Memuat data barang...
-                  </div>
-                </td>
-              </tr>
-            ) : barang.length === 0 ? (
-              // Jika tidak ada barang ditemukan
-              <tr>
-                <td
-                  colSpan="6"
-                  className="px-6 py-12 text-center text-gray-500"
-                >
-                  Tidak ada barang ditemukan
-                </td>
-              </tr>
-            ) : (
-              // Mapping data barang ke baris tabel
-              barang.map((item) => {
-                const inKeranjang = isBarangInKeranjang(item);
-                const stokTersedia = isStokTersedia(item);
-
-                return (
-                  <tr
-                    key={item.id}
-                    className={`hover:bg-gray-50 transition-colors ${
-                      inKeranjang ? "bg-blue-50" : ""
-                    }`}
-                  >
-                    <td className="px-4 py-3 font-mono text-sm">{item.kode}</td>
-                    <td className="px-4 py-3 font-medium">{item.nama}</td>
-                    <td className="px-4 py-3 text-center">
-                      <span className="px-2 py-1 bg-blue-50 text-blue-600 rounded-full text-xs">
-                        {item.kategori || "-"}
-                      </span>
-                    </td>
-                    <td
-                      className={`px-4 py-3 text-right font-medium ${
-                        item.stok <= 5 ? "text-red-600" : "text-gray-900"
-                      }`}
-                    >
-                      {item.stok}
-                    </td>
-                    <td className="px-4 py-3 text-center text-gray-500">
-                      {item.satuan}
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      {/* Tombol aksi tambah barang ke keranjang */}
-                      <button
-                        onClick={() => onAddItem(item)}
-                        disabled={inKeranjang || !stokTersedia}
-                        className={`px-3 py-1 rounded-lg transition-all ${
-                          inKeranjang
-                            ? "bg-green-100 text-green-700 border border-green-200"
-                            : !stokTersedia
-                            ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                            : "bg-blue-500 text-white hover:bg-blue-600 shadow-sm"
-                        }`}
-                      >
-                        {inKeranjang
-                          ? "Ditambahkan"
-                          : stokTersedia
-                          ? "Tambah"
-                          : "Stok Kosong"}
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })
-            )}
+            {renderBodyTabel()}
           </tbody>
         </table>
       </div>

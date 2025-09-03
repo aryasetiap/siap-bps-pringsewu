@@ -14,6 +14,10 @@ import { FunnelIcon, DocumentArrowDownIcon } from "@heroicons/react/24/outline";
 /**
  * Komponen LaporanFilterForm
  *
+ * Komponen ini digunakan untuk menampilkan form filter laporan pada aplikasi SIAP.
+ * Pengguna dapat memfilter data laporan berdasarkan tanggal mulai, tanggal akhir, dan unit kerja.
+ * Terdapat juga tombol untuk melakukan filter data dan ekspor laporan ke PDF.
+ *
  * Parameter:
  * - startDate (string): Tanggal mulai filter laporan.
  * - endDate (string): Tanggal akhir filter laporan.
@@ -49,57 +53,89 @@ const LaporanFilterForm = ({
    * Digunakan untuk filter laporan berdasarkan unit kerja.
    */
   useEffect(() => {
-    /**
-     * Fungsi fetchUnitKerja
-     *
-     * Tujuan: Mengambil data user dari API dan mengekstrak daftar unit kerja unik.
-     *
-     * Parameter: Tidak ada.
-     * Return: void
-     */
-    const fetchUnitKerja = async () => {
-      setLoadingUnitKerja(true);
-      try {
-        // Ambil data user dari API
-        const response = await getAllUsers();
-        // Ekstrak unit kerja unik dari data user
-        const uniqueUnitKerja = [
-          ...new Set(
-            response.data.map((user) => user.unit_kerja).filter(Boolean)
-          ),
-        ].sort();
-        setUnitKerjaList(uniqueUnitKerja);
-      } catch (error) {
-        // Jika terjadi error saat pengambilan data, tampilkan di konsol
-        console.error("Error fetching unit kerja list:", error);
-      } finally {
-        setLoadingUnitKerja(false);
-      }
-    };
-
     fetchUnitKerja();
   }, []);
 
-  // Fungsi untuk mendapatkan tanggal hari ini dalam format ISO
+  /**
+   * Fungsi fetchUnitKerja
+   *
+   * Fungsi ini digunakan untuk mengambil data user dari API dan mengekstrak daftar unit kerja unik.
+   * Unit kerja digunakan sebagai filter laporan pada aplikasi SIAP.
+   *
+   * Parameter: Tidak ada.
+   * Return: void
+   */
+  const fetchUnitKerja = async () => {
+    setLoadingUnitKerja(true);
+    try {
+      const response = await getAllUsers();
+      // Ekstrak unit kerja unik dari data user
+      const uniqueUnitKerja = [
+        ...new Set(
+          response.data.map((user) => user.unit_kerja).filter(Boolean)
+        ),
+      ].sort();
+      setUnitKerjaList(uniqueUnitKerja);
+    } catch (error) {
+      // Jika terjadi error saat pengambilan data, tampilkan di konsol
+      console.error("Error fetching unit kerja list:", error);
+    } finally {
+      setLoadingUnitKerja(false);
+    }
+  };
+
+  /**
+   * Fungsi getToday
+   *
+   * Fungsi ini digunakan untuk mendapatkan tanggal hari ini dalam format ISO (YYYY-MM-DD).
+   *
+   * Parameter: Tidak ada.
+   * Return:
+   * - string: Tanggal hari ini dalam format ISO.
+   */
   const getToday = () => {
     const today = new Date();
     return today.toISOString().split("T")[0];
   };
 
-  // Fungsi untuk mendapatkan tanggal 30 hari yang lalu dalam format ISO
+  /**
+   * Fungsi getOneMonthAgo
+   *
+   * Fungsi ini digunakan untuk mendapatkan tanggal 30 hari yang lalu dari hari ini dalam format ISO (YYYY-MM-DD).
+   *
+   * Parameter: Tidak ada.
+   * Return:
+   * - string: Tanggal 30 hari yang lalu dalam format ISO.
+   */
   const getOneMonthAgo = () => {
     const date = new Date();
     date.setDate(date.getDate() - 30);
     return date.toISOString().split("T")[0];
   };
 
-  // Handler untuk mengatur rentang 30 hari terakhir
+  /**
+   * Fungsi handleLast30Days
+   *
+   * Fungsi ini digunakan untuk mengatur rentang tanggal filter ke 30 hari terakhir.
+   * Cocok digunakan untuk laporan pengelolaan barang, permintaan, dan verifikasi dalam periode 1 bulan terakhir.
+   *
+   * Parameter: Tidak ada.
+   * Return: void
+   */
   const handleLast30Days = () => {
     setStartDate(getOneMonthAgo());
     setEndDate(getToday());
   };
 
-  // Handler untuk mengatur rentang bulan ini
+  /**
+   * Fungsi handleThisMonth
+   *
+   * Fungsi ini digunakan untuk mengatur rentang tanggal filter ke bulan ini.
+   * Cocok digunakan untuk laporan bulanan pengelolaan barang, permintaan, dan verifikasi.
+   *
+   * Parameter: Tidak ada.
+   * Return: void
+   */
   const handleThisMonth = () => {
     const date = new Date();
     const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);

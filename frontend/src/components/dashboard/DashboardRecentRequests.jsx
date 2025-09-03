@@ -1,7 +1,11 @@
 /**
- * Komponen DashboardRecentRequests digunakan untuk menampilkan daftar permintaan barang terbaru
- * pada aplikasi SIAP (Sistem Informasi Administrasi Pengelolaan Barang). Komponen ini menampilkan
- * informasi pemohon, tanggal permintaan, daftar barang yang diminta, serta status permintaan.
+ * ============================================
+ * Komponen DashboardRecentRequests
+ * --------------------------------------------
+ * Komponen ini digunakan untuk menampilkan daftar permintaan barang terbaru
+ * pada aplikasi SIAP (Sistem Informasi Administrasi Pengelolaan Barang).
+ * Menampilkan informasi pemohon, tanggal permintaan, daftar barang yang diminta,
+ * serta status permintaan.
  *
  * Parameter:
  * - requests (Array): Daftar objek permintaan barang yang akan ditampilkan.
@@ -10,19 +14,25 @@
  *
  * Return:
  * - React Element: Komponen UI daftar permintaan terbaru.
+ * ============================================
  */
 
 import React from "react";
 import { ClockIcon, UserCircleIcon } from "@heroicons/react/24/outline";
 
 /**
- * Fungsi statusColor digunakan untuk menentukan kelas warna badge status permintaan.
+ * ============================================
+ * Fungsi statusColor
+ * --------------------------------------------
+ * Fungsi ini digunakan untuk menentukan kelas warna badge status permintaan
+ * berdasarkan status permintaan barang.
  *
  * Parameter:
  * - status (String): Status permintaan barang (misal: "menunggu", "disetujui").
  *
  * Return:
  * - String: Kelas Tailwind CSS untuk warna background dan teks badge status.
+ * ============================================
  */
 const statusColor = (status) => {
   switch ((status || "").toLowerCase()) {
@@ -40,13 +50,18 @@ const statusColor = (status) => {
 };
 
 /**
- * Fungsi getInitials digunakan untuk mengambil inisial dari nama pemohon.
+ * ============================================
+ * Fungsi getInitials
+ * --------------------------------------------
+ * Fungsi ini digunakan untuk mengambil inisial dari nama pemohon.
+ * Inisial diambil dari huruf pertama setiap kata pada nama, maksimal 2 huruf.
  *
  * Parameter:
  * - name (String): Nama lengkap pemohon.
  *
  * Return:
  * - String: Inisial (maksimal 2 huruf) dari nama pemohon, atau "?" jika nama tidak tersedia.
+ * ============================================
  */
 const getInitials = (name) => {
   if (!name) return "?";
@@ -60,7 +75,11 @@ const getInitials = (name) => {
 };
 
 /**
- * Komponen RecentRequestItem digunakan untuk menampilkan satu baris permintaan barang.
+ * ============================================
+ * Komponen RecentRequestItem
+ * --------------------------------------------
+ * Komponen ini digunakan untuk menampilkan satu baris permintaan barang
+ * pada daftar permintaan terbaru.
  *
  * Parameter:
  * - req (Object): Objek permintaan barang.
@@ -68,6 +87,7 @@ const getInitials = (name) => {
  *
  * Return:
  * - React Element: Baris permintaan barang.
+ * ============================================
  */
 const RecentRequestItem = ({ req, onDetail }) => (
   <li
@@ -137,8 +157,20 @@ const RecentRequestItem = ({ req, onDetail }) => (
 );
 
 /**
- * Komponen utama DashboardRecentRequests.
- * Menampilkan daftar permintaan barang terbaru, loading state, dan pesan jika data kosong.
+ * ============================================
+ * Komponen DashboardRecentRequests
+ * --------------------------------------------
+ * Komponen utama untuk menampilkan daftar permintaan barang terbaru,
+ * loading state, dan pesan jika data kosong.
+ *
+ * Parameter:
+ * - requests (Array): Daftar permintaan barang yang akan ditampilkan.
+ * - onDetail (Function): Fungsi callback saat detail permintaan diakses.
+ * - loading (Boolean): Status pemuatan data permintaan.
+ *
+ * Return:
+ * - React Element: Komponen UI daftar permintaan terbaru.
+ * ============================================
  */
 const DashboardRecentRequests = ({ requests, onDetail, loading }) => (
   <div className="bg-white p-6 rounded-xl shadow-md mb-6">

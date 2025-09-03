@@ -25,7 +25,7 @@ import {
 } from "chart.js";
 import { FaChartLine } from "react-icons/fa";
 
-// Registrasi elemen ChartJS yang diperlukan
+// Registrasi elemen ChartJS yang diperlukan untuk visualisasi grafik
 ChartJS.register(
   LineElement,
   CategoryScale,
@@ -37,6 +37,9 @@ ChartJS.register(
 
 /**
  * Membuat gradient warna untuk area chart.
+ *
+ * Fungsi ini digunakan untuk menghasilkan warna latar belakang berbentuk gradient pada grafik tren permintaan bulanan.
+ * Gradient membantu visualisasi data agar lebih menarik dan mudah dibaca.
  *
  * Parameter:
  * - ctx (CanvasRenderingContext2D): Context canvas ChartJS.
@@ -55,6 +58,8 @@ function getChartGradient(ctx, area) {
 
 /**
  * Mengubah data bulan dari format "YYYY-MM" menjadi "MMM YYYY" (contoh: "Jan 2024").
+ *
+ * Fungsi ini digunakan untuk mengubah format bulan agar lebih mudah dibaca oleh pengguna SIAP.
  *
  * Parameter:
  * - bulan (String): Format bulan "YYYY-MM".
@@ -82,18 +87,20 @@ function formatBulan(bulan) {
 }
 
 /**
- * Komponen utama DashboardChart.
- * Menampilkan grafik tren permintaan bulanan, skeleton loading, atau pesan jika data kosong.
+ * Membuat data dan konfigurasi chart untuk visualisasi tren permintaan bulanan.
+ *
+ * Fungsi ini digunakan untuk memisahkan logika pembuatan data dan opsi chart agar kode lebih modular dan mudah dipelihara.
  *
  * Parameter:
  * - chartData (Array): Data tren permintaan bulanan.
- * - loading (Boolean): Status loading data.
  *
  * Return:
- * - React Element: Komponen visual sesuai status data.
+ * - Object: Berisi properti 'data' dan 'options' untuk komponen Line Chart.
  */
-function DashboardChart({ chartData, loading }) {
-  // Data chart yang akan ditampilkan
+function getChartConfig(chartData) {
+  /**
+   * Data chart yang akan ditampilkan pada grafik tren permintaan bulanan.
+   */
   const data = {
     labels: chartData.map((d) => formatBulan(d.bulan)),
     datasets: [
@@ -114,7 +121,9 @@ function DashboardChart({ chartData, loading }) {
     ],
   };
 
-  // Konfigurasi chart agar mudah dibaca dan sesuai branding SIAP
+  /**
+   * Konfigurasi chart agar mudah dibaca dan sesuai branding SIAP.
+   */
   const options = {
     responsive: true,
     plugins: {
@@ -151,6 +160,25 @@ function DashboardChart({ chartData, loading }) {
     },
   };
 
+  return { data, options };
+}
+
+/**
+ * Komponen utama DashboardChart.
+ *
+ * Komponen ini digunakan untuk menampilkan grafik tren permintaan bulanan pada aplikasi SIAP.
+ * Grafik ini membantu admin atau pengguna memantau jumlah permintaan barang setiap bulan.
+ * Jika data sedang dimuat, akan menampilkan skeleton loading.
+ * Jika data kosong, akan menampilkan pesan bahwa belum ada data tren permintaan.
+ *
+ * Parameter:
+ * - chartData (Array): Data tren permintaan bulanan.
+ * - loading (Boolean): Status loading data.
+ *
+ * Return:
+ * - React Element: Komponen visual sesuai status data.
+ */
+function DashboardChart({ chartData, loading }) {
   // Skeleton loading saat data sedang diambil dari server
   if (loading) {
     return (
@@ -178,6 +206,9 @@ function DashboardChart({ chartData, loading }) {
     );
   }
 
+  // Mendapatkan data dan konfigurasi chart dari fungsi helper
+  const { data, options } = getChartConfig(chartData);
+
   // Tampilan utama grafik tren permintaan bulanan
   return (
     <div className="bg-white p-8 rounded-2xl shadow-lg mb-6 w-full border border-blue-50">
@@ -195,11 +226,8 @@ function DashboardChart({ chartData, loading }) {
       <div className="mt-2 text-xs text-gray-400">
         Grafik tren permintaan barang setiap bulan.
       </div>
-      {/* Tambahkan label bulan agar bisa diassert oleh Cypress */}
-      {/*
-        Render label bulan hanya jika environment test (Cypress)
-        Agar UI tetap rapi di production
-      */}
+      {/* Render label bulan hanya jika environment test (Cypress) */}
+      {/* Agar UI tetap rapi di production */}
       {window.Cypress && (
         <div className="flex flex-wrap gap-2 mt-2">
           {chartData.map((d) => (

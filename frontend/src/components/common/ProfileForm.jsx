@@ -1,12 +1,14 @@
 /**
- * Komponen ProfileForm digunakan untuk menampilkan dan mengelola form profil pengguna
- * pada aplikasi SIAP. Pengguna dapat memperbarui informasi profil dan mengubah password.
- * Komponen ini terdiri dari dua tab: Informasi Profil dan Ubah Password.
+ * File: ProfileForm.jsx
+ * Komponen ini digunakan untuk menampilkan dan mengelola form profil pengguna
+ * pada aplikasi SIAP (Sistem Informasi Administrasi Pengelolaan Barang).
+ * Pengguna dapat memperbarui informasi profil dan mengubah password.
+ * Terdiri dari dua tab: Informasi Profil dan Ubah Password.
  *
  * Parameter:
- * - profile (Object): Data profil pengguna yang berisi nama dan unit kerja.
- * - onUpdate (Function): Fungsi callback untuk menyimpan perubahan profil.
- * - onChangePassword (Function): Fungsi callback untuk mengubah password.
+ * - profile (Object): Data profil pengguna (nama, unit kerja).
+ * - onUpdate (Function): Callback untuk menyimpan perubahan profil.
+ * - onChangePassword (Function): Callback untuk mengubah password.
  * - loading (Boolean): Status loading untuk menonaktifkan tombol saat proses berlangsung.
  *
  * Return:
@@ -22,7 +24,6 @@ import {
 } from "@heroicons/react/24/outline";
 
 /**
- * ProfileForm
  * Komponen utama untuk form profil dan ubah password pengguna.
  *
  * Parameter:
@@ -50,11 +51,10 @@ const ProfileForm = ({ profile, onUpdate, onChangePassword, loading }) => {
   // State untuk error password
   const [passwordError, setPasswordError] = useState("");
 
-  // State untuk tab aktif
-  const [activeTab, setActiveTab] = useState("profile"); // "profile" atau "password"
+  // State untuk tab aktif ("profile" atau "password")
+  const [activeTab, setActiveTab] = useState("profile");
 
   /**
-   * handleChange
    * Fungsi untuk menangani perubahan input pada form profil.
    *
    * Parameter:
@@ -68,7 +68,6 @@ const ProfileForm = ({ profile, onUpdate, onChangePassword, loading }) => {
   };
 
   /**
-   * handlePasswordChange
    * Fungsi untuk menangani perubahan input pada form password.
    * Menghapus pesan error saat ada perubahan.
    *
@@ -84,7 +83,6 @@ const ProfileForm = ({ profile, onUpdate, onChangePassword, loading }) => {
   };
 
   /**
-   * handleSubmit
    * Fungsi untuk submit form profil.
    * Memanggil fungsi onUpdate dari parent.
    *
@@ -100,7 +98,6 @@ const ProfileForm = ({ profile, onUpdate, onChangePassword, loading }) => {
   };
 
   /**
-   * handlePasswordSubmit
    * Fungsi untuk submit form ubah password.
    * Melakukan validasi password sebelum mengirim ke parent.
    *
@@ -177,7 +174,6 @@ const ProfileForm = ({ profile, onUpdate, onChangePassword, loading }) => {
 };
 
 /**
- * TabButton
  * Komponen tombol tab navigasi.
  *
  * Parameter:
@@ -205,8 +201,8 @@ const TabButton = ({ isActive, onClick, icon, label }) => (
 );
 
 /**
- * ProfileInfoForm
  * Komponen form untuk informasi profil pengguna.
+ * Digunakan untuk memperbarui nama dan unit kerja pengguna pada aplikasi SIAP.
  *
  * Parameter:
  * - form (Object): State form profil.
@@ -268,8 +264,8 @@ const ProfileInfoForm = ({ form, handleChange, handleSubmit, loading }) => (
 );
 
 /**
- * PasswordForm
  * Komponen form untuk ubah password pengguna.
+ * Digunakan untuk mengelola perubahan password pada aplikasi SIAP.
  *
  * Parameter:
  * - password (Object): State form password.

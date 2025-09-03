@@ -1,15 +1,8 @@
 /**
+ * File: Headbar.jsx
  * Komponen Headbar untuk aplikasi SIAP BPS Pringsewu.
  * Menampilkan header yang berisi tombol sidebar, judul aplikasi, notifikasi, dan menu user.
  * Digunakan pada halaman utama untuk pengelolaan barang, permintaan, dan verifikasi.
- *
- * Parameter:
- * - onToggleSidebarMobile (function): Fungsi untuk toggle sidebar pada mode mobile.
- * - onToggleSidebarCollapse (function): Fungsi untuk collapse/expand sidebar pada desktop.
- * - isSidebarCollapsed (boolean): Status collapse sidebar.
- *
- * Return:
- * - JSX: Komponen header yang interaktif.
  */
 
 import React, { useEffect, useState, Fragment } from "react";
@@ -40,16 +33,17 @@ function classNames(...classes) {
 }
 
 /**
- * Komponen utama Headbar.
+ * Komponen Headbar.
  * Menampilkan header aplikasi SIAP BPS Pringsewu, termasuk tombol sidebar, notifikasi, dan menu user.
+ * Digunakan pada halaman utama untuk pengelolaan barang, permintaan, dan verifikasi.
  *
  * Parameter:
- * - onToggleSidebarMobile (function): Handler toggle sidebar mobile.
- * - onToggleSidebarCollapse (function): Handler collapse sidebar desktop.
+ * - onToggleSidebarMobile (function): Handler untuk toggle sidebar pada mode mobile.
+ * - onToggleSidebarCollapse (function): Handler untuk collapse/expand sidebar pada desktop.
  * - isSidebarCollapsed (boolean): Status collapse sidebar.
  *
  * Return:
- * - JSX: Komponen header.
+ * - JSX: Komponen header yang interaktif.
  */
 function Headbar({
   onToggleSidebarMobile,
@@ -71,11 +65,19 @@ function Headbar({
   /**
    * Efek untuk mengambil foto user dari context profile.
    * Jika tidak ada, fallback ke API userService.
+   *
+   * Tujuan: Menampilkan foto profil user pada Headbar.
    */
   useEffect(() => {
     if (profile && profile.foto) {
       setUserPhoto(profile.foto);
     } else {
+      /**
+       * Fungsi async untuk mengambil foto user dari API jika belum tersedia di context.
+       *
+       * Return:
+       * - void
+       */
       const fetchUserPhoto = async () => {
         try {
           const response = await userService.getProfile();
@@ -83,6 +85,7 @@ function Headbar({
             setUserPhoto(response.data.foto);
           }
         } catch (error) {
+          // Error saat mengambil foto user, tampilkan di console
           console.error("Error fetching user photo:", error);
         }
       };
@@ -93,6 +96,9 @@ function Headbar({
   /**
    * Fungsi untuk logout user dari aplikasi SIAP.
    * Menghapus data autentikasi dan mengarahkan ke halaman login.
+   *
+   * Return:
+   * - void
    */
   const handleLogout = async () => {
     try {
@@ -106,6 +112,10 @@ function Headbar({
     navigate("/login");
   };
 
+  /**
+   * Render komponen Headbar.
+   * Struktur UI tidak diubah, hanya penamaan dan dokumentasi yang diperjelas.
+   */
   return (
     <header className="bg-white ml-6 shadow-sm p-4 flex justify-between items-center rounded-lg top-0 right-0 z-40 transition-all duration-300 ease-in-out border border-gray-100">
       <div className="flex items-center h-full">

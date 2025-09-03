@@ -1,8 +1,17 @@
 /**
- * Komponen UserFormModal digunakan untuk menampilkan modal form tambah/edit pengguna
+ * File: UserFormModal.jsx
+ * Komponen ini digunakan untuk menampilkan modal form tambah/edit pengguna
  * dalam aplikasi SIAP (Sistem Informasi Administrasi Pengelolaan Barang).
- * Modal ini digunakan untuk pengelolaan data pengguna, termasuk penambahan, pengeditan,
- * dan pengaturan status serta unit kerja pengguna.
+ * Modal ini mendukung pengelolaan data pengguna, termasuk penambahan, pengeditan,
+ * pengaturan status, role, dan unit kerja pengguna.
+ */
+
+import React from "react";
+import { PlusIcon, PencilIcon } from "@heroicons/react/24/outline";
+
+/**
+ * Komponen UserFormModal
+ * Menampilkan modal form untuk tambah/edit pengguna.
  *
  * Parameter:
  * - show (boolean): Menentukan apakah modal ditampilkan.
@@ -18,16 +27,6 @@
  * Return:
  * - React.Element: Modal form pengguna.
  */
-
-import React from "react";
-import { PlusIcon, PencilIcon } from "@heroicons/react/24/outline";
-
-/**
- * Komponen utama modal form pengguna.
- *
- * @param {object} props - Properti yang diterima komponen.
- * @returns {React.Element} Modal form pengguna.
- */
 const UserFormModal = ({
   show,
   mode,
@@ -42,7 +41,13 @@ const UserFormModal = ({
   // Jika modal tidak ditampilkan, return null
   if (!show) return null;
 
-  // Helper untuk render input username hanya pada mode tambah
+  /**
+   * Fungsi renderUsernameInput
+   * Menampilkan input username hanya pada mode tambah pengguna.
+   *
+   * Return:
+   * - React.Element: Input username.
+   */
   const renderUsernameInput = () => (
     <div className="md:col-span-2">
       <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -60,7 +65,13 @@ const UserFormModal = ({
     </div>
   );
 
-  // Helper untuk render input status hanya pada mode edit
+  /**
+   * Fungsi renderStatusInput
+   * Menampilkan input status hanya pada mode edit pengguna.
+   *
+   * Return:
+   * - React.Element: Input status.
+   */
   const renderStatusInput = () => (
     <div>
       <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -79,7 +90,13 @@ const UserFormModal = ({
     </div>
   );
 
-  // Helper untuk render opsi role
+  /**
+   * Fungsi renderRoleOptions
+   * Membuat daftar opsi role pengguna.
+   *
+   * Return:
+   * - Array<React.Element>: Opsi role.
+   */
   const renderRoleOptions = () =>
     roleOptions.map((role) => (
       <option key={role.value} value={role.value}>
@@ -87,7 +104,13 @@ const UserFormModal = ({
       </option>
     ));
 
-  // Helper untuk render opsi unit kerja
+  /**
+   * Fungsi renderUnitKerjaOptions
+   * Membuat daftar opsi unit kerja pengguna.
+   *
+   * Return:
+   * - Array<React.Element>: Opsi unit kerja.
+   */
   const renderUnitKerjaOptions = () =>
     unitKerjaOptions.map((unit) => (
       <option key={unit} value={unit}>

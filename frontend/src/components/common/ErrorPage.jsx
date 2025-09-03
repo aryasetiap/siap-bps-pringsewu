@@ -10,10 +10,48 @@ import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeftIcon, HomeIcon } from "@heroicons/react/24/outline";
 
 /**
- * Komponen ErrorPage
+ * Fungsi getHomePage
+ * ----------------------------------------
+ * Fungsi ini digunakan untuk menentukan path halaman beranda yang sesuai
+ * berdasarkan role pengguna dan status autentikasi pada aplikasi SIAP.
  *
- * Menampilkan halaman error dengan kode, judul, pesan, ikon, dan navigasi.
- * Dapat digunakan pada kasus error seperti gagal verifikasi, permintaan tidak ditemukan, atau akses tidak diizinkan.
+ * Parameter:
+ * - Tidak ada
+ *
+ * Return:
+ * - string: Path halaman beranda sesuai role ('/admin/dashboard' atau '/pegawai/permintaan').
+ *           Jika belum login, akan diarahkan ke '/login'.
+ */
+function getHomePage() {
+  const userRole = localStorage.getItem("userRole");
+  const isAuthenticated = localStorage.getItem("authToken");
+
+  if (!isAuthenticated) return "/login";
+  return userRole === "admin" ? "/admin/dashboard" : "/pegawai/permintaan";
+}
+
+/**
+ * Fungsi handleGoBack
+ * ----------------------------------------
+ * Fungsi ini digunakan untuk mengembalikan pengguna ke halaman sebelumnya.
+ * Cocok digunakan saat pengguna ingin membatalkan aksi atau kembali dari halaman error.
+ *
+ * Parameter:
+ * - navigate (function): Fungsi navigasi dari react-router-dom.
+ *
+ * Return:
+ * - void: Tidak mengembalikan nilai.
+ */
+function handleGoBack(navigate) {
+  navigate(-1);
+}
+
+/**
+ * Komponen ErrorPage
+ * ----------------------------------------
+ * Komponen ini digunakan untuk menampilkan halaman error pada aplikasi SIAP,
+ * seperti gagal verifikasi, permintaan tidak ditemukan, atau akses tidak diizinkan.
+ * Menampilkan kode error, judul, pesan, ikon, dan navigasi ke halaman sebelumnya atau beranda.
  *
  * Parameter:
  * - code (string): Kode error yang ditampilkan (misal: 404, 403).
@@ -27,7 +65,7 @@ import { ArrowLeftIcon, HomeIcon } from "@heroicons/react/24/outline";
  * Return:
  * - React.Element: Tampilan halaman error.
  */
-const ErrorPage = ({
+function ErrorPage({
   code,
   title,
   message,
@@ -35,42 +73,8 @@ const ErrorPage = ({
   iconColor,
   iconBgColor,
   children,
-}) => {
+}) {
   const navigate = useNavigate();
-
-  /**
-   * Fungsi getHomePage
-   *
-   * Menentukan halaman beranda yang sesuai berdasarkan role pengguna dan status autentikasi.
-   * Digunakan untuk navigasi ke beranda setelah terjadi error.
-   *
-   * Parameter: Tidak ada
-   *
-   * Return:
-   * - string: Path halaman beranda sesuai role ('/admin/dashboard' atau '/pegawai/permintaan').
-   *           Jika belum login, akan diarahkan ke '/login'.
-   */
-  const getHomePage = () => {
-    const userRole = localStorage.getItem("userRole");
-    const isAuthenticated = localStorage.getItem("authToken");
-
-    if (!isAuthenticated) return "/login";
-    return userRole === "admin" ? "/admin/dashboard" : "/pegawai/permintaan";
-  };
-
-  /**
-   * Fungsi handleGoBack
-   *
-   * Mengembalikan pengguna ke halaman sebelumnya.
-   * Cocok digunakan saat pengguna ingin membatalkan aksi atau kembali dari halaman error.
-   *
-   * Parameter: Tidak ada
-   *
-   * Return: Tidak ada
-   */
-  const handleGoBack = () => {
-    navigate(-1);
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex flex-col items-center justify-center p-4">
@@ -96,7 +100,7 @@ const ErrorPage = ({
           {/* Navigasi aksi: kembali atau ke beranda */}
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <button
-              onClick={handleGoBack}
+              onClick={() => handleGoBack(navigate)}
               className="flex items-center justify-center px-4 py-2 bg-white border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-50 shadow-sm transition-colors"
             >
               <ArrowLeftIcon className="w-5 h-5 mr-2" />
@@ -127,6 +131,6 @@ const ErrorPage = ({
       </div>
     </div>
   );
-};
+}
 
 export default ErrorPage;

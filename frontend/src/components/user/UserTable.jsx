@@ -1,7 +1,10 @@
 /**
- * Komponen UserTable digunakan untuk menampilkan daftar pengguna dalam aplikasi SIAP.
+ * ============================================================
+ * Komponen UserTable
+ * ============================================================
+ * Komponen ini digunakan untuk menampilkan daftar pengguna dalam aplikasi SIAP.
  * Tabel ini memuat informasi pengguna seperti nama, username, role, unit kerja, status, dan aksi yang dapat dilakukan.
- * Komponen ini mendukung pengelolaan pengguna seperti edit, aktivasi/non-aktivasi, dan penghapusan.
+ * Mendukung pengelolaan pengguna seperti edit, aktivasi/non-aktivasi, dan penghapusan.
  *
  * Parameter:
  * - users (Array<Object>): Daftar data pengguna yang akan ditampilkan.
@@ -25,7 +28,22 @@ import {
 } from "@heroicons/react/24/outline";
 
 /**
- * Komponen UserTable untuk menampilkan data pengguna SIAP.
+ * ============================================================
+ * Komponen UserTable
+ * ============================================================
+ * Komponen utama untuk menampilkan tabel data pengguna SIAP.
+ *
+ * Parameter:
+ * - users (Array<Object>): Daftar pengguna.
+ * - getRoleColor (Function): Fungsi penentu warna label role.
+ * - getStatusColor (Function): Fungsi penentu warna label status.
+ * - formatDate (Function): Fungsi pemformat tanggal.
+ * - onEdit (Function): Callback edit pengguna.
+ * - onToggleStatus (Function): Callback aktivasi/non-aktivasi pengguna.
+ * - onDelete (Function): Callback hapus pengguna.
+ *
+ * Return:
+ * - React.Element: Tabel pengguna.
  */
 const UserTable = ({
   users,
@@ -37,7 +55,10 @@ const UserTable = ({
   onDelete,
 }) => {
   /**
-   * Fungsi renderFoto digunakan untuk menampilkan foto pengguna atau inisial jika foto tidak tersedia.
+   * ============================================================
+   * Fungsi renderFoto
+   * ============================================================
+   * Menampilkan foto pengguna jika tersedia, atau inisial nama jika tidak ada foto.
    *
    * Parameter:
    * - user (Object): Data pengguna.
@@ -65,13 +86,16 @@ const UserTable = ({
   };
 
   /**
-   * Fungsi renderRoleLabel digunakan untuk menampilkan label role pengguna.
+   * ============================================================
+   * Fungsi renderRoleLabel
+   * ============================================================
+   * Menampilkan label role pengguna dengan warna sesuai.
    *
    * Parameter:
    * - role (string): Role pengguna.
    *
    * Return:
-   * - React.Element: Label role dengan warna sesuai.
+   * - React.Element: Label role.
    */
   const renderRoleLabel = (role) => (
     <span
@@ -84,13 +108,16 @@ const UserTable = ({
   );
 
   /**
-   * Fungsi renderStatusLabel digunakan untuk menampilkan label status pengguna.
+   * ============================================================
+   * Fungsi renderStatusLabel
+   * ============================================================
+   * Menampilkan label status pengguna dengan warna sesuai.
    *
    * Parameter:
    * - status (string): Status pengguna.
    *
    * Return:
-   * - React.Element: Label status dengan warna sesuai.
+   * - React.Element: Label status.
    */
   const renderStatusLabel = (status) => (
     <span
@@ -103,13 +130,16 @@ const UserTable = ({
   );
 
   /**
-   * Fungsi renderAksi digunakan untuk menampilkan tombol aksi pada setiap baris pengguna.
+   * ============================================================
+   * Fungsi renderAksi
+   * ============================================================
+   * Menampilkan tombol aksi edit, aktivasi/non-aktivasi, dan hapus pada setiap baris pengguna.
    *
    * Parameter:
    * - user (Object): Data pengguna.
    *
    * Return:
-   * - React.Element: Tombol aksi edit, aktivasi/non-aktivasi, dan hapus.
+   * - React.Element: Tombol aksi.
    */
   const renderAksi = (user) => (
     <div className="flex items-center justify-center space-x-2">
@@ -145,6 +175,12 @@ const UserTable = ({
     </div>
   );
 
+  /**
+   * ============================================================
+   * Render utama tabel pengguna
+   * ============================================================
+   * Menampilkan tabel dengan data pengguna, atau pesan jika data kosong.
+   */
   return (
     <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden transition-all duration-300">
       <div className="overflow-x-auto">

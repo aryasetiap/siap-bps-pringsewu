@@ -48,7 +48,8 @@ const EmployeeRequestHistoryTable = ({
   /**
    * Fungsi renderBarisPermintaan
    *
-   * Membantu merender baris data permintaan barang.
+   * Merender satu baris data permintaan barang pada tabel.
+   * Menampilkan nomor permintaan, tanggal, status, total item, dan aksi.
    *
    * Parameter:
    * - item (Object): Data permintaan barang.
@@ -81,35 +82,12 @@ const EmployeeRequestHistoryTable = ({
       </td>
       <td className="px-4 py-3 text-center">{(item.items || []).length}</td>
       <td className="px-4 py-3 text-center">
-        <div className="flex justify-center items-center space-x-2">
-          {/* Tombol untuk melihat detail permintaan */}
-          <button
-            onClick={() => onDetail(item)}
-            className="inline-flex items-center px-2.5 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-            title="Lihat Detail"
-          >
-            <EyeIcon className="h-4 w-4 text-blue-500 mr-1.5" />
-            Detail
-          </button>
-
-          {/* Tombol Download PDF, hanya tampil jika status bukan 'Menunggu' */}
-          {item.status !== "Menunggu" && (
-            <button
-              onClick={() => onDownloadPDF(item.id)}
-              disabled={pdfLoading === item.id}
-              className="inline-flex items-center px-2.5 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 transition-colors"
-              title="Unduh PDF"
-            >
-              {pdfLoading === item.id ? (
-                // Indikator loading saat proses unduh PDF
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500 mr-1.5"></div>
-              ) : (
-                <DocumentArrowDownIcon className="h-4 w-4 text-blue-500 mr-1.5" />
-              )}
-              PDF
-            </button>
-          )}
-        </div>
+        <AksiPermintaan
+          item={item}
+          onDetail={onDetail}
+          onDownloadPDF={onDownloadPDF}
+          pdfLoading={pdfLoading}
+        />
       </td>
     </tr>
   );
@@ -140,25 +118,7 @@ const EmployeeRequestHistoryTable = ({
     <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Nomor
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Tanggal
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Status
-              </th>
-              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Total Item
-              </th>
-              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Aksi
-              </th>
-            </tr>
-          </thead>
+          <TabelHeader />
           <tbody className="bg-white divide-y divide-gray-200">
             {renderIsiTabel()}
           </tbody>
@@ -167,5 +127,88 @@ const EmployeeRequestHistoryTable = ({
     </div>
   );
 };
+
+/**
+ * Komponen TabelHeader
+ *
+ * Menampilkan header kolom tabel permintaan barang.
+ *
+ * Return:
+ * - JSX: Baris header tabel.
+ */
+function TabelHeader() {
+  return (
+    <thead className="bg-gray-50">
+      <tr>
+        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+          Nomor
+        </th>
+        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+          Tanggal
+        </th>
+        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+          Status
+        </th>
+        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+          Total Item
+        </th>
+        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+          Aksi
+        </th>
+      </tr>
+    </thead>
+  );
+}
+
+/**
+ * Komponen AksiPermintaan
+ *
+ * Menampilkan tombol aksi untuk setiap permintaan barang:
+ * - Tombol detail untuk melihat detail permintaan.
+ * - Tombol unduh PDF jika status bukan 'Menunggu'.
+ * - Indikator loading saat proses unduh PDF.
+ *
+ * Parameter:
+ * - item (Object): Data permintaan barang.
+ * - onDetail (Function): Handler klik tombol detail.
+ * - onDownloadPDF (Function): Handler klik tombol unduh PDF.
+ * - pdfLoading (String|Number): ID permintaan yang sedang loading PDF-nya.
+ *
+ * Return:
+ * - JSX: Tombol aksi permintaan barang.
+ */
+function AksiPermintaan({ item, onDetail, onDownloadPDF, pdfLoading }) {
+  return (
+    <div className="flex justify-center items-center space-x-2">
+      {/* Tombol untuk melihat detail permintaan */}
+      <button
+        onClick={() => onDetail(item)}
+        className="inline-flex items-center px-2.5 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+        title="Lihat Detail"
+      >
+        <EyeIcon className="h-4 w-4 text-blue-500 mr-1.5" />
+        Detail
+      </button>
+
+      {/* Tombol Download PDF, hanya tampil jika status bukan 'Menunggu' */}
+      {item.status !== "Menunggu" && (
+        <button
+          onClick={() => onDownloadPDF(item.id)}
+          disabled={pdfLoading === item.id}
+          className="inline-flex items-center px-2.5 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 transition-colors"
+          title="Unduh PDF"
+        >
+          {pdfLoading === item.id ? (
+            // Indikator loading saat proses unduh PDF
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500 mr-1.5"></div>
+          ) : (
+            <DocumentArrowDownIcon className="h-4 w-4 text-blue-500 mr-1.5" />
+          )}
+          PDF
+        </button>
+      )}
+    </div>
+  );
+}
 
 export default EmployeeRequestHistoryTable;

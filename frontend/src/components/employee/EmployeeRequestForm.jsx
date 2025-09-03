@@ -27,8 +27,22 @@ import {
 } from "@heroicons/react/24/outline";
 
 /**
- * Komponen utama untuk form permintaan barang pegawai.
- * Menampilkan daftar barang yang diminta, input jumlah, catatan, dan tombol submit.
+ * Komponen EmployeeRequestForm
+ *
+ * Komponen utama untuk form permintaan barang pegawai pada aplikasi SIAP.
+ * Menampilkan daftar barang yang diminta, input jumlah, catatan, dan tombol submit permintaan.
+ *
+ * Parameter:
+ * - items (Array): Daftar barang yang diminta.
+ * - onItemChange (Function): Handler perubahan jumlah barang.
+ * - onRemoveItem (Function): Handler penghapusan barang dari daftar.
+ * - onSubmit (Function): Handler pengajuan permintaan barang.
+ * - loading (Boolean): Status loading saat permintaan diproses.
+ * - catatan (String): Catatan tambahan permintaan barang.
+ * - onCatatanChange (Function): Handler perubahan catatan permintaan.
+ *
+ * Return:
+ * - React Element: Form permintaan barang pegawai.
  */
 const EmployeeRequestForm = ({
   items,
@@ -41,7 +55,9 @@ const EmployeeRequestForm = ({
 }) => {
   /**
    * Fungsi renderTabelBarang
+   *
    * Menampilkan tabel daftar barang yang diminta beserta input jumlah dan aksi hapus.
+   * Validasi jumlah barang agar tidak melebihi stok tersedia.
    *
    * Parameter:
    * - items (Array): Daftar barang yang diminta.
@@ -141,7 +157,9 @@ const EmployeeRequestForm = ({
 
   /**
    * Fungsi renderEmptyState
+   *
    * Menampilkan pesan jika belum ada barang yang ditambahkan ke daftar permintaan.
+   * Memberikan informasi kepada pegawai untuk memilih barang dari daftar.
    *
    * Return:
    * - React Element: Pesan empty state.
@@ -159,7 +177,12 @@ const EmployeeRequestForm = ({
 
   /**
    * Fungsi handleSubmit
+   *
    * Handler untuk tombol submit permintaan barang.
+   * Memastikan fungsi onSubmit dipanggil jika tersedia.
+   *
+   * Parameter:
+   * - e (Event): Event klik tombol submit.
    *
    * Return:
    * - void
@@ -204,10 +227,10 @@ const EmployeeRequestForm = ({
       <div className="flex justify-end">
         <button
           onClick={handleSubmit}
-          disabled={loading} // Hanya disabled saat loading, bukan saat keranjang kosong
+          disabled={loading}
           className={`flex items-center px-6 py-2.5 ${
             items.length === 0
-              ? "bg-gray-400 hover:bg-gray-500" // Bisa diklik meski keranjang kosong
+              ? "bg-gray-400 hover:bg-gray-500"
               : "bg-blue-600 hover:bg-blue-700"
           } text-white font-medium rounded-lg transition shadow-sm`}
         >

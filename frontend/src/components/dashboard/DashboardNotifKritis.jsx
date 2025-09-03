@@ -18,27 +18,23 @@ import React from "react";
 import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 
 /**
- * Komponen utama notifikasi stok kritis.
- * Menampilkan daftar barang yang stoknya di bawah ambang batas kritis.
+ * Fungsi renderListItem digunakan untuk merender satu item barang dengan stok kritis.
  *
  * Parameter:
- * - items (Array<Object>): Daftar barang dengan stok kritis.
- * - loading (Boolean): Status pemuatan data.
+ * - item (Object): Data barang yang stoknya kritis. Properti yang digunakan:
+ *   - id (string|number): ID unik barang
+ *   - nama_barang (string): Nama barang
+ *   - kode_barang (string): Kode barang
+ *   - satuan (string): Satuan barang
+ *   - deskripsi (string): Deskripsi barang
+ *   - stok (number): Jumlah stok saat ini
+ *   - ambang_batas_kritis (number): Ambang batas stok kritis
  *
  * Return:
- * - React Element: UI notifikasi stok kritis.
+ * - React Element: Satu baris informasi barang dengan stok kritis.
  */
-const DashboardNotifKritis = ({ items, loading }) => {
-  /**
-   * Fungsi renderListItem digunakan untuk merender satu item barang dengan stok kritis.
-   *
-   * Parameter:
-   * - item (Object): Data barang yang stoknya kritis.
-   *
-   * Return:
-   * - React Element: Satu baris informasi barang.
-   */
-  const renderListItem = (item) => (
+function renderListItem(item) {
+  return (
     <li
       key={item.id}
       className="py-3 px-2 flex flex-col md:flex-row md:justify-between md:items-center hover:bg-red-50 transition rounded-lg"
@@ -64,7 +60,26 @@ const DashboardNotifKritis = ({ items, loading }) => {
       </div>
     </li>
   );
+}
 
+/**
+ * Komponen utama notifikasi stok kritis.
+ * Menampilkan daftar barang yang stoknya di bawah ambang batas kritis.
+ *
+ * Parameter:
+ * - items (Array<Object>): Daftar barang dengan stok kritis.
+ * - loading (Boolean): Status pemuatan data.
+ *
+ * Return:
+ * - React Element: UI notifikasi stok kritis.
+ */
+function DashboardNotifKritis({ items, loading }) {
+  /**
+   * Bagian ini menangani kondisi tampilan:
+   * - Jika loading, tampilkan pesan pemuatan.
+   * - Jika tidak ada barang kritis, tampilkan pesan kosong.
+   * - Jika ada barang kritis, tampilkan daftar barang.
+   */
   return (
     <div className="bg-white p-6 rounded-xl shadow-md mb-6 border border-red-100">
       {/* Header notifikasi stok kritis */}
@@ -86,6 +101,6 @@ const DashboardNotifKritis = ({ items, loading }) => {
       )}
     </div>
   );
-};
+}
 
 export default DashboardNotifKritis;

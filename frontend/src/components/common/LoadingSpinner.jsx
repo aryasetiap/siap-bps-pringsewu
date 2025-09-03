@@ -31,8 +31,37 @@ const SPINNER_VARIANTS = {
 };
 
 /**
- * Komponen LoadingSpinner
- * Menampilkan animasi spinner sebagai indikator loading pada aplikasi SIAP.
+ * Fungsi: getSpinnerSize
+ * Fungsi ini digunakan untuk mengambil kelas Tailwind CSS sesuai ukuran spinner yang dipilih.
+ *
+ * Parameter:
+ * - size (string): Ukuran spinner ('sm', 'md', 'lg', 'xl')
+ *
+ * Return:
+ * - string: Kelas Tailwind CSS untuk ukuran spinner
+ */
+function getSpinnerSize(size) {
+  return SPINNER_SIZES[size] || SPINNER_SIZES.md;
+}
+
+/**
+ * Fungsi: getSpinnerVariant
+ * Fungsi ini digunakan untuk mengambil kelas Tailwind CSS sesuai varian warna spinner yang dipilih.
+ *
+ * Parameter:
+ * - variant (string): Varian warna spinner ('primary', 'white', 'gray')
+ *
+ * Return:
+ * - string: Kelas Tailwind CSS untuk warna spinner
+ */
+function getSpinnerVariant(variant) {
+  return SPINNER_VARIANTS[variant] || SPINNER_VARIANTS.primary;
+}
+
+/**
+ * Komponen: LoadingSpinner
+ * Komponen ini digunakan untuk menampilkan animasi spinner sebagai indikator loading pada aplikasi SIAP.
+ * Sering digunakan pada proses pengelolaan barang, permintaan, atau verifikasi data.
  *
  * Parameter:
  * - size (string): Ukuran spinner, dapat berupa 'sm', 'md', 'lg', atau 'xl'. Default: 'md'.
@@ -49,15 +78,15 @@ const LoadingSpinner = ({
   className = "",
   text,
 }) => {
-  // Validasi agar size dan variant selalu menggunakan value yang tersedia
-  const spinnerSize = SPINNER_SIZES[size] || SPINNER_SIZES.md;
-  const spinnerVariant = SPINNER_VARIANTS[variant] || SPINNER_VARIANTS.primary;
+  // Ambil kelas Tailwind CSS sesuai ukuran dan varian spinner
+  const spinnerSizeClass = getSpinnerSize(size);
+  const spinnerVariantClass = getSpinnerVariant(variant);
 
   return (
     <div className={`flex flex-col items-center justify-center ${className}`}>
-      {/* Spinner animasi untuk menandakan proses loading */}
+      {/* Spinner animasi untuk menandakan proses loading pada aplikasi SIAP */}
       <div
-        className={`animate-spin rounded-full border-b-2 ${spinnerSize} ${spinnerVariant}`}
+        className={`animate-spin rounded-full border-b-2 ${spinnerSizeClass} ${spinnerVariantClass}`}
       ></div>
       {/* Teks opsional di bawah spinner, misal "Memuat data barang..." */}
       {text && <p className="mt-2 text-sm text-gray-600">{text}</p>}

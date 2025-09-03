@@ -4,6 +4,9 @@
  * Komponen modal untuk menambah stok barang pada aplikasi SIAP.
  * Digunakan dalam proses pengelolaan barang, khususnya saat admin ingin menambah stok barang tertentu.
  *
+ * Komponen ini menampilkan detail barang, form input jumlah penambahan stok, keterangan, dan preview stok setelah penambahan.
+ * Modal ini digunakan pada proses permintaan dan verifikasi stok barang.
+ *
  * Parameter Props:
  * - show (boolean): Menentukan apakah modal ditampilkan.
  * - barang (object): Data barang yang akan ditambah stoknya.
@@ -21,16 +24,19 @@ import React from "react";
 import { PlusCircleIcon } from "@heroicons/react/24/outline";
 
 /**
- * Komponen modal untuk menambah stok barang.
+ * Komponen BarangStokModal
+ *
+ * Komponen ini digunakan untuk menampilkan modal penambahan stok barang.
+ * Modal ini berisi informasi barang, form input jumlah penambahan, keterangan, dan preview stok setelah penambahan.
  *
  * Parameter:
- * - show (boolean): Menampilkan atau menyembunyikan modal.
- * - barang (object): Data barang yang dipilih.
- * - stokData (object): Data input penambahan stok.
- * - loading (boolean): Status loading submit.
- * - onChange (function): Fungsi handler perubahan input.
- * - onClose (function): Fungsi handler tutup modal.
- * - onSubmit (function): Fungsi handler submit form.
+ * - show (boolean): Menentukan apakah modal ditampilkan.
+ * - barang (object): Data barang yang dipilih untuk ditambah stok.
+ * - stokData (object): Data input penambahan stok (jumlahTambah, keterangan).
+ * - loading (boolean): Status loading saat proses submit.
+ * - onChange (function): Fungsi handler perubahan input form.
+ * - onClose (function): Fungsi handler untuk menutup modal.
+ * - onSubmit (function): Fungsi handler submit form penambahan stok.
  *
  * Return:
  * - React Element: Modal penambahan stok barang.
@@ -44,10 +50,16 @@ const BarangStokModal = ({
   onClose,
   onSubmit,
 }) => {
-  // Jika modal tidak ditampilkan atau data barang belum tersedia, tidak render apapun
+  /**
+   * Jika modal tidak ditampilkan atau data barang belum tersedia,
+   * maka tidak merender apapun.
+   */
   if (!show || !barang) return null;
 
-  // Hitung stok setelah penambahan untuk preview
+  /**
+   * Menghitung stok setelah penambahan untuk preview.
+   * Jika input jumlahTambah tidak valid, gunakan 0.
+   */
   const stokSetelahTambah =
     barang.stok + (parseInt(stokData.jumlahTambah, 10) || 0);
 
@@ -147,7 +159,10 @@ const BarangStokModal = ({
               disabled={loading}
               className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition"
               onClick={(e) => {
-                // Pastikan validasi JS tetap dijalankan
+                /**
+                 * Handler submit form penambahan stok.
+                 * Pastikan validasi JS tetap dijalankan.
+                 */
                 if (typeof onSubmit === "function") onSubmit(e);
               }}
             >

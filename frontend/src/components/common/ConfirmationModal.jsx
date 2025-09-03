@@ -4,6 +4,9 @@
  * Komponen modal konfirmasi untuk aplikasi SIAP BPS Pringsewu.
  * Digunakan untuk menampilkan dialog konfirmasi pada proses pengelolaan barang, permintaan, dan verifikasi.
  *
+ * Komponen ini dapat digunakan pada berbagai proses bisnis SIAP yang membutuhkan persetujuan user,
+ * seperti verifikasi permintaan barang, pengelolaan stok, dan validasi data.
+ *
  * Parameter:
  * - show (boolean): Menentukan apakah modal ditampilkan.
  * - title (string): Judul modal konfirmasi.
@@ -24,8 +27,8 @@ import { CheckCircleIcon, XMarkIcon } from "@heroicons/react/24/outline";
 /**
  * Komponen ConfirmationModal
  *
- * Menampilkan modal konfirmasi untuk aksi penting seperti verifikasi permintaan barang.
- * Modal ini dapat digunakan pada berbagai proses bisnis SIAP yang membutuhkan persetujuan user.
+ * Fungsi ini digunakan untuk menampilkan modal konfirmasi pada proses penting aplikasi SIAP,
+ * seperti verifikasi permintaan barang, pengelolaan stok, dan validasi data.
  *
  * Parameter:
  * - show (boolean): Status visibilitas modal.
@@ -50,13 +53,18 @@ const ConfirmationModal = ({
   cancelText = "Batal",
   loading = false,
 }) => {
-  // Jika modal tidak perlu ditampilkan, kembalikan null
+  /**
+   * Jika modal tidak perlu ditampilkan, kembalikan null.
+   * Hal ini untuk menghindari rendering komponen yang tidak diperlukan.
+   */
   if (!show) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 animate-fadeIn">
       <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md relative">
-        {/* Tombol untuk menutup modal */}
+        {/* Tombol untuk menutup modal.
+            Tombol ini dapat digunakan untuk membatalkan proses konfirmasi.
+            Disabled saat loading agar tidak terjadi interaksi ganda. */}
         <button
           className="absolute top-3 right-3 text-gray-400 hover:text-red-500 text-2xl font-bold transition"
           onClick={onCancel}
@@ -66,7 +74,8 @@ const ConfirmationModal = ({
           <XMarkIcon className="h-5 w-5" />
         </button>
 
-        {/* Header modal dengan ikon dan judul */}
+        {/* Header modal dengan ikon dan judul.
+            Ikon menandakan proses konfirmasi penting dalam aplikasi SIAP. */}
         <div className="flex items-center mb-4">
           <div className="bg-blue-100 text-blue-600 rounded-full p-3 mr-3">
             <CheckCircleIcon className="h-6 w-6" />
@@ -74,10 +83,12 @@ const ConfirmationModal = ({
           <h3 className="text-xl font-bold text-gray-800">{title}</h3>
         </div>
 
-        {/* Pesan utama modal */}
+        {/* Pesan utama modal.
+            Digunakan untuk memberikan penjelasan atau instruksi kepada user. */}
         <p className="mb-6 text-gray-600">{message}</p>
 
-        {/* Tombol aksi: batal dan konfirmasi */}
+        {/* Tombol aksi: batal dan konfirmasi.
+            Tombol batal untuk membatalkan proses, tombol konfirmasi untuk melanjutkan proses bisnis. */}
         <div className="flex justify-end space-x-3">
           <button
             type="button"
@@ -95,7 +106,8 @@ const ConfirmationModal = ({
           >
             {loading ? (
               <>
-                {/* Indikator loading saat proses konfirmasi */}
+                {/* Indikator loading saat proses konfirmasi.
+                    Animasi ini menandakan proses sedang berlangsung dan mencegah interaksi ganda. */}
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
                 Memproses...
               </>

@@ -2,7 +2,7 @@
  * Sidebar.jsx
  *
  * Komponen Sidebar untuk aplikasi SIAP BPS Pringsewu.
- * Sidebar ini digunakan untuk navigasi utama aplikasi, baik untuk admin maupun pegawai.
+ * Sidebar ini digunakan sebagai navigasi utama aplikasi, baik untuk admin maupun pegawai.
  * Mendukung tampilan mobile dan desktop, serta fitur collapse pada desktop.
  *
  * Fitur bisnis yang didukung:
@@ -10,14 +10,6 @@
  * - Pengajuan dan verifikasi permintaan
  * - Manajemen pengguna
  * - Laporan periodik
- *
- * Parameter:
- * - isOpenMobile (boolean): Status apakah sidebar mobile terbuka.
- * - onCloseMobile (function): Fungsi untuk menutup sidebar mobile.
- * - isCollapsed (boolean): Status apakah sidebar desktop dalam mode collapse.
- *
- * Return:
- * - React Element: Komponen Sidebar yang siap digunakan.
  */
 
 import React from "react";
@@ -36,7 +28,7 @@ import {
 } from "@heroicons/react/24/outline";
 
 /**
- * Fungsi untuk menggabungkan beberapa kelas CSS menjadi satu string.
+ * Fungsi utilitas untuk menggabungkan beberapa kelas CSS menjadi satu string.
  *
  * Parameter:
  * - classes (...string): Daftar kelas CSS yang ingin digabungkan.
@@ -49,7 +41,7 @@ function classNames(...classes) {
 }
 
 /**
- * Objek navigasi berdasarkan peran pengguna.
+ * Konfigurasi navigasi berdasarkan peran pengguna.
  *
  * Struktur:
  * - admin: Navigasi untuk admin (manajemen barang, pengguna, verifikasi, laporan).
@@ -86,29 +78,16 @@ const NAVIGATION_ITEMS = {
 };
 
 /**
- * Komponen Sidebar utama untuk aplikasi SIAP.
+ * Komponen Logo dan Header aplikasi SIAP.
  *
  * Parameter:
- * - isOpenMobile (boolean): Status sidebar mobile.
- * - onCloseMobile (function): Handler untuk menutup sidebar mobile.
- * - isCollapsed (boolean): Status collapse sidebar desktop.
+ * - collapsed (boolean): Status apakah sidebar dalam mode collapse.
  *
  * Return:
- * - React Element: Sidebar dengan navigasi sesuai peran pengguna.
+ * - React.Element: Logo dan header aplikasi.
  */
-function Sidebar({ isOpenMobile, onCloseMobile, isCollapsed }) {
-  const location = useLocation();
-
-  // Ambil peran dan nama pengguna dari localStorage
-  const userRole = localStorage.getItem("userRole") || "pegawai";
-  const username = localStorage.getItem("username") || "Pengguna";
-  const currentNav = NAVIGATION_ITEMS[userRole] || [];
-
-  /**
-   * Komponen Logo dan Header aplikasi SIAP.
-   * Ditampilkan pada sidebar mobile dan desktop.
-   */
-  const LogoHeader = ({ collapsed }) => (
+function LogoHeader({ collapsed }) {
+  return (
     <div className="flex flex-shrink-0 items-center justify-center px-4 mb-4">
       {!collapsed ? (
         <div className="flex flex-col items-center">
@@ -125,40 +104,56 @@ function Sidebar({ isOpenMobile, onCloseMobile, isCollapsed }) {
       )}
     </div>
   );
+}
 
-  /**
-   * Komponen User Profile.
-   * Menampilkan nama dan peran pengguna.
-   * Hanya tampil jika sidebar tidak collapse.
-   */
-  const UserProfile = ({ collapsed }) =>
-    !collapsed && (
-      <div className="mx-3 mb-6 rounded-lg bg-blue-700/40 p-3">
-        <div className="flex items-center">
-          <div className="mr-3 rounded-full bg-blue-800 p-2">
-            <UserCircleIcon
-              className="h-6 w-6 text-blue-200"
-              aria-hidden="true"
-            />
-          </div>
-          <div>
-            <p className="text-sm font-medium text-white">{username}</p>
-            <p className="text-xs text-blue-200 capitalize">{userRole}</p>
-          </div>
+/**
+ * Komponen User Profile.
+ * Menampilkan nama dan peran pengguna.
+ *
+ * Parameter:
+ * - collapsed (boolean): Status apakah sidebar dalam mode collapse.
+ * - username (string): Nama pengguna.
+ * - userRole (string): Peran pengguna.
+ *
+ * Return:
+ * - React.Element|null: Profil pengguna (hanya tampil jika sidebar tidak collapse).
+ */
+function UserProfile({ collapsed, username, userRole }) {
+  if (collapsed) return null;
+  return (
+    <div className="mx-3 mb-6 rounded-lg bg-blue-700/40 p-3">
+      <div className="flex items-center">
+        <div className="mr-3 rounded-full bg-blue-800 p-2">
+          <UserCircleIcon
+            className="h-6 w-6 text-blue-200"
+            aria-hidden="true"
+          />
+        </div>
+        <div>
+          <p className="text-sm font-medium text-white">{username}</p>
+          <p className="text-xs text-blue-200 capitalize">{userRole}</p>
         </div>
       </div>
-    );
+    </div>
+  );
+}
 
-  /**
-   * Komponen Navigasi Sidebar.
-   * Menampilkan daftar menu sesuai peran pengguna.
-   *
-   * Parameter:
-   * - navItems (array): Daftar item navigasi.
-   * - collapsed (boolean): Status collapse sidebar.
-   * - onItemClick (function): Handler klik menu (opsional, untuk mobile).
-   */
-  const SidebarNav = ({ navItems, collapsed, onItemClick }) => (
+/**
+ * Komponen Navigasi Sidebar.
+ * Menampilkan daftar menu sesuai peran pengguna.
+ *
+ * Parameter:
+ * - navItems (array): Daftar item navigasi.
+ * - collapsed (boolean): Status collapse sidebar.
+ * - onItemClick (function): Handler klik menu (opsional, untuk mobile).
+ *
+ * Return:
+ * - React.Element: Daftar menu navigasi sidebar.
+ */
+function SidebarNav({ navItems, collapsed, onItemClick }) {
+  const location = useLocation();
+
+  return (
     <nav className={collapsed ? "space-y-1" : "flex-1 space-y-1"}>
       {navItems.map((item) => (
         <Link
@@ -196,6 +191,26 @@ function Sidebar({ isOpenMobile, onCloseMobile, isCollapsed }) {
       ))}
     </nav>
   );
+}
+
+/**
+ * Komponen utama Sidebar untuk aplikasi SIAP.
+ * Sidebar ini digunakan sebagai navigasi utama aplikasi, baik untuk admin maupun pegawai.
+ * Mendukung tampilan mobile dan desktop, serta fitur collapse pada desktop.
+ *
+ * Parameter:
+ * - isOpenMobile (boolean): Status sidebar mobile.
+ * - onCloseMobile (function): Handler untuk menutup sidebar mobile.
+ * - isCollapsed (boolean): Status collapse sidebar desktop.
+ *
+ * Return:
+ * - React.Element: Sidebar dengan navigasi sesuai peran pengguna.
+ */
+function Sidebar({ isOpenMobile, onCloseMobile, isCollapsed }) {
+  // Ambil peran dan nama pengguna dari localStorage
+  const userRole = localStorage.getItem("userRole") || "pegawai";
+  const username = localStorage.getItem("username") || "Pengguna";
+  const currentNav = NAVIGATION_ITEMS[userRole] || [];
 
   return (
     <>
@@ -231,6 +246,7 @@ function Sidebar({ isOpenMobile, onCloseMobile, isCollapsed }) {
                 className="relative flex w-full max-w-xs flex-1 flex-col bg-gradient-to-b from-blue-800 to-blue-900 pb-4 pt-5 shadow-xl"
                 data-testid="mobile-sidebar"
               >
+                {/* Tombol tutup sidebar mobile */}
                 <div className="absolute top-0 right-0 -mr-12 pt-2">
                   <button
                     type="button"
@@ -263,24 +279,11 @@ function Sidebar({ isOpenMobile, onCloseMobile, isCollapsed }) {
                   </p>
                 </div>
                 {/* User profile section */}
-                <div className="mx-3 mb-6 rounded-lg bg-blue-700/40 p-3">
-                  <div className="flex items-center">
-                    <div className="mr-3 rounded-full bg-blue-800 p-2">
-                      <UserCircleIcon
-                        className="h-6 w-6 text-blue-200"
-                        aria-hidden="true"
-                      />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-white">
-                        {username}
-                      </p>
-                      <p className="text-xs text-blue-200 capitalize">
-                        {userRole}
-                      </p>
-                    </div>
-                  </div>
-                </div>
+                <UserProfile
+                  collapsed={false}
+                  username={username}
+                  userRole={userRole}
+                />
                 {/* Navigasi menu */}
                 <div className="mt-2 flex-1 overflow-y-auto px-3">
                   <SidebarNav
@@ -298,7 +301,7 @@ function Sidebar({ isOpenMobile, onCloseMobile, isCollapsed }) {
       {/* Sidebar Desktop */}
       <div
         className={classNames(
-          "hidden md:flex flex-shrink-0 bg-gradient-to-b from-blue-800 to-blue-900 shadow-lg transition-all duration-300 ease-in-out h-full fixed top-0 left-0 pt-5 pb-4 z-40 flex flex-col",
+          "md:flex flex-shrink-0 bg-gradient-to-b from-blue-800 to-blue-900 shadow-lg transition-all duration-300 ease-in-out h-full fixed top-0 left-0 pt-5 pb-4 z-40 flex flex-col",
           isCollapsed ? "w-20" : "w-64"
         )}
         data-testid="desktop-sidebar"
@@ -306,7 +309,11 @@ function Sidebar({ isOpenMobile, onCloseMobile, isCollapsed }) {
         {/* Logo Section */}
         <LogoHeader collapsed={isCollapsed} />
         {/* User Profile Section */}
-        <UserProfile collapsed={isCollapsed} />
+        <UserProfile
+          collapsed={isCollapsed}
+          username={username}
+          userRole={userRole}
+        />
         {/* Navigasi menu */}
         <div className="flex-1 flex flex-col overflow-y-auto px-3">
           <SidebarNav navItems={currentNav} collapsed={isCollapsed} />

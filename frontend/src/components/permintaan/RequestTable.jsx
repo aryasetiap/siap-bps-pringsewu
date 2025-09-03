@@ -1,24 +1,9 @@
 /**
- * Komponen RequestTable
+ * File: RequestTable.jsx
+ * Komponen utama untuk menampilkan tabel daftar permintaan barang pada aplikasi SIAP.
+ * Berisi fitur detail, verifikasi, pagination, dan filter jumlah data per halaman.
  *
- * Komponen ini digunakan untuk menampilkan tabel daftar permintaan barang pada aplikasi SIAP.
- * Tabel ini menampilkan informasi detail permintaan, pemohon, tanggal, item, status, dan aksi yang dapat dilakukan
- * seperti melihat detail dan melakukan verifikasi permintaan.
- *
- * Parameter:
- * - permintaan (Array): Daftar data permintaan barang.
- * - getStatusColor (Function): Fungsi untuk mendapatkan warna status permintaan.
- * - formatDate (Function): Fungsi untuk memformat tanggal permintaan.
- * - onDetail (Function): Fungsi callback ketika tombol detail diklik.
- * - onVerifikasi (Function): Fungsi callback ketika tombol verifikasi diklik.
- * - page (Number): Nomor halaman saat ini.
- * - setPage (Function): Fungsi untuk mengubah halaman.
- * - limit (Number): Jumlah data per halaman.
- * - totalData (Number): Total jumlah data permintaan.
- * - onLimitChange (Function): Fungsi untuk mengubah jumlah data per halaman.
- *
- * Return:
- * - JSX: Komponen tabel permintaan barang beserta pagination dan filter limit.
+ * Konteks bisnis: Digunakan untuk pengelolaan permintaan barang, verifikasi status, dan monitoring proses permintaan.
  */
 
 import React from "react";
@@ -48,7 +33,22 @@ const statusIcon = {
 /**
  * Komponen RequestTable
  *
- * Menampilkan tabel permintaan barang beserta fitur pagination dan filter jumlah data per halaman.
+ * Komponen utama untuk menampilkan tabel permintaan barang beserta fitur pagination dan filter jumlah data per halaman.
+ *
+ * Parameter:
+ * - permintaan (Array): Daftar data permintaan barang.
+ * - getStatusColor (Function): Fungsi untuk mendapatkan warna status permintaan.
+ * - formatDate (Function): Fungsi untuk memformat tanggal permintaan.
+ * - onDetail (Function): Callback ketika tombol detail diklik.
+ * - onVerifikasi (Function): Callback ketika tombol verifikasi diklik.
+ * - page (Number): Nomor halaman saat ini.
+ * - setPage (Function): Fungsi untuk mengubah halaman.
+ * - limit (Number): Jumlah data per halaman.
+ * - totalData (Number): Total jumlah data permintaan.
+ * - onLimitChange (Function): Fungsi untuk mengubah jumlah data per halaman.
+ *
+ * Return:
+ * - JSX: Komponen tabel permintaan barang beserta pagination dan filter limit.
  */
 const RequestTable = ({
   permintaan,
@@ -65,8 +65,8 @@ const RequestTable = ({
   /**
    * Fungsi renderItemInfo
    *
-   * Membantu menampilkan informasi singkat tentang item yang diminta pada setiap permintaan.
-   * Menampilkan maksimal 2 item, jika lebih dari 2 akan ditampilkan "..."
+   * Digunakan untuk menampilkan informasi singkat tentang item yang diminta pada setiap permintaan.
+   * Menampilkan maksimal 2 item, jika lebih dari 2 akan ditampilkan "...".
    *
    * Parameter:
    * - items (Array): Daftar item pada permintaan.
@@ -97,8 +97,8 @@ const RequestTable = ({
    * Return:
    * - JSX: Baris-baris tabel permintaan.
    */
-  const renderTableRows = (permintaan) => {
-    if (permintaan.length === 0) {
+  const renderTableRows = (permintaanList) => {
+    if (permintaanList.length === 0) {
       return (
         <tr>
           <td colSpan="6" className="px-6 py-16 text-center text-gray-400">
@@ -110,69 +110,74 @@ const RequestTable = ({
       );
     }
 
-    return permintaan.map((item) => (
-      <tr key={item.id} className="transition hover:bg-blue-50/60 group">
+    return permintaanList.map((permintaanItem) => (
+      <tr
+        key={permintaanItem.id}
+        className="transition hover:bg-blue-50/60 group"
+      >
         <td className="px-6 py-5 whitespace-nowrap">
           <div className="text-base font-bold text-blue-700">
-            {item.nomorPermintaan}
+            {permintaanItem.nomorPermintaan}
           </div>
-          <div className="text-xs text-gray-400">ID: {item.id}</div>
+          <div className="text-xs text-gray-400">ID: {permintaanItem.id}</div>
         </td>
         <td className="px-6 py-5">
           <div className="flex items-center">
             <img
               src={
-                item.fotoPemohon ||
+                permintaanItem.fotoPemohon ||
                 "https://ui-avatars.com/api/?name=" +
-                  encodeURIComponent(item.namaPemohon)
+                  encodeURIComponent(permintaanItem.namaPemohon)
               }
-              alt={item.namaPemohon}
+              alt={permintaanItem.namaPemohon}
               className="h-10 w-10 rounded-full object-cover border border-gray-200 shadow-sm mr-3 bg-gray-100"
             />
             <div>
               <div className="text-base font-semibold text-gray-900">
-                {item.namaPemohon}
+                {permintaanItem.namaPemohon}
               </div>
-              <div className="text-xs text-gray-500">{item.unitKerja}</div>
+              <div className="text-xs text-gray-500">
+                {permintaanItem.unitKerja}
+              </div>
             </div>
           </div>
         </td>
         <td className="px-6 py-5 whitespace-nowrap">
           <div className="flex items-center text-base text-gray-900">
             <CalendarIcon className="h-4 w-4 text-gray-400 mr-2" />
-            {formatDate(item.tanggalPermintaan)}
+            {formatDate(permintaanItem.tanggalPermintaan)}
           </div>
         </td>
         <td className="px-6 py-5 whitespace-nowrap">
           <div className="text-base font-bold text-gray-900">
-            {item.totalItem} Item
+            {permintaanItem.totalItem} Item
           </div>
           <div className="text-xs text-gray-500">
-            {renderItemInfo(item.items)}
+            {renderItemInfo(permintaanItem.items)}
           </div>
         </td>
         <td className="px-6 py-5 whitespace-nowrap">
           <span
             className={`inline-flex items-center px-3 py-1 text-xs font-bold rounded-full shadow-sm align-middle ${getStatusColor(
-              item.status
+              permintaanItem.status
             )}`}
           >
-            {statusIcon[item.status] || null}
-            {item.status}
+            {statusIcon[permintaanItem.status] || null}
+            {permintaanItem.status}
           </span>
         </td>
         <td className="px-6 py-5 whitespace-nowrap text-center">
           <div className="flex items-center justify-center space-x-2">
             <button
-              onClick={() => onDetail(item)}
+              onClick={() => onDetail(permintaanItem)}
               className="p-2 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 hover:text-blue-900 transition group-hover:scale-110"
               title="Lihat Detail"
             >
               <EyeIcon className="h-5 w-5" />
             </button>
-            {item.status === "Menunggu" && (
+            {permintaanItem.status === "Menunggu" && (
               <button
-                onClick={() => onVerifikasi(item)}
+                onClick={() => onVerifikasi(permintaanItem)}
                 className="p-2 rounded-lg bg-green-50 text-green-600 hover:bg-green-100 hover:text-green-900 transition group-hover:scale-110"
                 title="Verifikasi"
               >
@@ -188,10 +193,13 @@ const RequestTable = ({
   /**
    * Fungsi handleLimitChange
    *
-   * Membantu mengubah jumlah data yang ditampilkan per halaman.
+   * Digunakan untuk mengubah jumlah data yang ditampilkan per halaman pada tabel permintaan.
    *
    * Parameter:
    * - e (Event): Event perubahan pada dropdown limit.
+   *
+   * Return:
+   * - void
    */
   const handleLimitChange = (e) => {
     onLimitChange(Number(e.target.value));

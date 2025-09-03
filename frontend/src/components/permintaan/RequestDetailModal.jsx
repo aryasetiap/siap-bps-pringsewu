@@ -1,8 +1,43 @@
 /**
- * Komponen RequestDetailModal
+ * File: RequestDetailModal.jsx
  *
  * Komponen ini digunakan untuk menampilkan detail permintaan barang pada aplikasi SIAP.
  * Modal ini menampilkan informasi pemohon, status permintaan, tanggal, catatan, dan daftar barang yang diminta.
+ *
+ * Konteks bisnis: Digunakan dalam proses pengelolaan permintaan barang, verifikasi, dan monitoring stok.
+ */
+
+import React from "react";
+import { XMarkIcon } from "@heroicons/react/24/outline";
+
+/**
+ * Fungsi renderItemsTableRows
+ *
+ * Fungsi ini digunakan untuk menghasilkan baris-baris tabel barang permintaan.
+ *
+ * Parameter:
+ * - items (array): Daftar barang yang diminta.
+ *
+ * Return:
+ * - React.Element[]: Array elemen <tr> untuk setiap barang yang diminta.
+ */
+const renderItemsTableRows = (items = []) =>
+  items.map((item, idx) => (
+    <tr key={item.id} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+      <td className="px-3 py-2">{item.kodeBarang}</td>
+      <td className="px-3 py-2">{item.namaBarang}</td>
+      <td className="px-3 py-2">{item.kategori}</td>
+      <td className="px-3 py-2 text-right">{item.jumlahDiminta}</td>
+      <td className="px-3 py-2 text-right">{item.jumlahDisetujui}</td>
+      <td className="px-3 py-2 text-right">{item.satuan}</td>
+      <td className="px-3 py-2 text-right">{item.stokTersedia}</td>
+    </tr>
+  ));
+
+/**
+ * Komponen RequestDetailModal
+ *
+ * Komponen utama untuk menampilkan modal detail permintaan barang.
  *
  * Parameter:
  * - show (boolean): Menentukan apakah modal ditampilkan.
@@ -12,23 +47,7 @@
  * - onClose (function): Fungsi yang dipanggil saat modal ditutup.
  *
  * Return:
- * - React.Element: Komponen modal detail permintaan barang.
- */
-
-import React from "react";
-import { XMarkIcon } from "@heroicons/react/24/outline";
-
-/**
- * Komponen utama untuk menampilkan modal detail permintaan barang.
- *
- * @param {Object} props - Properti yang diterima komponen.
- * @param {boolean} props.show - Status tampil/tidaknya modal.
- * @param {Object} props.permintaan - Data permintaan barang.
- * @param {Function} props.getStatusColor - Fungsi penentu warna status.
- * @param {Function} props.formatDate - Fungsi pemformat tanggal.
- * @param {Function} props.onClose - Fungsi penutup modal.
- *
- * @returns {React.Element|null} Modal detail permintaan barang atau null jika tidak ditampilkan.
+ * - React.Element|null: Komponen modal detail permintaan barang atau null jika tidak ditampilkan.
  */
 const RequestDetailModal = ({
   show,
@@ -39,28 +58,6 @@ const RequestDetailModal = ({
 }) => {
   // Jika modal tidak perlu ditampilkan atau data permintaan tidak tersedia, kembalikan null
   if (!show || !permintaan) return null;
-
-  /**
-   * Fungsi render baris tabel barang permintaan.
-   *
-   * Parameter:
-   * - items (array): Daftar barang yang diminta.
-   *
-   * Return:
-   * - React.Element[]: Array elemen <tr> untuk setiap barang.
-   */
-  const renderItemsTableRows = (items = []) =>
-    items.map((item, idx) => (
-      <tr key={item.id} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-        <td className="px-3 py-2">{item.kodeBarang}</td>
-        <td className="px-3 py-2">{item.namaBarang}</td>
-        <td className="px-3 py-2">{item.kategori}</td>
-        <td className="px-3 py-2 text-right">{item.jumlahDiminta}</td>
-        <td className="px-3 py-2 text-right">{item.jumlahDisetujui}</td>
-        <td className="px-3 py-2 text-right">{item.satuan}</td>
-        <td className="px-3 py-2 text-right">{item.stokTersedia}</td>
-      </tr>
-    ));
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 animate-fadeIn">

@@ -10,8 +10,13 @@ import React from "react";
 import { ExclamationCircleIcon } from "@heroicons/react/24/outline";
 
 /**
- * Variabel untuk menentukan style berdasarkan jenis alert.
- * Key: variant, Value: class Tailwind CSS.
+ * Konstanta ALERT_VARIANTS
+ * Menyimpan style Tailwind CSS berdasarkan jenis alert.
+ *
+ * Struktur:
+ * - error: Style untuk pesan error.
+ * - warning: Style untuk pesan warning.
+ * - info: Style untuk pesan info.
  */
 const ALERT_VARIANTS = {
   error: "bg-red-50 text-red-800 border-red-200",
@@ -20,8 +25,13 @@ const ALERT_VARIANTS = {
 };
 
 /**
- * Variabel untuk menentukan warna ikon berdasarkan jenis alert.
- * Key: variant, Value: class Tailwind CSS.
+ * Konstanta ICON_COLORS
+ * Menyimpan warna ikon berdasarkan jenis alert.
+ *
+ * Struktur:
+ * - error: Warna ikon untuk error.
+ * - warning: Warna ikon untuk warning.
+ * - info: Warna ikon untuk info.
  */
 const ICON_COLORS = {
   error: "text-red-500",
@@ -31,7 +41,8 @@ const ICON_COLORS = {
 
 /**
  * Komponen ErrorAlert
- * Menampilkan pesan alert sesuai dengan variant yang dipilih.
+ * Menampilkan pesan alert sesuai dengan variant yang dipilih pada aplikasi SIAP.
+ * Komponen ini digunakan untuk memberikan feedback terkait pengelolaan barang, permintaan, dan verifikasi.
  *
  * Parameter:
  * - message (string): Pesan yang akan ditampilkan pada alert.
@@ -43,14 +54,16 @@ const ICON_COLORS = {
  * Return:
  * - JSX: Komponen alert yang dapat ditampilkan pada halaman.
  */
-const ErrorAlert = ({
+function ErrorAlert({
   message,
   variant = "error",
   dismissible = false,
   onDismiss,
   className = "",
-}) => {
-  // Jika tidak ada pesan, tidak perlu render komponen
+}) {
+  /**
+   * Jika tidak ada pesan, komponen tidak dirender.
+   */
   if (!message) return null;
 
   // Mendapatkan style dan warna ikon sesuai variant
@@ -97,6 +110,6 @@ const ErrorAlert = ({
       </div>
     </div>
   );
-};
+}
 
 export default ErrorAlert;

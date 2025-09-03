@@ -8,11 +8,30 @@ import React from "react";
 import { DocumentTextIcon } from "@heroicons/react/24/outline";
 
 /**
- * Komponen LaporanTable
- * Menampilkan tabel berisi data penggunaan barang.
+ * Fungsi formatDate
+ * Memformat string tanggal ke format Indonesia (DD/MM/YYYY).
  *
  * Parameter:
- * - data (Array<Object>): Data array berisi objek barang yang digunakan, setiap objek memiliki properti:
+ * - dateString (string): Tanggal dalam format ISO atau string yang dapat diparse oleh Date.
+ *
+ * Return:
+ * - (string): Tanggal yang sudah diformat sesuai lokal Indonesia.
+ */
+function formatDate(dateString) {
+  const options = {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  };
+  return new Date(dateString).toLocaleDateString("id-ID", options);
+}
+
+/**
+ * Komponen LaporanTable
+ * Menampilkan tabel berisi data penggunaan barang pada aplikasi SIAP.
+ *
+ * Parameter:
+ * - data (Array<Object>): Array berisi objek barang yang digunakan, setiap objek memiliki properti:
  *   - nama_barang (string): Nama barang yang digunakan.
  *   - kode_barang (string): Kode barang yang digunakan.
  *   - total_digunakan (number): Jumlah barang yang digunakan.
@@ -21,20 +40,12 @@ import { DocumentTextIcon } from "@heroicons/react/24/outline";
  * - loading (boolean): Status pemuatan data, jika true maka akan menampilkan indikator loading.
  *
  * Return:
- * - JSX: Tabel laporan penggunaan barang atau pesan jika data kosong/loading.
+ * - (JSX): Tabel laporan penggunaan barang, indikator loading, atau pesan jika data kosong.
  */
-const LaporanTable = ({ data, loading }) => {
-  // Fungsi untuk memformat tanggal ke format Indonesia
-  const formatDate = (dateString) => {
-    const options = {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    };
-    return new Date(dateString).toLocaleDateString("id-ID", options);
-  };
-
-  // Render loading jika data sedang dimuat
+function LaporanTable({ data, loading }) {
+  /**
+   * Render indikator loading jika data sedang dimuat.
+   */
   if (loading) {
     return (
       <div className="bg-white rounded-xl shadow-md border border-gray-100">
@@ -46,7 +57,9 @@ const LaporanTable = ({ data, loading }) => {
     );
   }
 
-  // Render empty state jika tidak ada data
+  /**
+   * Render pesan empty state jika tidak ada data penggunaan barang.
+   */
   if (!data.length) {
     return (
       <div className="bg-white rounded-xl shadow-md border border-gray-100 p-12 text-center">
@@ -66,7 +79,10 @@ const LaporanTable = ({ data, loading }) => {
     );
   }
 
-  // Render tabel laporan penggunaan barang
+  /**
+   * Render tabel laporan penggunaan barang.
+   * Tabel ini menampilkan daftar barang beserta detail penggunaan dan tanggal permintaan.
+   */
   return (
     <div className="bg-white rounded-xl overflow-hidden shadow-md border border-gray-100">
       <div className="overflow-x-auto">
@@ -131,7 +147,7 @@ const LaporanTable = ({ data, loading }) => {
         </table>
       </div>
 
-      {/* Footer tabel */}
+      {/* Footer tabel: Menampilkan total item penggunaan barang */}
       <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
         <div className="text-sm text-gray-700">
           Menampilkan total <span className="font-medium">{data.length}</span>{" "}
@@ -140,6 +156,6 @@ const LaporanTable = ({ data, loading }) => {
       </div>
     </div>
   );
-};
+}
 
 export default LaporanTable;

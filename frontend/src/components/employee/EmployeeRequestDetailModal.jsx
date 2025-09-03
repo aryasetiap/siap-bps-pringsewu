@@ -21,10 +21,56 @@ import React from "react";
 import { XMarkIcon, DocumentArrowDownIcon } from "@heroicons/react/24/outline";
 
 /**
+ * Fungsi getStatusColorClass
+ *
+ * Fungsi ini digunakan untuk menentukan kelas warna Tailwind CSS berdasarkan status permintaan barang.
+ *
+ * Parameter:
+ * - status (string): Status permintaan barang.
+ *
+ * Return:
+ * - string: Kelas Tailwind CSS untuk warna status.
+ */
+function getStatusColorClass(status) {
+  const lowerStatus = status?.toLowerCase();
+  if (lowerStatus === "menunggu") return "bg-yellow-100 text-yellow-800";
+  if (lowerStatus === "disetujui") return "bg-green-100 text-green-800";
+  if (lowerStatus === "disetujui sebagian") return "bg-blue-100 text-blue-800";
+  return "bg-red-100 text-red-800";
+}
+
+/**
+ * Fungsi renderItemsRows
+ *
+ * Fungsi ini digunakan untuk merender baris-baris tabel daftar barang yang diminta dalam permintaan.
+ *
+ * Parameter:
+ * - items (array): Daftar item permintaan barang.
+ *
+ * Return:
+ * - React Element: Baris-baris tabel item permintaan.
+ */
+function renderItemsRows(items) {
+  return items.map((item, index) => (
+    <tr key={item.id} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+      <td className="px-4 py-2 text-sm font-mono">{item.kodeBarang}</td>
+      <td className="px-4 py-2 font-medium text-gray-900">{item.namaBarang}</td>
+      <td className="px-4 py-2 text-center">{item.jumlahDiminta}</td>
+      <td className="px-4 py-2 text-center">
+        {item.jumlahDisetujui !== null && item.jumlahDisetujui !== undefined
+          ? item.jumlahDisetujui
+          : "-"}
+      </td>
+      <td className="px-4 py-2 text-gray-500">{item.satuan}</td>
+    </tr>
+  ));
+}
+
+/**
  * Komponen EmployeeRequestDetailModal
  *
- * Menampilkan detail permintaan barang, status, catatan, dan daftar barang yang diminta.
- * Modal ini digunakan dalam proses pengelolaan permintaan barang oleh pegawai di aplikasi SIAP.
+ * Komponen ini digunakan untuk menampilkan detail permintaan barang oleh pegawai dalam aplikasi SIAP.
+ * Menampilkan informasi permintaan, status, catatan, daftar barang, serta tombol aksi seperti tutup dan unduh PDF.
  *
  * Parameter:
  * - show (boolean): Menentukan apakah modal ditampilkan.
@@ -47,50 +93,6 @@ const EmployeeRequestDetailModal = ({
 }) => {
   // Jika modal tidak ditampilkan atau data permintaan tidak tersedia, kembalikan null
   if (!show || !permintaan) return null;
-
-  /**
-   * Fungsi untuk menentukan warna status permintaan.
-   *
-   * Parameter:
-   * - status (string): Status permintaan barang.
-   *
-   * Return:
-   * - string: Kelas Tailwind CSS untuk warna status.
-   */
-  const getStatusColorClass = (status) => {
-    const lowerStatus = status?.toLowerCase();
-    if (lowerStatus === "menunggu") return "bg-yellow-100 text-yellow-800";
-    if (lowerStatus === "disetujui") return "bg-green-100 text-green-800";
-    if (lowerStatus === "disetujui sebagian")
-      return "bg-blue-100 text-blue-800";
-    return "bg-red-100 text-red-800";
-  };
-
-  /**
-   * Fungsi untuk render baris item permintaan barang.
-   *
-   * Parameter:
-   * - items (array): Daftar item permintaan barang.
-   *
-   * Return:
-   * - React Element: Baris-baris tabel item permintaan.
-   */
-  const renderItemsRows = (items) =>
-    items.map((item, index) => (
-      <tr key={item.id} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-        <td className="px-4 py-2 text-sm font-mono">{item.kodeBarang}</td>
-        <td className="px-4 py-2 font-medium text-gray-900">
-          {item.namaBarang}
-        </td>
-        <td className="px-4 py-2 text-center">{item.jumlahDiminta}</td>
-        <td className="px-4 py-2 text-center">
-          {item.jumlahDisetujui !== null && item.jumlahDisetujui !== undefined
-            ? item.jumlahDisetujui
-            : "-"}
-        </td>
-        <td className="px-4 py-2 text-gray-500">{item.satuan}</td>
-      </tr>
-    ));
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full z-50 animate-fadeIn">

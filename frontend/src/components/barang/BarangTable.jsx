@@ -10,8 +10,8 @@
  * - onDelete (Function): Fungsi callback ketika tombol hapus barang diklik.
  * - onTambahStok (Function): Fungsi callback ketika tombol tambah stok diklik.
  * - onAktifkan (Function): Fungsi callback ketika tombol aktifkan barang diklik.
- * - getStatusColor (Function): Fungsi untuk mendapatkan warna status barang (tidak digunakan di sini, bisa dioptimalkan).
- * - getStatusText (Function): Fungsi untuk mendapatkan teks status barang (tidak digunakan di sini, bisa dioptimalkan).
+ * - getStatusColor (Function): Fungsi untuk mendapatkan warna status barang (opsional, tidak digunakan).
+ * - getStatusText (Function): Fungsi untuk mendapatkan teks status barang (opsional, tidak digunakan).
  *
  * Return:
  * - React.Element: Komponen tabel barang yang interaktif.
@@ -26,7 +26,9 @@ import {
 
 /**
  * Komponen BarangTable
- * Menampilkan data barang dalam bentuk tabel beserta aksi pengelolaan barang.
+ *
+ * Komponen ini digunakan untuk menampilkan data barang dalam bentuk tabel
+ * beserta aksi pengelolaan barang seperti edit, tambah stok, hapus, dan aktivasi.
  *
  * Parameter:
  * - data (Array<Object>): Data barang yang akan ditampilkan.
@@ -34,8 +36,8 @@ import {
  * - onDelete (Function): Callback untuk aksi hapus barang.
  * - onTambahStok (Function): Callback untuk aksi tambah stok barang.
  * - onAktifkan (Function): Callback untuk aksi aktivasi barang.
- * - getStatusColor (Function): Fungsi untuk mendapatkan warna status barang (opsional, tidak digunakan).
- * - getStatusText (Function): Fungsi untuk mendapatkan teks status barang (opsional, tidak digunakan).
+ * - getStatusColor (Function): Fungsi opsional untuk mendapatkan warna status barang.
+ * - getStatusText (Function): Fungsi opsional untuk mendapatkan teks status barang.
  *
  * Return:
  * - React.Element: Tabel barang dengan fitur aksi.
@@ -46,12 +48,14 @@ const BarangTable = ({
   onDelete,
   onTambahStok,
   onAktifkan,
-  getStatusColor, // Belum digunakan, bisa dioptimalkan jika diperlukan
-  getStatusText, // Belum digunakan, bisa dioptimalkan jika diperlukan
+  getStatusColor, // Opsional, tidak digunakan
+  getStatusText, // Opsional, tidak digunakan
 }) => {
   /**
    * Fungsi renderBarisBarang
-   * Membantu merender setiap baris data barang agar kode lebih modular dan mudah dibaca.
+   *
+   * Fungsi ini digunakan untuk merender satu baris data barang pada tabel.
+   * Setiap baris menampilkan informasi barang dan tombol aksi sesuai status barang.
    *
    * Parameter:
    * - item (Object): Data barang per baris.
@@ -67,9 +71,11 @@ const BarangTable = ({
         idx % 2 === 0 ? "bg-white" : "bg-gray-50"
       }`}
     >
+      {/* Kolom Kode Barang */}
       <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
         {item.kode}
       </td>
+      {/* Kolom Nama Barang dan Foto */}
       <td className="px-6 py-4 whitespace-nowrap">
         <div className="flex items-center space-x-3">
           {item.foto && (
@@ -85,11 +91,13 @@ const BarangTable = ({
           </div>
         </div>
       </td>
+      {/* Kolom Kategori Barang */}
       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
         <span className="px-2 py-1 rounded bg-blue-50 text-blue-700 font-semibold text-xs">
           {item.kategori}
         </span>
       </td>
+      {/* Kolom Stok Barang */}
       <td className="px-6 py-4 whitespace-nowrap">
         <div className="text-sm text-gray-900 font-semibold">
           {item.stok}{" "}
@@ -99,6 +107,7 @@ const BarangTable = ({
           Min: {item.stokMinimum} {item.satuan}
         </div>
       </td>
+      {/* Kolom Status Barang (Aktif/Nonaktif) */}
       <td className="px-6 py-4 whitespace-nowrap">
         <span
           className={`px-2 py-1 rounded-full text-xs font-bold ${
@@ -110,6 +119,7 @@ const BarangTable = ({
           {item.statusAktif ? "Aktif" : "Nonaktif"}
         </span>
       </td>
+      {/* Kolom Status Kritis Stok */}
       <td className="px-6 py-4 whitespace-nowrap">
         <span
           className={`px-2 py-1 rounded-full text-xs font-bold ${
@@ -121,6 +131,7 @@ const BarangTable = ({
           {item.stok <= item.stokMinimum ? "Kritis" : "Normal"}
         </span>
       </td>
+      {/* Kolom Aksi */}
       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
         <div className="flex space-x-2">
           {item.statusAktif ? (
@@ -165,6 +176,11 @@ const BarangTable = ({
     </tr>
   );
 
+  /**
+   * Render utama komponen BarangTable.
+   * Menampilkan tabel barang beserta header dan body.
+   * Jika data barang kosong, tampilkan pesan "Tidak ada data barang".
+   */
   return (
     <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden transition-all duration-300">
       <div className="overflow-x-auto">
