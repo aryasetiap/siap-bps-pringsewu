@@ -117,7 +117,7 @@ function Headbar({
    * Struktur UI tidak diubah, hanya penamaan dan dokumentasi yang diperjelas.
    */
   return (
-    <header className="bg-white ml-6 shadow-sm p-4 flex justify-between items-center rounded-lg top-0 right-0 z-40 transition-all duration-300 ease-in-out border border-gray-100">
+    <header className="bg-white mx-6 shadow-sm p-4 flex justify-between items-center rounded-lg top-0 right-0 z-40 transition-all duration-300 ease-in-out border border-gray-100">
       <div className="flex items-center h-full">
         {/* Tombol Toggle Sidebar Mobile */}
         <button

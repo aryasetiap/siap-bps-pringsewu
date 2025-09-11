@@ -99,8 +99,10 @@ const EmployeeBarangTable = ({
           inKeranjang ? "bg-blue-50" : ""
         }`}
       >
-        <td className="px-4 py-3 font-mono text-sm">{item.kode}</td>
-        <td className="px-4 py-3 font-medium">{item.nama}</td>
+        <td className="px-4 py-3 whitespace-normal break-words">{item.kode}</td>
+        <td className="px-4 py-3 font-medium whitespace-normal break-words">
+          {item.nama}
+        </td>
         <td className="px-4 py-3 text-center">
           <span className="px-2 py-1 bg-blue-50 text-blue-600 rounded-full text-xs">
             {item.kategori || "-"}
@@ -214,10 +216,10 @@ const EmployeeBarangTable = ({
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-normal break-words">
                 Kode
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-normal break-words">
                 Nama Barang
               </th>
               <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">

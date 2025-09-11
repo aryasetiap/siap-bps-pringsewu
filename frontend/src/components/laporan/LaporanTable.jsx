@@ -92,7 +92,7 @@ function LaporanTable({ data, loading }) {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16">
                 No
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-normal break-words">
                 Nama Barang
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -118,7 +118,7 @@ function LaporanTable({ data, loading }) {
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                   {index + 1}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="px-6 py-4 whitespace-normal break-words">
                   <div className="text-sm font-medium text-gray-900">
                     {barang.nama_barang}
                   </div>

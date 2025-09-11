@@ -115,7 +115,7 @@ const RequestTable = ({
         key={permintaanItem.id}
         className="transition hover:bg-blue-50/60 group"
       >
-        <td className="px-6 py-5 whitespace-nowrap">
+        <td className="px-6 py-5 whitespace-normal break-words">
           <div className="text-base font-bold text-blue-700">
             {permintaanItem.nomorPermintaan}
           </div>
@@ -142,13 +142,13 @@ const RequestTable = ({
             </div>
           </div>
         </td>
-        <td className="px-6 py-5 whitespace-nowrap">
+        <td className="px-6 py-5 whitespace-normal break-words">
           <div className="flex items-center text-base text-gray-900">
             <CalendarIcon className="h-4 w-4 text-gray-400 mr-2" />
             {formatDate(permintaanItem.tanggalPermintaan)}
           </div>
         </td>
-        <td className="px-6 py-5 whitespace-nowrap">
+        <td className="px-6 py-5 whitespace-normal break-words">
           <div className="text-base font-bold text-gray-900">
             {permintaanItem.totalItem} Item
           </div>
@@ -156,7 +156,7 @@ const RequestTable = ({
             {renderItemInfo(permintaanItem.items)}
           </div>
         </td>
-        <td className="px-6 py-5 whitespace-nowrap">
+        <td className="px-6 py-5 whitespace-normal break-words">
           <span
             className={`inline-flex items-center px-3 py-1 text-xs font-bold rounded-full shadow-sm align-middle ${getStatusColor(
               permintaanItem.status
@@ -166,7 +166,7 @@ const RequestTable = ({
             {permintaanItem.status}
           </span>
         </td>
-        <td className="px-6 py-5 whitespace-nowrap text-center">
+        <td className="px-6 py-5 whitespace-normal break-words text-center">
           <div className="flex items-center justify-center space-x-2">
             <button
               onClick={() => onDetail(permintaanItem)}
@@ -211,7 +211,7 @@ const RequestTable = ({
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gradient-to-r from-blue-100 to-blue-200 sticky top-0 z-10">
             <tr>
-              <th className="px-6 py-5 text-left text-sm font-bold text-blue-700 uppercase tracking-wider border-b-2 border-blue-300">
+              <th className="px-6 py-5 text-left text-sm font-bold text-blue-700 uppercase tracking-wider border-b-2 border-blue-300 whitespace-normal break-words">
                 Nomor Permintaan
               </th>
               <th className="px-6 py-5 text-left text-sm font-bold text-blue-700 uppercase tracking-wider border-b-2 border-blue-300">

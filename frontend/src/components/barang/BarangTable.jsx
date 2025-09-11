@@ -72,11 +72,11 @@ const BarangTable = ({
       }`}
     >
       {/* Kolom Kode Barang */}
-      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
+      <td className="px-6 py-4 whitespace-normal break-words text-sm font-semibold text-gray-900">
         {item.kode}
       </td>
       {/* Kolom Nama Barang dan Foto */}
-      <td className="px-6 py-4 whitespace-nowrap">
+      <td className="px-6 py-4 whitespace-normal break-words">
         <div className="flex items-center space-x-3">
           {item.foto && (
             <img
@@ -92,13 +92,13 @@ const BarangTable = ({
         </div>
       </td>
       {/* Kolom Kategori Barang */}
-      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+      <td className="px-6 py-4 whitespace-normal break-words text-sm text-gray-700">
         <span className="px-2 py-1 rounded bg-blue-50 text-blue-700 font-semibold text-xs">
           {item.kategori}
         </span>
       </td>
       {/* Kolom Stok Barang */}
-      <td className="px-6 py-4 whitespace-nowrap">
+      <td className="px-6 py-4 whitespace-normal break-words">
         <div className="text-sm text-gray-900 font-semibold">
           {item.stok}{" "}
           <span className="text-xs text-gray-500">{item.satuan}</span>
@@ -108,7 +108,7 @@ const BarangTable = ({
         </div>
       </td>
       {/* Kolom Status Barang (Aktif/Nonaktif) */}
-      <td className="px-6 py-4 whitespace-nowrap">
+      <td className="px-6 py-4 whitespace-normal break-words">
         <span
           className={`px-2 py-1 rounded-full text-xs font-bold ${
             item.statusAktif
@@ -120,7 +120,7 @@ const BarangTable = ({
         </span>
       </td>
       {/* Kolom Status Kritis Stok */}
-      <td className="px-6 py-4 whitespace-nowrap">
+      <td className="px-6 py-4 whitespace-normal break-words">
         <span
           className={`px-2 py-1 rounded-full text-xs font-bold ${
             item.stok <= item.stokMinimum
@@ -132,7 +132,7 @@ const BarangTable = ({
         </span>
       </td>
       {/* Kolom Aksi */}
-      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+      <td className="px-6 py-4 whitespace-normal break-words text-sm font-medium">
         <div className="flex space-x-2">
           {item.statusAktif ? (
             <>
@@ -187,25 +187,25 @@ const BarangTable = ({
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gradient-to-r from-blue-50 to-blue-100 sticky top-0 z-10">
             <tr>
-              <th className="px-6 py-4 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-bold text-blue-700 uppercase tracking-wider whitespace-normal break-words">
                 Kode
               </th>
-              <th className="px-6 py-4 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-bold text-blue-700 uppercase tracking-wider whitespace-normal break-words">
                 Nama Barang
               </th>
-              <th className="px-6 py-4 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-bold text-blue-700 uppercase tracking-wider whitespace-normal break-words">
                 Kategori
               </th>
-              <th className="px-6 py-4 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-bold text-blue-700 uppercase tracking-wider whitespace-normal break-words">
                 Stok
               </th>
-              <th className="px-6 py-4 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-bold text-blue-700 uppercase tracking-wider whitespace-normal break-words">
                 Status Barang
               </th>
-              <th className="px-6 py-4 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-bold text-blue-700 uppercase tracking-wider whitespace-normal break-words">
                 Status Kritis
               </th>
-              <th className="px-6 py-4 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-bold text-blue-700 uppercase tracking-wider whitespace-normal break-words">
                 Aksi
               </th>
             </tr>

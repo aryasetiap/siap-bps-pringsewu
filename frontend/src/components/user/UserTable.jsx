@@ -187,22 +187,22 @@ const UserTable = ({
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gradient-to-r from-blue-50 to-blue-100 sticky top-0 z-10">
             <tr>
-              <th className="px-6 py-4 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-bold text-blue-700 uppercase tracking-wider whitespace-normal break-words">
                 Pengguna
               </th>
-              <th className="px-6 py-4 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-bold text-blue-700 uppercase tracking-wider whitespace-normal break-words">
                 Username
               </th>
-              <th className="px-6 py-4 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-bold text-blue-700 uppercase tracking-wider whitespace-normal break-words">
                 Role
               </th>
-              <th className="px-6 py-4 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-bold text-blue-700 uppercase tracking-wider whitespace-normal break-words">
                 Unit Kerja
               </th>
-              <th className="px-6 py-4 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-bold text-blue-700 uppercase tracking-wider whitespace-normal break-words">
                 Status
               </th>
-              <th className="px-6 py-4 text-center text-xs font-bold text-blue-700 uppercase tracking-wider">
+              <th className="px-6 py-4 text-center text-xs font-bold text-blue-700 uppercase tracking-wider whitespace-normal break-words">
                 Aksi
               </th>
             </tr>
@@ -224,7 +224,7 @@ const UserTable = ({
                   key={user.id}
                   className="transition hover:bg-blue-50 hover:shadow"
                 >
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-6 py-4 whitespace-normal break-words">
                     <div className="flex items-center">
                       <div className="h-10 w-10 rounded-full bg-blue-200 flex items-center justify-center overflow-hidden border border-blue-300 shadow-sm">
                         {renderFoto(user)}
@@ -239,7 +239,7 @@ const UserTable = ({
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-6 py-4 whitespace-normal break-words">
                     <div className="text-sm font-bold text-gray-900">
                       {user.username}
                     </div>
@@ -247,16 +247,16 @@ const UserTable = ({
                       Dibuat: {formatDate(user.createdAt)}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-6 py-4 whitespace-normal break-words">
                     {renderRoleLabel(user.role)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td className="px-6 py-4 whitespace-normal break-words text-sm text-gray-900">
                     {user.unitKerja}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-6 py-4 whitespace-normal break-words">
                     {renderStatusLabel(user.status)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-center">
+                  <td className="px-6 py-4 whitespace-normal break-words text-center">
                     {renderAksi(user)}
                   </td>
                 </tr>

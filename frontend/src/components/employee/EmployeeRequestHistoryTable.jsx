@@ -65,7 +65,7 @@ const EmployeeRequestHistoryTable = ({
         index % 2 === 0 ? "bg-white" : "bg-gray-50"
       }`}
     >
-      <td className="px-4 py-3 font-mono text-sm">
+      <td className="px-4 py-3 whitespace-normal break-words">
         {item.nomorPermintaan || item.id}
       </td>
       <td className="px-4 py-3 text-gray-600">
@@ -140,7 +140,7 @@ function TabelHeader() {
   return (
     <thead className="bg-gray-50">
       <tr>
-        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-normal break-words">
           Nomor
         </th>
         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
