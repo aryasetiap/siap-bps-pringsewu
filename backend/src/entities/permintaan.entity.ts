@@ -50,7 +50,7 @@ export class Permintaan {
    * - number: ID unik permintaan.
    */
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   /**
    * ID pengguna yang mengajukan permintaan.
@@ -62,7 +62,7 @@ export class Permintaan {
    * - number: ID user pemohon.
    */
   @Column()
-  id_user_pemohon: number;
+  id_user_pemohon!: number;
 
   /**
    * Relasi ke entitas User sebagai pemohon.
@@ -75,7 +75,7 @@ export class Permintaan {
    */
   @ManyToOne(() => User)
   @JoinColumn({ name: 'id_user_pemohon' })
-  pemohon: User;
+  pemohon!: User;
 
   /**
    * Tanggal permintaan diajukan.
@@ -88,7 +88,7 @@ export class Permintaan {
    * - Date: Tanggal permintaan.
    */
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-  tanggal_permintaan: Date;
+  tanggal_permintaan!: Date;
 
   /**
    * Status permintaan.
@@ -102,7 +102,7 @@ export class Permintaan {
    * - string: Status permintaan.
    */
   @Column({ default: 'Menunggu' })
-  status: 'Menunggu' | 'Disetujui' | 'Disetujui Sebagian' | 'Ditolak';
+  status!: 'Menunggu' | 'Disetujui' | 'Disetujui Sebagian' | 'Ditolak';
 
   /**
    * Catatan tambahan terkait permintaan (opsional).
@@ -150,7 +150,7 @@ export class Permintaan {
    * - Date: Tanggal pembuatan data permintaan.
    */
   @CreateDateColumn()
-  created_at: Date;
+  created_at!: Date;
 
   /**
    * Tanggal data permintaan terakhir diubah (otomatis oleh sistem).
@@ -162,7 +162,7 @@ export class Permintaan {
    * - Date: Tanggal update data permintaan.
    */
   @UpdateDateColumn()
-  updated_at: Date;
+  updated_at!: Date;
 
   /**
    * Daftar detail permintaan yang terkait dengan permintaan ini.
@@ -174,5 +174,5 @@ export class Permintaan {
    * - DetailPermintaan[]: Array detail permintaan.
    */
   @OneToMany(() => DetailPermintaan, (detail) => detail.permintaan)
-  details: DetailPermintaan[];
+  details!: DetailPermintaan[];
 }

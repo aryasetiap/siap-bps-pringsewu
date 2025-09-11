@@ -39,10 +39,7 @@ export class CreateBarangDto {
    */
   @IsString()
   @IsNotEmpty()
-  @Matches(/^[A-Za-z0-9\-]+$/, {
-    message: 'Kode hanya boleh huruf, angka, dan strip',
-  })
-  @MaxLength(20)
+  @MaxLength(50)
   kode_barang: string;
 
   /**

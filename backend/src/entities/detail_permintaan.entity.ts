@@ -39,11 +39,11 @@ import { Barang } from './barang.entity';
 export class DetailPermintaan {
   /** Primary key detail permintaan. */
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   /** Foreign key ke entitas Permintaan. */
   @Column()
-  id_permintaan: number;
+  id_permintaan!: number;
 
   /**
    * Relasi ke entitas Permintaan.
@@ -51,11 +51,11 @@ export class DetailPermintaan {
    */
   @ManyToOne(() => Permintaan)
   @JoinColumn({ name: 'id_permintaan' })
-  permintaan: Permintaan;
+  permintaan!: Permintaan;
 
   /** Foreign key ke entitas Barang. */
   @Column()
-  id_barang: number;
+  id_barang!: number;
 
   /**
    * Relasi ke entitas Barang.
@@ -63,21 +63,21 @@ export class DetailPermintaan {
    */
   @ManyToOne(() => Barang)
   @JoinColumn({ name: 'id_barang' })
-  barang: Barang;
+  barang!: Barang;
 
   /** Jumlah barang yang diminta oleh pemohon. */
   @Column()
-  jumlah_diminta: number;
+  jumlah_diminta!: number;
 
   /** Jumlah barang yang disetujui oleh verifikator (default 0). */
   @Column({ default: 0 })
-  jumlah_disetujui: number;
+  jumlah_disetujui!: number;
 
   /** Tanggal dan waktu entri dibuat (otomatis oleh sistem). */
   @CreateDateColumn()
-  created_at: Date;
+  created_at!: Date;
 
   /** Tanggal dan waktu entri terakhir diubah (otomatis oleh sistem). */
   @UpdateDateColumn()
-  updated_at: Date;
+  updated_at!: Date;
 }

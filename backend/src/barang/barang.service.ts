@@ -419,7 +419,7 @@ export class BarangService {
                     margin: [0, 20, 0, 15],
                   },
                   { text: 'Kasubag Umum', margin: [0, 0, 0, 40] },
-                  { text: 'Singgih Adiwijaya, S.E, M.M', fontSize: 12 },
+                  { text: 'Ambriyanto, S.E.', fontSize: 12 },
                 ],
                 alignment: 'left',
               },

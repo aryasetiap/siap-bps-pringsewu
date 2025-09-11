@@ -33,21 +33,21 @@ export class Barang {
    * Digunakan sebagai identitas unik setiap barang.
    */
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   /**
    * kode_barang (string): Kode unik untuk setiap barang.
    * Penting untuk proses identifikasi dan pencarian barang.
    */
   @Column({ unique: true })
-  kode_barang: string;
+  kode_barang!: string;
 
   /**
    * nama_barang (string): Nama barang.
    * Digunakan untuk menampilkan nama barang pada sistem.
    */
   @Column()
-  nama_barang: string;
+  nama_barang!: string;
 
   /**
    * deskripsi (string | null): Deskripsi barang (opsional).
@@ -61,28 +61,28 @@ export class Barang {
    * Menentukan satuan pengukuran barang.
    */
   @Column()
-  satuan: string;
+  satuan!: string;
 
   /**
    * stok (number): Jumlah stok barang yang tersedia.
    * Default: 0. Digunakan untuk pelacakan ketersediaan barang.
    */
   @Column({ default: 0 })
-  stok: number;
+  stok!: number;
 
   /**
    * ambang_batas_kritis (number): Ambang batas kritis stok barang.
    * Default: 0. Jika stok <= ambang batas, sistem dapat memberikan notifikasi.
    */
   @Column({ default: 0 })
-  ambang_batas_kritis: number;
+  ambang_batas_kritis!: number;
 
   /**
    * status_aktif (boolean): Status aktif barang.
    * Default: true. Menandakan apakah barang masih digunakan dalam sistem.
    */
   @Column({ default: true })
-  status_aktif: boolean;
+  status_aktif!: boolean;
 
   /**
    * foto (string | null): Path atau URL foto barang (opsional).
@@ -103,12 +103,12 @@ export class Barang {
    * Diisi otomatis oleh sistem saat data barang ditambahkan.
    */
   @CreateDateColumn()
-  created_at: Date;
+  created_at!: Date;
 
   /**
    * updated_at (Date): Tanggal dan waktu data barang terakhir diperbarui.
    * Diisi otomatis oleh sistem setiap kali data barang diubah.
    */
   @UpdateDateColumn()
-  updated_at: Date;
+  updated_at!: Date;
 }
