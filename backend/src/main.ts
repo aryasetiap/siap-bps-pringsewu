@@ -12,6 +12,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as bodyParser from 'body-parser';
 
 /**
  * Fungsi bootstrap digunakan untuk memulai aplikasi SIAP.
@@ -24,6 +25,10 @@ import * as path from 'path';
 async function bootstrap(): Promise<void> {
   // Membuat instance aplikasi NestJS dengan konfigurasi Express
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  // Tambahkan konfigurasi body-parser
+  app.use(bodyParser.json());
+  app.use(bodyParser.urlencoded({ extended: true }));
 
   // Menetapkan prefix global untuk seluruh endpoint API
   app.setGlobalPrefix('api');

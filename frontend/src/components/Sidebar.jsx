@@ -292,6 +292,12 @@ function Sidebar({ isOpenMobile, onCloseMobile, isCollapsed }) {
                     onItemClick={onCloseMobile}
                   />
                 </div>
+                {/* Identitas pembuat */}
+                <div className="mt-4 px-4 text-xs text-blue-200 text-center">
+                  Dibuat oleh Arya Setia Pratama
+                  <br />
+                  085669644533
+                </div>
               </Dialog.Panel>
             </Transition.Child>
           </div>
@@ -318,6 +324,14 @@ function Sidebar({ isOpenMobile, onCloseMobile, isCollapsed }) {
         <div className="flex-1 flex flex-col overflow-y-auto px-3">
           <SidebarNav navItems={currentNav} collapsed={isCollapsed} />
         </div>
+        {/* Identitas pembuat */}
+        {!isCollapsed && (
+          <div className="mt-4 px-4 text-xs text-blue-200 text-center">
+            Dibuat oleh Arya Setia Pratama
+            <br />
+            085669644533
+          </div>
+        )}
       </div>
     </>
   );
