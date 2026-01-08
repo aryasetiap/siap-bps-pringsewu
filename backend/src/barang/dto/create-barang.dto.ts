@@ -34,8 +34,8 @@ import {
  */
 export class CreateBarangDto {
   /**
-   * Kode unik barang.
-   * Hanya boleh huruf, angka, dan strip, maksimal 20 karakter.
+   * Kode barang (tidak lagi harus unik).
+   * Memungkinkan beberapa barang dengan kode sama tapi nama berbeda.
    */
   @IsString()
   @IsNotEmpty()
@@ -44,7 +44,7 @@ export class CreateBarangDto {
 
   /**
    * Nama barang.
-   * Wajib diisi, maksimal 100 karakter.
+   * Kombinasi kode_barang + nama_barang harus unik untuk mencegah duplikasi sepenuhnya.
    */
   @IsString()
   @IsNotEmpty()

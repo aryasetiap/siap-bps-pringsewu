@@ -14,19 +14,46 @@ import api from "./api";
 const API_URL = "/barang";
 
 /**
- * Mendapatkan daftar seluruh barang dari server.
+ * Mendapatkan daftar seluruh barang dari server dengan pagination.
  *
  * Parameter:
- * - params (Object): Parameter query opsional untuk filter, pagination, dsb.
+ * - params (Object): Parameter query untuk filter, pagination, dsb.
+ *   - page (number): Nomor halaman
+ *   - limit (number): Jumlah data per halaman
+ *   - q (string): Kata kunci pencarian
+ *   - status_aktif (boolean): Filter status aktif
+ *   - stok_kritis (boolean): Filter stok kritis
+ *   - paginate (boolean): Aktifkan pagination (default: true)
  *
  * Return:
- * - Promise: Resolusi berisi response data daftar barang.
+ * - Promise: Resolusi berisi response data dengan pagination info.
  */
-export const getAllBarang = (params) => {
+export const getAllBarang = (params = {}) => {
   /**
    * Fungsi ini digunakan untuk mengambil seluruh data barang dari backend.
    */
   return api.get(API_URL, { params });
+};
+
+/**
+ * Mendapatkan daftar barang tanpa pagination.
+ *
+ * Parameter:
+ * - params (Object): Parameter query untuk filter.
+ *
+ * Return:
+ * - Promise: Resolusi berisi array data barang.
+ */
+export const getAllBarangWithoutPagination = (params = {}) => {
+  /**
+   * Fungsi ini digunakan untuk mengambil seluruh data barang dari backend tanpa pagination.
+   */
+  return api.get(API_URL, {
+    params: {
+      ...params,
+      paginate: false,
+    },
+  });
 };
 
 /**

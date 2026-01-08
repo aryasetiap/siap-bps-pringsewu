@@ -294,7 +294,7 @@ function Sidebar({ isOpenMobile, onCloseMobile, isCollapsed }) {
                 </div>
                 {/* Identitas pembuat */}
                 <div className="mt-4 px-4 text-xs text-blue-200 text-center">
-                  Dibuat oleh Arya Setia Pratama
+                  Dibuat oleh Arya Setia Pratama & Divany Pangestika
                   <br />
                   085669644533
                 </div>
@@ -327,7 +327,7 @@ function Sidebar({ isOpenMobile, onCloseMobile, isCollapsed }) {
         {/* Identitas pembuat */}
         {!isCollapsed && (
           <div className="mt-4 px-4 text-xs text-blue-200 text-center">
-            Dibuat oleh Arya Setia Pratama
+            Dibuat oleh Arya Setia Pratama & Divany Pangestika
             <br />
             085669644533
           </div>

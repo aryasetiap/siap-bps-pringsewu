@@ -36,10 +36,10 @@ export class Barang {
   id!: number;
 
   /**
-   * kode_barang (string): Kode unik untuk setiap barang.
-   * Penting untuk proses identifikasi dan pencarian barang.
+   * kode_barang (string): Kode barang (tidak lagi unik).
+   * Memungkinkan beberapa barang memiliki kode yang sama dengan nama yang berbeda.
    */
-  @Column({ unique: true })
+  @Column()
   kode_barang!: string;
 
   /**

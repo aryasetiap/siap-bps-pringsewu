@@ -1,4 +1,4 @@
-# Dokumentasi API Barang (Barang API)
+# Dokumentasi API Barang
 
 Modul Barang menyediakan endpoint untuk manajemen data barang persediaan, termasuk CRUD, penambahan stok, filter stok kritis, notifikasi, dan laporan penggunaan barang dalam format PDF.
 
@@ -30,7 +30,7 @@ Modul Barang menyediakan endpoint untuk manajemen data barang persediaan, termas
 
 ---
 
-### 2. Mendapatkan Daftar Barang
+### 2. Mendapatkan Daftar Barang (dengan Pagination)
 
 - **URL:** `/barang`
 - **Method:** `GET`
@@ -39,8 +39,37 @@ Modul Barang menyediakan endpoint untuk manajemen data barang persediaan, termas
   - `q`: Pencarian nama/kode barang (string)
   - `status_aktif`: Filter status aktif (`true`/`false`)
   - `stok_kritis`: Filter barang stok kritis (`true`)
+  - `page`: Nomor halaman (number, default: 1)
+  - `limit`: Jumlah data per halaman (number, default: 20)
+  - `paginate`: Aktifkan pagination (`true`/`false`, default: `true`)
 - **Response:**
-  - **200 OK**: Array data barang
+  ```json
+  {
+    "data": [
+      {
+        "id": 1,
+        "kode_barang": "BRG001",
+        "nama_barang": "Kertas A4",
+        "satuan": "rim",
+        "stok": 100,
+        "ambang_batas_kritis": 10,
+        "status_aktif": true,
+        "created_at": "2024-01-01T10:00:00.000Z"
+      }
+    ],
+    "total": 150,
+    "page": 1,
+    "limit": 20,
+    "totalPages": 8
+  }
+  ```
+
+### 2b. Mendapatkan Daftar Barang (tanpa Pagination)
+
+- **URL:** `/barang?paginate=false`
+- **Method:** `GET`
+- **Role:** admin, pegawai
+- **Response:** Array data barang tanpa wrapper pagination
 
 ---
 
@@ -193,3 +222,35 @@ Modul Barang menyediakan endpoint untuk manajemen data barang persediaan, termas
 - Service: [`BarangService`](barang.service.ts)
 - Controller: [`BarangController`](barang.controller.ts)
 - DTO: [`CreateBarangDto`](dto/create-barang.dto.ts), [`UpdateBarangDto`](dto/update-barang.dto.ts),
+
+## Perubahan Penting - Kode Barang Duplikat
+
+Sistem sekarang **memungkinkan kode_barang yang sama** untuk barang dengan nama berbeda.
+
+### Validasi Baru:
+
+- ✅ Kode barang boleh duplikat
+- ✅ Kombinasi `kode_barang` + `nama_barang` harus unik
+- ✅ Nama barang tetap wajib diisi
+
+### Contoh Valid:
+
+```json
+// Barang 1
+{
+  "kode_barang": "ATK001",
+  "nama_barang": "Pensil 2B",
+  "satuan": "pcs"
+}
+
+// Barang 2 - VALID (kode sama, nama beda)
+{
+  "kode_barang": "ATK001",
+  "nama_barang": "Pensil HB",
+  "satuan": "pcs"
+}
+```
+
+### Error Cases:
+
+- ❌ Kombinasi kode + nama yang sama persis

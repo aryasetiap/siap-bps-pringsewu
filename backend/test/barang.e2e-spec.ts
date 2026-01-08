@@ -74,6 +74,53 @@ describe('Barang E2E', () => {
         });
     });
 
+    it('POST / - should allow duplicate kode_barang with different nama_barang', async () => {
+      const res1 = await request(app.getHttpServer())
+        .post('/barang')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          kode_barang: 'BRG001',
+          nama_barang: 'Barang Pertama',
+          satuan: 'pcs',
+          stok: 10,
+          ambang_batas_kritis: 2,
+        });
+
+      expect(res1.status).toBe(201);
+
+      const res2 = await request(app.getHttpServer())
+        .post('/barang')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          kode_barang: 'BRG001', // Kode sama
+          nama_barang: 'Barang Kedua', // Nama berbeda
+          satuan: 'unit',
+          stok: 5,
+          ambang_batas_kritis: 1,
+        });
+
+      expect(res2.status).toBe(201);
+    });
+
+    it('POST / - should fail if kombinasi kode_barang + nama_barang already exists', () => {
+      return request(app.getHttpServer())
+        .post('/barang')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          kode_barang: 'BRG001',
+          nama_barang: 'Barang Pertama', // Kombinasi yang sama
+          satuan: 'pcs',
+          stok: 10,
+          ambang_batas_kritis: 2,
+        })
+        .expect(400)
+        .expect((res) => {
+          expect(res.body.message).toMatch(
+            /Kombinasi kode barang dan nama barang sudah terdaftar/,
+          );
+        });
+    });
+
     it('GET / - should find all barang', () => {
       return request(app.getHttpServer())
         .get('/barang')

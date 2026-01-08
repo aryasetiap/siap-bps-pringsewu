@@ -188,13 +188,17 @@ const EmployeeRequestForm = ({
    * - void
    */
   const handleSubmit = (e) => {
+    e.preventDefault();
     if (typeof onSubmit === "function") {
       onSubmit(e);
     }
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+    <form
+      className="bg-white rounded-xl shadow-lg p-6 border border-gray-100"
+      onSubmit={handleSubmit}
+    >
       {/* Header daftar barang permintaan */}
       <div className="flex items-center space-x-3 mb-6">
         <ClipboardDocumentListIcon className="h-6 w-6 text-blue-600" />
@@ -226,7 +230,7 @@ const EmployeeRequestForm = ({
       {/* Tombol submit permintaan */}
       <div className="flex justify-end">
         <button
-          onClick={handleSubmit}
+          type="submit"
           disabled={loading}
           className={`flex items-center px-6 py-2.5 ${
             items.length === 0
@@ -247,7 +251,7 @@ const EmployeeRequestForm = ({
           )}
         </button>
       </div>
-    </div>
+    </form>
   );
 };
 

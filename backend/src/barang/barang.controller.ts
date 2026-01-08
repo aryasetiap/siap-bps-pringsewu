@@ -33,13 +33,6 @@ import { Response } from 'express';
 
 /**
  * Controller utama untuk pengelolaan data barang.
- *
- * Endpoint yang tersedia:
- * - CRUD barang
- * - Penambahan stok
- * - Notifikasi stok kritis
- * - Laporan penggunaan barang (JSON & PDF)
- * - Daftar barang aktif untuk permintaan pegawai
  */
 @Controller('barang')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -78,7 +71,7 @@ export class BarangController {
   }
 
   /**
-   * Mengambil daftar seluruh barang dengan opsi filter.
+   * Mengambil daftar seluruh barang dengan opsi filter dan pagination.
    * Bisa difilter berdasarkan status aktif dan stok kritis.
    * Hanya dapat diakses oleh admin dan pegawai.
    *
@@ -86,23 +79,44 @@ export class BarangController {
    * - q (string, opsional): Kata kunci pencarian barang.
    * - status_aktif (string, opsional): Filter status aktif barang.
    * - stok_kritis (string, opsional): Filter barang dengan stok kritis.
+   * - page (string, opsional): Nomor halaman (default: 1).
+   * - limit (string, opsional): Jumlah data per halaman (default: 20).
+   * - paginate (string, opsional): Aktifkan pagination (default: true).
    *
    * Return:
-   * - Promise<object[]>: Daftar barang sesuai filter.
+   * - Promise<object>: Data barang dengan info pagination atau array barang.
    */
   @Roles('admin', 'pegawai')
   @Get()
-  findAll(
+  async findAll(
     @Query('q') q?: string,
     @Query('status_aktif') status_aktif?: string,
     @Query('stok_kritis') stok_kritis?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('paginate') paginate?: string,
   ) {
-    return this.barangService.findAll({
-      q,
-      status_aktif:
-        status_aktif === undefined ? undefined : status_aktif === 'true',
-      stok_kritis: stok_kritis === 'true',
-    });
+    const shouldPaginate = paginate !== 'false';
+
+    if (shouldPaginate) {
+      return this.barangService.findAll({
+        q,
+        status_aktif:
+          status_aktif === undefined ? undefined : status_aktif === 'true',
+        stok_kritis: stok_kritis === 'true',
+        page: page ? parseInt(page) : 1,
+        limit: limit ? parseInt(limit) : 20,
+      });
+    } else {
+      // Untuk backward compatibility dengan endpoint yang tidak menggunakan pagination
+      const data = await this.barangService.findAllWithoutPagination({
+        q,
+        status_aktif:
+          status_aktif === undefined ? undefined : status_aktif === 'true',
+        stok_kritis: stok_kritis === 'true',
+      });
+      return data;
+    }
   }
 
   /**
@@ -212,15 +226,12 @@ export class BarangController {
 
   /**
    * Mengambil daftar barang yang tersedia untuk permintaan pegawai.
-   * Hanya menampilkan barang dengan status aktif.
-   *
-   * Return:
-   * - Promise<object[]>: Daftar barang aktif yang dapat diminta pegawai.
+   * Hanya menampilkan barang dengan status aktif tanpa pagination.
    */
   @Get('available')
   @Roles('pegawai')
   getAvailableBarang() {
-    return this.barangService.findAll({
+    return this.barangService.findAllWithoutPagination({
       status_aktif: true,
     });
   }

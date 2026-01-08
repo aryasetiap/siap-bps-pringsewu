@@ -11,7 +11,9 @@ import { DataSource } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 import * as dotenv from 'dotenv';
 import { User } from './entities/user.entity';
-import { Barang } from './entities/barang.entity'; // Tambahkan import ini
+import { Barang } from './entities/barang.entity';
+import { Permintaan } from './entities/permintaan.entity';
+import { DetailPermintaan } from './entities/detail_permintaan.entity';
 import ormconfig from '../ormconfig';
 
 dotenv.config();
@@ -21,8 +23,8 @@ dotenv.config();
  *
  * Proses yang dilakukan:
  * 1. Inisialisasi koneksi database.
- * 2. Pengosongan seluruh data pada tabel users.
- * 3. Penambahan data user (admin dan pegawai produksi BPS Pringsewu).
+ * 2. Pengosongan seluruh data pada tabel.
+ * 3. Penambahan data user, barang, dan permintaan dummy.
  * 4. Penutupan koneksi database.
  *
  * Parameter: Tidak ada.
@@ -33,46 +35,57 @@ dotenv.config();
 async function seed(): Promise<void> {
   const dataSource = await ormconfig.initialize();
 
+  // Truncate tables dalam urutan yang benar (foreign key dependencies)
+  await truncatePermintaanTables(dataSource);
+  await truncateBarangTable(dataSource);
   await truncateUserTable(dataSource);
-  await truncateBarangTable(dataSource); // Tambahkan ini
 
-  await seedUsers(dataSource);
-  await seedBarang(dataSource); // Tambahkan ini
+  // Seed data dalam urutan yang benar
+  const users = await seedUsers(dataSource);
+  const barangs = await seedBarang(dataSource);
+  await seedPermintaan(dataSource, users, barangs);
 
   await dataSource.destroy();
-  console.log('Seeding user dan barang selesai');
+  console.log(
+    '✅ Seeding lengkap: user, barang, dan permintaan berhasil dibuat',
+  );
+}
+
+/**
+ * Fungsi untuk mengosongkan tabel permintaan dan detail_permintaan.
+ */
+async function truncatePermintaanTables(dataSource: DataSource): Promise<void> {
+  await dataSource.query(`
+    TRUNCATE TABLE "detail_permintaan" RESTART IDENTITY CASCADE
+  `);
+  await dataSource.query(`
+    TRUNCATE TABLE "permintaan" RESTART IDENTITY CASCADE
+  `);
+  console.log('🗑️ Tabel permintaan dan detail_permintaan dikosongkan');
 }
 
 /**
  * Fungsi untuk mengosongkan tabel users pada database SIAP.
- *
- * Parameter:
- * - dataSource (DataSource): Koneksi database yang sudah diinisialisasi.
- *
- * Return:
- * - Promise<void>: Tidak mengembalikan nilai.
  */
 async function truncateUserTable(dataSource: DataSource): Promise<void> {
   await dataSource.query(`
     TRUNCATE TABLE "users" RESTART IDENTITY CASCADE
   `);
+  console.log('🗑️ Tabel users dikosongkan');
 }
 
-// Tambahkan fungsi ini untuk truncate tabel barang
+/**
+ * Fungsi untuk mengosongkan tabel barang.
+ */
 async function truncateBarangTable(dataSource: DataSource): Promise<void> {
   await dataSource.query(`
     TRUNCATE TABLE "barang" RESTART IDENTITY CASCADE
   `);
+  console.log('🗑️ Tabel barang dikosongkan');
 }
 
 /**
  * Fungsi untuk melakukan seeding data user (admin dan pegawai produksi BPS Pringsewu).
- *
- * Parameter:
- * - dataSource (DataSource): Koneksi database yang sudah diinisialisasi.
- *
- * Return:
- * - Promise<User[]>: Array user yang sudah tersimpan di database.
  */
 async function seedUsers(dataSource: DataSource): Promise<User[]> {
   const userRepo = dataSource.getRepository(User);
@@ -98,7 +111,26 @@ async function seedUsers(dataSource: DataSource): Promise<User[]> {
       status_aktif: true,
       foto: 'https://ui-avatars.com/api/?name=Eko+Purnomo',
     },
-    // Pegawai BPS Pringsewu
+    // Pegawai untuk testing - dengan username yang mudah diingat
+    {
+      nama: 'Budi Setiawan',
+      username: 'budi',
+      password: await bcrypt.hash('budi123', 10),
+      role: 'pegawai',
+      unit_kerja: 'Seksi Statistik Sosial',
+      status_aktif: true,
+      foto: 'https://ui-avatars.com/api/?name=Budi+Setiawan',
+    },
+    {
+      nama: 'Sari Indah',
+      username: 'sari',
+      password: await bcrypt.hash('sari123', 10),
+      role: 'pegawai',
+      unit_kerja: 'Seksi Statistik Produksi',
+      status_aktif: true,
+      foto: 'https://ui-avatars.com/api/?name=Sari+Indah',
+    },
+    // Pegawai BPS Pringsewu yang sudah ada...
     {
       nama: 'Erwansyah Yusup',
       username: 'erwansyah',
@@ -107,42 +139,6 @@ async function seedUsers(dataSource: DataSource): Promise<User[]> {
       unit_kerja: 'Fungsional Umum BPS Kabupaten/Kota',
       status_aktif: true,
       foto: 'https://ui-avatars.com/api/?name=Erwansyah+Yusup',
-    },
-    {
-      nama: 'Tri Budi Setiawan',
-      username: 'tri.bs',
-      password: await bcrypt.hash('197509032006041020', 10),
-      role: 'pegawai',
-      unit_kerja: 'Fungsional Umum BPS Kabupaten/Kota',
-      status_aktif: true,
-      foto: 'https://ui-avatars.com/api/?name=Tri+Budi+Setiawan',
-    },
-    {
-      nama: 'Fazani',
-      username: 'fazani',
-      password: await bcrypt.hash('198405212007011001', 10),
-      role: 'pegawai',
-      unit_kerja: 'Fungsional Umum BPS Kabupaten/Kota',
-      status_aktif: true,
-      foto: 'https://ui-avatars.com/api/?name=Fazani',
-    },
-    {
-      nama: 'Agistin Nafta',
-      username: 'agustin.nafta',
-      password: await bcrypt.hash('197008032007012004', 10),
-      role: 'pegawai',
-      unit_kerja: 'Fungsional Umum BPS Kabupaten/Kota',
-      status_aktif: true,
-      foto: 'https://ui-avatars.com/api/?name=Agistin+Nafta',
-    },
-    {
-      nama: 'Saifu Rohmatullah',
-      username: 'saifu.rohmatullah',
-      password: await bcrypt.hash('198002022009011010', 10),
-      role: 'pegawai',
-      unit_kerja: 'Fungsional Umum BPS Kabupaten/Kota',
-      status_aktif: true,
-      foto: 'https://ui-avatars.com/api/?name=Saifu+Rohmatullah',
     },
     {
       nama: 'Resty Sopiyono, SST, M.E.K.K.',
@@ -154,60 +150,6 @@ async function seedUsers(dataSource: DataSource): Promise<User[]> {
       foto: 'https://ui-avatars.com/api/?name=Resty+Sopiyono',
     },
     {
-      nama: 'Syamsul Bahri, S.Si',
-      username: 'bahri.syamsul',
-      password: await bcrypt.hash('197205231995121001', 10),
-      role: 'pegawai',
-      unit_kerja: 'Pranata Komputer Ahli Muda BPS Kabupaten/Kota',
-      status_aktif: true,
-      foto: 'https://ui-avatars.com/api/?name=Syamsul+Bahri',
-    },
-    {
-      nama: 'Andi Stiawan, SP',
-      username: 'andi.stiawan',
-      password: await bcrypt.hash('197007112003121003', 10),
-      role: 'pegawai',
-      unit_kerja: 'Statistisi Ahli Muda BPS Kabupaten/Kota',
-      status_aktif: true,
-      foto: 'https://ui-avatars.com/api/?name=Andi+Stiawan',
-    },
-    {
-      nama: 'Dewi Yuliana S., S.T.',
-      username: 'dewiyuliana',
-      password: await bcrypt.hash('198207182005022001', 10),
-      role: 'pegawai',
-      unit_kerja: 'Statistisi Ahli Muda BPS Kabupaten/Kota',
-      status_aktif: true,
-      foto: 'https://ui-avatars.com/api/?name=Dewi+Yuliana',
-    },
-    {
-      nama: 'Fithriyah, SST',
-      username: 'fitriyah',
-      password: await bcrypt.hash('198506202007012005', 10),
-      role: 'pegawai',
-      unit_kerja: 'Statistisi Ahli Muda BPS Kabupaten/Kota',
-      status_aktif: true,
-      foto: 'https://ui-avatars.com/api/?name=Fithriyah',
-    },
-    {
-      nama: 'Arum Pratiwi, SST',
-      username: 'arump',
-      password: await bcrypt.hash('198309022009022008', 10),
-      role: 'pegawai',
-      unit_kerja: 'Statistisi Ahli Muda BPS Kabupaten/Kota',
-      status_aktif: true,
-      foto: 'https://ui-avatars.com/api/?name=Arum+Pratiwi',
-    },
-    {
-      nama: 'Nisalasi Ikhsan Nurfathillah, SST',
-      username: 'nisalasi',
-      password: await bcrypt.hash('198702162009022009', 10),
-      role: 'pegawai',
-      unit_kerja: 'Statistisi Ahli Muda BPS Kabupaten/Kota',
-      status_aktif: true,
-      foto: 'https://ui-avatars.com/api/?name=Nisalasi+Ikhsan+Nurfathillah',
-    },
-    {
       nama: 'Ahmad Rifki Febrianto, SST, M.EKK',
       username: 'arifki',
       password: await bcrypt.hash('198902082010121005', 10),
@@ -216,149 +158,15 @@ async function seedUsers(dataSource: DataSource): Promise<User[]> {
       status_aktif: true,
       foto: 'https://ui-avatars.com/api/?name=Ahmad+Rifki+Febrianto',
     },
+    // Tambah beberapa pegawai lagi untuk variasi demo
     {
-      nama: 'Muhamad Zaenuri, S.P.',
-      username: 'muh.zaenuri',
-      password: await bcrypt.hash('198005262011011005', 10),
+      nama: 'Dewi Yuliana S., S.T.',
+      username: 'dewiyuliana',
+      password: await bcrypt.hash('198207182005022001', 10),
       role: 'pegawai',
       unit_kerja: 'Statistisi Ahli Muda BPS Kabupaten/Kota',
       status_aktif: true,
-      foto: 'https://ui-avatars.com/api/?name=Muhamad+Zaenuri',
-    },
-    {
-      nama: 'Dinny Pravitasari, SST, M.S.E.',
-      username: 'dinnypravita',
-      password: await bcrypt.hash('198908092013112001', 10),
-      role: 'pegawai',
-      unit_kerja: 'Statistisi Ahli Pertama BPS Kabupaten/Kota',
-      status_aktif: true,
-      foto: 'https://ui-avatars.com/api/?name=Dinny+Pravitasari',
-    },
-    {
-      nama: 'Surachman Budiarto, S.Si',
-      username: 'budi.surachman',
-      password: await bcrypt.hash('198410012011011013', 10),
-      role: 'pegawai',
-      unit_kerja: 'Statistisi Ahli Pertama BPS Kabupaten/Kota',
-      status_aktif: true,
-      foto: 'https://ui-avatars.com/api/?name=Surachman+Budiarto',
-    },
-    {
-      nama: 'Fanisa Dwita Hanggarani, SST',
-      username: 'fanisa',
-      password: await bcrypt.hash('199405092016022001', 10),
-      role: 'pegawai',
-      unit_kerja: 'Statistisi Ahli Muda BPS Kabupaten/Kota',
-      status_aktif: true,
-      foto: 'https://ui-avatars.com/api/?name=Fanisa+Dwita+Hanggarani',
-    },
-    {
-      nama: 'Annisa Fauziatul Mardiyah, SST',
-      username: 'annisa.mardiyah',
-      password: await bcrypt.hash('199404202017012001', 10),
-      role: 'pegawai',
-      unit_kerja: 'Statistisi Ahli Pertama BPS Kabupaten/Kota',
-      status_aktif: true,
-      foto: 'https://ui-avatars.com/api/?name=Annisa+Fauziatul+Mardiyah',
-    },
-    {
-      nama: 'Sela Anisada, S.Tr.Stat.',
-      username: 'sela.anisada',
-      password: await bcrypt.hash('199707132019122001', 10),
-      role: 'pegawai',
-      unit_kerja: 'Pranata Komputer Ahli Pertama BPS Kabupaten/Kota',
-      status_aktif: true,
-      foto: 'https://ui-avatars.com/api/?name=Sela+Anisada',
-    },
-    {
-      nama: 'Esa Anindika Sari, S.Tr.Stat.',
-      username: 'esa.anindika',
-      password: await bcrypt.hash('199910302022012002', 10),
-      role: 'pegawai',
-      unit_kerja: 'Statistisi Ahli Pertama BPS Kabupaten/Kota',
-      status_aktif: true,
-      foto: 'https://ui-avatars.com/api/?name=Esa+Anindika+Sari',
-    },
-    {
-      nama: 'Miftahul Husna, S.Tr.Stat.',
-      username: 'miftahul.husna',
-      password: await bcrypt.hash('199911292022012002', 10),
-      role: 'pegawai',
-      unit_kerja: 'Statistisi Ahli Pertama BPS Kabupaten/Kota',
-      status_aktif: true,
-      foto: 'https://ui-avatars.com/api/?name=Miftahul+Husna',
-    },
-    {
-      nama: 'Ahmad Rifjayansyah, S.Tr.Stat.',
-      username: 'ahmadrifjayansyah',
-      password: await bcrypt.hash('200006222023021004', 10),
-      role: 'pegawai',
-      unit_kerja: 'Statistisi Ahli Pertama BPS Kabupaten/Kota',
-      status_aktif: true,
-      foto: 'https://ui-avatars.com/api/?name=Ahmad+Rifjayansyah',
-    },
-    {
-      nama: 'Riki Afrianto, A.Md.',
-      username: 'rikiafrianto-pppk',
-      password: await bcrypt.hash('199304242024211005', 10),
-      role: 'pegawai',
-      unit_kerja: 'Pranata Komputer Terampil BPS Kabupaten/Kota',
-      status_aktif: true,
-      foto: 'https://ui-avatars.com/api/?name=Riki+Afrianto',
-    },
-    {
-      nama: 'Ayu Setianingsih, A.Md.Stat.',
-      username: 'ayusetianingsih',
-      password: await bcrypt.hash('200002092023022003', 10),
-      role: 'pegawai',
-      unit_kerja: 'Statistisi Terampil BPS Kabupaten/Kota',
-      status_aktif: true,
-      foto: 'https://ui-avatars.com/api/?name=Ayu+Setianingsih',
-    },
-    {
-      nama: 'Dini Alfitri Zahra, A.Md.Stat.',
-      username: 'dinialfitrizahra',
-      password: await bcrypt.hash('200001262023022001', 10),
-      role: 'pegawai',
-      unit_kerja: 'Statistisi Terampil BPS Kabupaten/Kota',
-      status_aktif: true,
-      foto: 'https://ui-avatars.com/api/?name=Dini+Alfitri+Zahra',
-    },
-    {
-      nama: 'Singgih Adiwijaya, S.E., M.M.',
-      username: 'singgih.adiwijaya',
-      password: await bcrypt.hash('198605302009111001', 10),
-      role: 'pegawai',
-      unit_kerja: 'Analis Pengelolaan Keuangan APBN Ahli Muda Subbagian Umum',
-      status_aktif: true,
-      foto: 'https://ui-avatars.com/api/?name=Singgih+Adiwijaya',
-    },
-    {
-      nama: 'Diah Hadianing Putri, S.Si',
-      username: 'diah.hp',
-      password: await bcrypt.hash('198512212012122002', 10),
-      role: 'pegawai',
-      unit_kerja: 'Statistisi Penyelia Subbagian Umum',
-      status_aktif: true,
-      foto: 'https://ui-avatars.com/api/?name=Diah+Hadianing+Putri',
-    },
-    {
-      nama: 'Fitri Nurjanah, S.E., M.M.',
-      username: 'fitri.nurjanah',
-      password: await bcrypt.hash('198905052011012013', 10),
-      role: 'pegawai',
-      unit_kerja: 'Pranata Keuangan APBN Mahir Subbagian Umum',
-      status_aktif: true,
-      foto: 'https://ui-avatars.com/api/?name=Fitri+Nurjanah',
-    },
-    {
-      nama: 'Eklesia Valentia, A.Md.Kb.N.',
-      username: 'eklesia.valentia',
-      password: await bcrypt.hash('199902142022012004', 10),
-      role: 'pegawai',
-      unit_kerja: 'Pranata Keuangan APBN Terampil Subbagian Umum',
-      status_aktif: true,
-      foto: 'https://ui-avatars.com/api/?name=Eklesia+Valentia',
+      foto: 'https://ui-avatars.com/api/?name=Dewi+Yuliana',
     },
   ];
 
@@ -371,1052 +179,417 @@ async function seedUsers(dataSource: DataSource): Promise<User[]> {
   return savedUsers;
 }
 
-// Fungsi untuk seeding data barang
-async function seedBarang(dataSource: DataSource): Promise<void> {
+/**
+ * Fungsi untuk seeding data barang yang lebih terstruktur untuk demo.
+ */
+async function seedBarang(dataSource: DataSource): Promise<Barang[]> {
   const barangRepo = dataSource.getRepository(Barang);
 
   const barangList: Partial<Barang>[] = [
+    // ATK (Alat Tulis Kantor) - Stok normal
     {
-      kode_barang: '000001',
-      nama_barang: 'PENGHAPUS PENSIL',
+      kode_barang: 'ATK001',
+      nama_barang: 'Pulpen Standard',
       kategori: 'ATK',
-      stok: 60,
+      stok: 50,
+      satuan: 'Pcs',
+      ambang_batas_kritis: 10,
+      status_aktif: true,
+      deskripsi: 'Pulpen tinta biru untuk keperluan sehari-hari',
+    },
+    {
+      kode_barang: 'ATK002',
+      nama_barang: 'Pensil 2B',
+      kategori: 'ATK',
+      stok: 100,
+      satuan: 'Pcs',
+      ambang_batas_kritis: 20,
+      status_aktif: true,
+      deskripsi: 'Pensil hitam 2B untuk menggambar dan menulis',
+    },
+    {
+      kode_barang: 'ATK003',
+      nama_barang: 'Penghapus Karet',
+      kategori: 'ATK',
+      stok: 30,
       satuan: 'Pcs',
       ambang_batas_kritis: 5,
       status_aktif: true,
+      deskripsi: 'Penghapus karet putih standar',
     },
     {
-      kode_barang: '000001',
-      nama_barang: 'Binder Clip 105',
+      kode_barang: 'ATK004',
+      nama_barang: 'Spidol Whiteboard',
       kategori: 'ATK',
-      stok: 17,
-      satuan: 'Box',
+      stok: 15,
+      satuan: 'Pcs',
       ambang_batas_kritis: 5,
       status_aktif: true,
+      deskripsi: 'Spidol untuk papan tulis putih berbagai warna',
     },
     {
-      kode_barang: '000001',
-      nama_barang: 'BALLPOINT BOLLINER',
+      kode_barang: 'ATK005',
+      nama_barang: 'Stapler',
       kategori: 'ATK',
       stok: 8,
       satuan: 'Pcs',
-      ambang_batas_kritis: 5,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000001',
-      nama_barang: 'CUTTER BESAR',
-      kategori: 'ATK',
-      stok: 4,
-      satuan: 'Pcs',
       ambang_batas_kritis: 2,
       status_aktif: true,
+      deskripsi: 'Stapler ukuran sedang untuk menjilid dokumen',
     },
+
+    // Kertas & Buku - Stok normal dan ada yang kritis
     {
-      kode_barang: '000001',
-      nama_barang: 'Isi Steples No 10',
-      kategori: 'ATK',
-      stok: 3,
-      satuan: 'Box',
-      ambang_batas_kritis: 2,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000001',
-      nama_barang: 'Tinta Stempel',
-      kategori: 'ATK',
-      stok: 1,
-      satuan: 'Botol',
-      ambang_batas_kritis: 1,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000002',
-      nama_barang: 'Binder Clip 155',
-      kategori: 'ATK',
-      stok: 18,
-      satuan: 'Box',
-      ambang_batas_kritis: 5,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000002',
-      nama_barang: 'CUTTER KECIL',
-      kategori: 'ATK',
-      stok: 5,
-      satuan: 'Pcs',
-      ambang_batas_kritis: 2,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000003',
-      nama_barang: 'Binder Clip 260',
-      kategori: 'ATK',
-      stok: 13,
-      satuan: 'Box',
-      ambang_batas_kritis: 5,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000003',
-      nama_barang: 'SOLATIF BESAR BENING',
-      kategori: 'Perekat',
-      stok: 2,
-      satuan: 'Roll',
-      ambang_batas_kritis: 1,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000003',
-      nama_barang: 'ISI CUTTER BESAR',
-      kategori: 'ATK',
-      stok: 1,
-      satuan: 'Box',
-      ambang_batas_kritis: 1,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000004',
-      nama_barang: 'BLOK NOTE',
+      kode_barang: 'KTB001',
+      nama_barang: 'Kertas HVS A4 80gr',
       kategori: 'Kertas & Buku',
-      stok: 50,
-      satuan: 'Buku',
-      ambang_batas_kritis: 10,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000004',
-      nama_barang: 'MAP SNELHECTER PLASTIK Bussiness file',
-      kategori: 'Penyimpanan Arsip',
-      stok: 35,
-      satuan: 'Pcs',
-      ambang_batas_kritis: 10,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000004',
-      nama_barang: 'ISI CUTTER KECIL',
-      kategori: 'ATK',
-      stok: 1,
-      satuan: 'Box',
-      ambang_batas_kritis: 1,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000005',
-      nama_barang: 'KERTAS HVS A4 80gr',
-      kategori: 'Kertas & Buku',
-      stok: 13,
+      stok: 25,
       satuan: 'Rim',
       ambang_batas_kritis: 5,
       status_aktif: true,
+      deskripsi: 'Kertas putih A4 80 gram untuk printer dan fotokopi',
     },
     {
-      kode_barang: '000006',
-      nama_barang: 'LAKBAND HITAM 1,5 in',
-      kategori: 'Perekat',
-      stok: 1,
-      satuan: 'Roll',
-      ambang_batas_kritis: 1,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000007',
-      nama_barang: 'AMPLOP LOGO KECIL',
+      kode_barang: 'KTB002',
+      nama_barang: 'Kertas HVS F4 80gr',
       kategori: 'Kertas & Buku',
-      stok: 235,
+      stok: 3,
+      satuan: 'Rim',
+      ambang_batas_kritis: 5,
+      status_aktif: true,
+      deskripsi: 'Kertas putih F4 80 gram untuk dokumen legal',
+    },
+    {
+      kode_barang: 'KTB003',
+      nama_barang: 'Buku Tulis 38 Lembar',
+      kategori: 'Kertas & Buku',
+      stok: 1,
+      satuan: 'Pcs',
+      ambang_batas_kritis: 10,
+      status_aktif: true,
+      deskripsi: 'Buku tulis bergaris 38 lembar untuk catatan',
+    },
+    {
+      kode_barang: 'KTB004',
+      nama_barang: 'Amplop Coklat A4',
+      kategori: 'Kertas & Buku',
+      stok: 200,
       satuan: 'Lembar',
       ambang_batas_kritis: 50,
       status_aktif: true,
+      deskripsi: 'Amplop coklat ukuran A4 untuk surat dinas',
     },
+
+    // Elektronik - Stok kritis untuk demo notifikasi
     {
-      kode_barang: '000007',
-      nama_barang: 'Lem Stik',
-      kategori: 'Perekat',
-      stok: 10,
-      satuan: 'Pcs',
-      ambang_batas_kritis: 3,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000007',
-      nama_barang: 'ISI TRECK PENSIL',
-      kategori: 'ATK',
-      stok: 4,
-      satuan: 'Tube',
-      ambang_batas_kritis: 2,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000008',
-      nama_barang: 'PENSIL 2B FABER CASTLE',
-      kategori: 'ATK',
-      stok: 120,
-      satuan: 'Pcs',
-      ambang_batas_kritis: 24,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000008',
-      nama_barang: 'NAME TAG',
-      kategori: 'Aksesoris Kantor',
-      stok: 19,
-      satuan: 'Pcs',
-      ambang_batas_kritis: 5,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000008',
-      nama_barang: 'Double Tape',
-      kategori: 'Perekat',
-      stok: 2,
-      satuan: 'Roll',
-      ambang_batas_kritis: 1,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000009',
-      nama_barang: 'PENGGARIS BESI 30CM',
-      kategori: 'ATK',
-      stok: 1,
-      satuan: 'Pcs',
-      ambang_batas_kritis: 1,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000010',
-      nama_barang: 'SPIDOL PERMANENT',
-      kategori: 'ATK',
-      stok: 29,
-      satuan: 'Pcs',
-      ambang_batas_kritis: 5,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000010',
-      nama_barang: 'SPIDOL WHITE BOARD',
-      kategori: 'ATK',
-      stok: 12,
-      satuan: 'Pcs',
-      ambang_batas_kritis: 5,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000011',
-      nama_barang: 'STABILO BOSS',
-      kategori: 'ATK',
-      stok: 2,
-      satuan: 'Pcs',
-      ambang_batas_kritis: 1,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000012',
-      nama_barang: 'BUKU TULIS',
-      kategori: 'Kertas & Buku',
-      stok: 24,
-      satuan: 'Buku',
-      ambang_batas_kritis: 5,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000013',
-      nama_barang: 'BATERAI A2',
+      kode_barang: 'ELK001',
+      nama_barang: 'Baterai AA',
       kategori: 'Elektronik',
-      stok: 16,
-      satuan: 'Pcs',
-      ambang_batas_kritis: 4,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000014',
-      nama_barang: 'BATERAI A3',
-      kategori: 'Elektronik',
-      stok: 12,
-      satuan: 'Pcs',
-      ambang_batas_kritis: 4,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000015',
-      nama_barang: 'BUKU EXPEDISI',
-      kategori: 'Kertas & Buku',
-      stok: 8,
-      satuan: 'Buku',
-      ambang_batas_kritis: 2,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000015',
-      nama_barang: 'LAKBAND COKLAT',
-      kategori: 'Perekat',
-      stok: 5,
-      satuan: 'Roll',
-      ambang_batas_kritis: 2,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000016',
-      nama_barang: 'BUKU FOLIO',
-      kategori: 'Kertas & Buku',
-      stok: 10,
-      satuan: 'Buku',
-      ambang_batas_kritis: 3,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000016',
-      nama_barang: 'KARBON',
-      kategori: 'ATK',
-      stok: 1,
-      satuan: 'Box',
-      ambang_batas_kritis: 1,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000017',
-      nama_barang: 'LAKBAND BENING',
-      kategori: 'Perekat',
-      stok: 4,
-      satuan: 'Roll',
-      ambang_batas_kritis: 2,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000017',
-      nama_barang: 'Double Tape Foam',
-      kategori: 'Perekat',
-      stok: 6,
-      satuan: 'Roll',
-      ambang_batas_kritis: 2,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000018',
-      nama_barang: 'Loose Leaf A5-100',
-      kategori: 'Kertas & Buku',
-      stok: 6,
-      satuan: 'Pack',
-      ambang_batas_kritis: 2,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000019',
-      nama_barang: 'BINDER KLIP NO. 1',
-      kategori: 'ATK',
-      stok: 3,
-      satuan: 'Box',
-      ambang_batas_kritis: 1,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000019',
-      nama_barang: 'Paper sticker glossy',
-      kategori: 'Kertas & Buku',
-      stok: 1,
-      satuan: 'Pack',
-      ambang_batas_kritis: 1,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000020',
-      nama_barang: 'Binder klip No.280',
-      kategori: 'ATK',
-      stok: 7,
-      satuan: 'Box',
-      ambang_batas_kritis: 2,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000021',
-      nama_barang: 'KERTAS A4 SIDU 75 GR',
-      kategori: 'Kertas & Buku',
-      stok: 103,
-      satuan: 'Rim',
-      ambang_batas_kritis: 20,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000021',
-      nama_barang: 'Binder Clip 107',
-      kategori: 'ATK',
-      stok: 23,
-      satuan: 'Box',
-      ambang_batas_kritis: 5,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000021',
-      nama_barang: 'Double Tape Kecil',
-      kategori: 'Perekat',
       stok: 2,
-      satuan: 'Roll',
-      ambang_batas_kritis: 1,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000022',
-      nama_barang: 'Lem Cair',
-      kategori: 'Perekat',
-      stok: 1,
-      satuan: 'Botol',
-      ambang_batas_kritis: 1,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000023',
-      nama_barang: 'Lem Fox',
-      kategori: 'Perekat',
-      stok: 2,
-      satuan: 'Pcs',
-      ambang_batas_kritis: 1,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000024',
-      nama_barang: 'PULPEN',
-      kategori: 'ATK',
-      stok: 49,
       satuan: 'Pcs',
       ambang_batas_kritis: 10,
       status_aktif: true,
+      deskripsi: 'Baterai AA alkaline untuk perangkat elektronik',
     },
     {
-      kode_barang: '000024',
-      nama_barang: 'Kertas Sidu F4 75 Gr',
-      kategori: 'Kertas & Buku',
-      stok: 10,
-      satuan: 'Rim',
+      kode_barang: 'ELK002',
+      nama_barang: 'Catridge Printer Canon',
+      kategori: 'Elektronik',
+      stok: 1,
+      satuan: 'Pcs',
       ambang_batas_kritis: 3,
       status_aktif: true,
+      deskripsi: 'Catridge tinta hitam untuk printer Canon',
     },
     {
-      kode_barang: '000024',
-      nama_barang: 'Solatip 1/2x36',
-      kategori: 'Perekat',
-      stok: 1,
-      satuan: 'Roll',
-      ambang_batas_kritis: 1,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000024',
-      nama_barang: 'Stiker label',
-      kategori: 'Kertas & Buku',
-      stok: 1,
-      satuan: 'Pack',
-      ambang_batas_kritis: 1,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000025',
-      nama_barang: 'Paperclip Color',
-      kategori: 'ATK',
-      stok: 6,
-      satuan: 'Box',
-      ambang_batas_kritis: 2,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000025',
-      nama_barang: 'Solatip 1/2x72',
-      kategori: 'Perekat',
-      stok: 5,
-      satuan: 'Roll',
-      ambang_batas_kritis: 2,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000026',
-      nama_barang: 'Kertas KS Photo Double Side Matte',
-      kategori: 'Kertas & Buku',
-      stok: 3,
-      satuan: 'Pack',
-      ambang_batas_kritis: 1,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000026',
-      nama_barang: 'LAKBAND HITAM 1 in',
-      kategori: 'Perekat',
-      stok: 2,
-      satuan: 'Roll',
-      ambang_batas_kritis: 1,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000027',
-      nama_barang: 'Selotip Double Tape Foam',
-      kategori: 'Perekat',
-      stok: 1,
-      satuan: 'Roll',
-      ambang_batas_kritis: 1,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000028',
-      nama_barang: 'Loose Leaf A5-50',
-      kategori: 'Kertas & Buku',
-      stok: 16,
-      satuan: 'Pack',
-      ambang_batas_kritis: 5,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000028',
-      nama_barang: 'TAPE DISPENSER',
-      kategori: 'Aksesoris Kantor',
-      stok: 1,
-      satuan: 'Pcs',
-      ambang_batas_kritis: 1,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000031',
-      nama_barang: 'Sticky Note - Besar 7,5 x7,5',
-      kategori: 'Kertas & Buku',
-      stok: 2,
-      satuan: 'Pack',
-      ambang_batas_kritis: 1,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000032',
-      nama_barang: 'PEN MEJA',
-      kategori: 'ATK',
-      stok: 3,
-      satuan: 'Pcs',
-      ambang_batas_kritis: 1,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000032',
-      nama_barang: 'Sticky Note - Sedang',
-      kategori: 'Kertas & Buku',
-      stok: 3,
-      satuan: 'Pack',
-      ambang_batas_kritis: 1,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000033',
-      nama_barang: 'BOX FILE',
-      kategori: 'Penyimpanan Arsip',
-      stok: 39,
-      satuan: 'Pcs',
-      ambang_batas_kritis: 10,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000033',
-      nama_barang: 'Spidol Whiteboard',
-      kategori: 'ATK',
-      stok: 12,
-      satuan: 'Pcs',
-      ambang_batas_kritis: 5,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000034',
-      nama_barang: 'Buku Kwitansi',
-      kategori: 'Kertas & Buku',
-      stok: 9,
-      satuan: 'Buku',
-      ambang_batas_kritis: 3,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000035',
-      nama_barang: 'REMOT AC',
+      kode_barang: 'ELK003',
+      nama_barang: 'Mouse USB',
       kategori: 'Elektronik',
-      stok: 1,
-      satuan: 'Pcs',
-      ambang_batas_kritis: 1,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000036',
-      nama_barang: 'BAK STEMPEL',
-      kategori: 'ATK',
-      stok: 2,
-      satuan: 'Pcs',
-      ambang_batas_kritis: 1,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000037',
-      nama_barang: 'TINTA PRINTER CANON',
-      kategori: 'Elektronik',
-      stok: 3,
-      satuan: 'Botol',
-      ambang_batas_kritis: 1,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000038',
-      nama_barang: 'TINTA PRINTER EPSON',
-      kategori: 'Elektronik',
-      stok: 2,
-      satuan: 'Botol',
-      ambang_batas_kritis: 1,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000043',
-      nama_barang: 'Kertas Thermal',
-      kategori: 'Kertas & Buku',
-      stok: 1,
-      satuan: 'Roll',
-      ambang_batas_kritis: 1,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000046',
-      nama_barang: 'Tinta Botol',
-      kategori: 'ATK',
-      stok: 1,
-      satuan: 'Botol',
-      ambang_batas_kritis: 1,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000047',
-      nama_barang: 'Buku Gambar',
-      kategori: 'Kertas & Buku',
-      stok: 1,
-      satuan: 'Buku',
-      ambang_batas_kritis: 1,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000048',
-      nama_barang: 'Buku Kwitansi Sedang',
-      kategori: 'Kertas & Buku',
-      stok: 1,
-      satuan: 'Buku',
-      ambang_batas_kritis: 1,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000049',
-      nama_barang: 'Buku Kwitansi Kecil',
-      kategori: 'Kertas & Buku',
-      stok: 1,
-      satuan: 'Buku',
-      ambang_batas_kritis: 1,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000050',
-      nama_barang: 'Catridge Canon Warna',
-      kategori: 'Elektronik',
-      stok: 2,
-      satuan: 'Pcs',
-      ambang_batas_kritis: 1,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000051',
-      nama_barang: 'Catridge Canon Hitam',
-      kategori: 'Elektronik',
-      stok: 2,
-      satuan: 'Pcs',
-      ambang_batas_kritis: 1,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000052',
-      nama_barang: 'Catridge Epson Warna',
-      kategori: 'Elektronik',
-      stok: 1,
-      satuan: 'Pcs',
-      ambang_batas_kritis: 1,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000053',
-      nama_barang: 'Catridge Epson Hitam',
-      kategori: 'Elektronik',
-      stok: 1,
-      satuan: 'Pcs',
-      ambang_batas_kritis: 1,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000054',
-      nama_barang: 'Crayon',
-      kategori: 'ATK',
-      stok: 1,
-      satuan: 'Set',
-      ambang_batas_kritis: 1,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000055',
-      nama_barang: 'Gunting',
-      kategori: 'ATK',
-      stok: 3,
-      satuan: 'Pcs',
-      ambang_batas_kritis: 1,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000056',
-      nama_barang: 'Isi Pensil',
-      kategori: 'ATK',
-      stok: 2,
-      satuan: 'Tube',
-      ambang_batas_kritis: 1,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000057',
-      nama_barang: 'Isi Pulpen',
-      kategori: 'ATK',
       stok: 5,
       satuan: 'Pcs',
       ambang_batas_kritis: 2,
       status_aktif: true,
+      deskripsi: 'Mouse optik USB untuk komputer',
     },
+
+    // Perlengkapan Kantor
     {
-      kode_barang: '000058',
-      nama_barang: 'Kalkulator',
-      kategori: 'Elektronik',
-      stok: 1,
-      satuan: 'Pcs',
-      ambang_batas_kritis: 1,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000059',
-      nama_barang: 'Kertas Buffalo',
-      kategori: 'Kertas & Buku',
-      stok: 1,
-      satuan: 'Pack',
-      ambang_batas_kritis: 1,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000060',
-      nama_barang: 'Kertas Foto',
-      kategori: 'Kertas & Buku',
-      stok: 2,
-      satuan: 'Pack',
-      ambang_batas_kritis: 1,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000061',
-      nama_barang: 'Kertas Label',
-      kategori: 'Kertas & Buku',
-      stok: 1,
-      satuan: 'Pack',
-      ambang_batas_kritis: 1,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000062',
-      nama_barang: 'Kertas Manila',
-      kategori: 'Kertas & Buku',
-      stok: 1,
-      satuan: 'Lembar',
-      ambang_batas_kritis: 1,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000063',
-      nama_barang: 'Klip Kertas',
-      kategori: 'ATK',
-      stok: 4,
-      satuan: 'Box',
-      ambang_batas_kritis: 2,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000064',
-      nama_barang: 'Kuas',
-      kategori: 'ATK',
-      stok: 1,
-      satuan: 'Pcs',
-      ambang_batas_kritis: 1,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000065',
-      nama_barang: 'Map Kertas',
-      kategori: 'Penyimpanan Arsip',
-      stok: 10,
-      satuan: 'Pcs',
-      ambang_batas_kritis: 3,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000066',
+      kode_barang: 'PKT001',
       nama_barang: 'Map Plastik',
+      kategori: 'Penyimpanan Arsip',
+      stok: 40,
+      satuan: 'Pcs',
+      ambang_batas_kritis: 10,
+      status_aktif: true,
+      deskripsi: 'Map plastik transparan untuk menyimpan dokumen',
+    },
+    {
+      kode_barang: 'PKT002',
+      nama_barang: 'Box File',
       kategori: 'Penyimpanan Arsip',
       stok: 15,
       satuan: 'Pcs',
       ambang_batas_kritis: 5,
       status_aktif: true,
+      deskripsi: 'Box file karton untuk arsip dokumen',
     },
     {
-      kode_barang: '000067',
-      nama_barang: 'Mouse',
-      kategori: 'Elektronik',
-      stok: 1,
-      satuan: 'Pcs',
-      ambang_batas_kritis: 1,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000068',
-      nama_barang: 'Mouse Pad',
-      kategori: 'Aksesoris Komputer',
-      stok: 1,
-      satuan: 'Pcs',
-      ambang_batas_kritis: 1,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000069',
-      nama_barang: 'Odner',
-      kategori: 'Penyimpanan Arsip',
-      stok: 5,
-      satuan: 'Pcs',
-      ambang_batas_kritis: 2,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000070',
-      nama_barang: 'Paper Clip',
+      kode_barang: 'PKT003',
+      nama_barang: 'Clip Kertas',
       kategori: 'ATK',
-      stok: 6,
+      stok: 20,
       satuan: 'Box',
-      ambang_batas_kritis: 2,
+      ambang_batas_kritis: 5,
       status_aktif: true,
+      deskripsi: 'Clip kertas ukuran standar untuk menjepit dokumen',
     },
+
+    // Barang dengan stok habis untuk demo
     {
-      kode_barang: '000071',
-      nama_barang: 'Penggaris Plastik',
+      kode_barang: 'ATK006',
+      nama_barang: 'Tip-Ex',
       kategori: 'ATK',
-      stok: 2,
+      stok: 0,
       satuan: 'Pcs',
-      ambang_batas_kritis: 1,
+      ambang_batas_kritis: 5,
       status_aktif: true,
+      deskripsi: 'Tip-Ex untuk mengoreksi tulisan',
     },
+
+    // Tambahan dari data asli yang penting
     {
-      kode_barang: '000072',
-      nama_barang: 'Penghapus Papan Tulis',
+      kode_barang: 'ATK007',
+      nama_barang: 'Binder Clip No.155',
       kategori: 'ATK',
-      stok: 2,
-      satuan: 'Pcs',
-      ambang_batas_kritis: 1,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000073',
-      nama_barang: 'Pensil Warna',
-      kategori: 'ATK',
-      stok: 1,
-      satuan: 'Set',
-      ambang_batas_kritis: 1,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000074',
-      nama_barang: 'Perforator',
-      kategori: 'ATK',
-      stok: 1,
-      satuan: 'Pcs',
-      ambang_batas_kritis: 1,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000075',
-      nama_barang: 'Plastik Jilid',
-      kategori: 'Penyimpanan Arsip',
-      stok: 1,
-      satuan: 'Pack',
-      ambang_batas_kritis: 1,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000076',
-      nama_barang: 'Rautan Pensil',
-      kategori: 'ATK',
-      stok: 3,
-      satuan: 'Pcs',
-      ambang_batas_kritis: 1,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000077',
-      nama_barang: 'Sampul Buku',
-      kategori: 'Kertas & Buku',
-      stok: 5,
-      satuan: 'Lembar',
-      ambang_batas_kritis: 2,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000078',
-      nama_barang: 'Sapu',
-      kategori: 'Peralatan Kebersihan',
-      stok: 1,
-      satuan: 'Pcs',
-      ambang_batas_kritis: 1,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000079',
-      nama_barang: 'Serutan',
-      kategori: 'ATK',
-      stok: 2,
-      satuan: 'Pcs',
-      ambang_batas_kritis: 1,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000080',
-      nama_barang: 'Spons',
-      kategori: 'Peralatan Kebersihan',
-      stok: 1,
-      satuan: 'Pcs',
-      ambang_batas_kritis: 1,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000081',
-      nama_barang: 'Stapler',
-      kategori: 'ATK',
-      stok: 2,
-      satuan: 'Pcs',
-      ambang_batas_kritis: 1,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000082',
-      nama_barang: 'Steples',
-      kategori: 'ATK',
-      stok: 3,
+      stok: 18,
       satuan: 'Box',
-      ambang_batas_kritis: 1,
+      ambang_batas_kritis: 5,
       status_aktif: true,
+      deskripsi: 'Binder clip ukuran sedang untuk menjepit dokumen tebal',
     },
     {
-      kode_barang: '000083',
-      nama_barang: 'Stiker',
-      kategori: 'Kertas & Buku',
-      stok: 1,
-      satuan: 'Lembar',
-      ambang_batas_kritis: 1,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000084',
-      nama_barang: 'Stopmap',
-      kategori: 'Penyimpanan Arsip',
-      stok: 8,
+      kode_barang: 'ATK008',
+      nama_barang: 'Lem Stick',
+      kategori: 'ATK',
+      stok: 12,
       satuan: 'Pcs',
       ambang_batas_kritis: 3,
       status_aktif: true,
-    },
-    {
-      kode_barang: '000085',
-      nama_barang: 'Tas Kertas',
-      kategori: 'Penyimpanan Arsip',
-      stok: 2,
-      satuan: 'Pcs',
-      ambang_batas_kritis: 1,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000086',
-      nama_barang: 'Tempat Pensil',
-      kategori: 'Aksesoris Kantor',
-      stok: 1,
-      satuan: 'Pcs',
-      ambang_batas_kritis: 1,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000087',
-      nama_barang: 'Tempat Sampah',
-      kategori: 'Peralatan Kebersihan',
-      stok: 1,
-      satuan: 'Pcs',
-      ambang_batas_kritis: 1,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000088',
-      nama_barang: 'Tipe-X',
-      kategori: 'ATK',
-      stok: 4,
-      satuan: 'Pcs',
-      ambang_batas_kritis: 2,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000089',
-      nama_barang: 'Tisu',
-      kategori: 'Peralatan Kebersihan',
-      stok: 3,
-      satuan: 'Box',
-      ambang_batas_kritis: 1,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000090',
-      nama_barang: 'Tusuk Sate',
-      kategori: 'Peralatan Dapur',
-      stok: 1,
-      satuan: 'Pack',
-      ambang_batas_kritis: 1,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000091',
-      nama_barang: 'Payung',
-      kategori: 'Aksesoris',
-      stok: 1,
-      satuan: 'Pcs',
-      ambang_batas_kritis: 1,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000092',
-      nama_barang: 'Gelas',
-      kategori: 'Peralatan Dapur',
-      stok: 6,
-      satuan: 'Pcs',
-      ambang_batas_kritis: 2,
-      status_aktif: true,
-    },
-    {
-      kode_barang: '000093',
-      nama_barang: 'Piring',
-      kategori: 'Peralatan Dapur',
-      stok: 4,
-      satuan: 'Pcs',
-      ambang_batas_kritis: 2,
-      status_aktif: true,
+      deskripsi: 'Lem stick untuk menempel kertas',
     },
   ];
 
-  await barangRepo.save(barangRepo.create(barangList));
-  console.log(`✅ Berhasil membuat ${barangList.length} barang`);
+  const savedBarang = await barangRepo.save(barangRepo.create(barangList));
+  console.log(
+    `✅ Berhasil membuat ${savedBarang.length} barang dengan berbagai status stok`,
+  );
+
+  return savedBarang;
+}
+
+/**
+ * Fungsi untuk seeding data permintaan dan detail permintaan untuk demo.
+ */
+async function seedPermintaan(
+  dataSource: DataSource,
+  users: User[],
+  barangs: Barang[],
+): Promise<void> {
+  const permintaanRepo = dataSource.getRepository(Permintaan);
+  const detailRepo = dataSource.getRepository(DetailPermintaan);
+
+  // Ambil user berdasarkan username untuk konsistensi
+  const adminUser = users.find((u) => u.username === 'admin');
+  const budiUser = users.find((u) => u.username === 'budi');
+  const sariUser = users.find((u) => u.username === 'sari');
+  const arifkiUser = users.find((u) => u.username === 'arifki');
+  const dewiyulianaUser = users.find((u) => u.username === 'dewiyuliana');
+
+  if (!adminUser || !budiUser || !sariUser) {
+    throw new Error('User admin, budi, atau sari tidak ditemukan');
+  }
+
+  // Buat tanggal untuk demo
+  const now = new Date();
+  const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const threeDaysAgo = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
+  const oneDayAgo = new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000);
+
+  // Permintaan 1: Disetujui (Minggu lalu - Budi)
+  const permintaan1 = permintaanRepo.create({
+    id_user_pemohon: budiUser.id,
+    tanggal_permintaan: oneWeekAgo,
+    status: 'Disetujui',
+    catatan: 'Permintaan ATK bulanan untuk Seksi Statistik Sosial',
+    id_user_verifikator: adminUser.id,
+    tanggal_verifikasi: new Date(oneWeekAgo.getTime() + 2 * 60 * 60 * 1000), // 2 jam setelah pengajuan
+  });
+  await permintaanRepo.save(permintaan1);
+
+  // Detail untuk permintaan 1
+  const detailPermintaan1 = [
+    {
+      id_permintaan: permintaan1.id,
+      id_barang:
+        barangs.find((b) => b.nama_barang === 'Pulpen Standard')?.id || 1,
+      jumlah_diminta: 20,
+      jumlah_disetujui: 20,
+    },
+    {
+      id_permintaan: permintaan1.id,
+      id_barang:
+        barangs.find((b) => b.nama_barang === 'Kertas HVS A4 80gr')?.id || 6,
+      jumlah_diminta: 5,
+      jumlah_disetujui: 5,
+    },
+    {
+      id_permintaan: permintaan1.id,
+      id_barang: barangs.find((b) => b.nama_barang === 'Map Plastik')?.id || 13,
+      jumlah_diminta: 10,
+      jumlah_disetujui: 10,
+    },
+  ];
+  await detailRepo.save(detailRepo.create(detailPermintaan1));
+
+  // Permintaan 2: Disetujui Sebagian (3 hari lalu - Sari)
+  const permintaan2 = permintaanRepo.create({
+    id_user_pemohon: sariUser.id,
+    tanggal_permintaan: threeDaysAgo,
+    status: 'Disetujui Sebagian',
+    catatan: 'Permintaan untuk kegiatan survei lapangan',
+    id_user_verifikator: adminUser.id,
+    tanggal_verifikasi: new Date(threeDaysAgo.getTime() + 4 * 60 * 60 * 1000),
+  });
+  await permintaanRepo.save(permintaan2);
+
+  // Detail untuk permintaan 2 (sebagian disetujui)
+  const detailPermintaan2 = [
+    {
+      id_permintaan: permintaan2.id,
+      id_barang:
+        barangs.find((b) => b.nama_barang === 'Buku Tulis 38 Lembar')?.id || 8,
+      jumlah_diminta: 20,
+      jumlah_disetujui: 1, // Stok terbatas
+    },
+    {
+      id_permintaan: permintaan2.id,
+      id_barang: barangs.find((b) => b.nama_barang === 'Pensil 2B')?.id || 2,
+      jumlah_diminta: 30,
+      jumlah_disetujui: 30,
+    },
+    {
+      id_permintaan: permintaan2.id,
+      id_barang:
+        barangs.find((b) => b.nama_barang === 'Kertas HVS F4 80gr')?.id || 7,
+      jumlah_diminta: 5,
+      jumlah_disetujui: 3, // Stok kritis
+    },
+  ];
+  await detailRepo.save(detailRepo.create(detailPermintaan2));
+
+  // Permintaan 3: Menunggu (Kemarin - Arifki)
+  const permintaan3 = permintaanRepo.create({
+    id_user_pemohon: arifkiUser?.id || budiUser.id,
+    tanggal_permintaan: oneDayAgo,
+    status: 'Menunggu',
+    catatan: 'Permintaan peralatan IT untuk maintenance komputer',
+  });
+  await permintaanRepo.save(permintaan3);
+
+  // Detail untuk permintaan 3 (menunggu)
+  const detailPermintaan3 = [
+    {
+      id_permintaan: permintaan3.id,
+      id_barang: barangs.find((b) => b.nama_barang === 'Mouse USB')?.id || 12,
+      jumlah_diminta: 3,
+      jumlah_disetujui: 0,
+    },
+    {
+      id_permintaan: permintaan3.id,
+      id_barang:
+        barangs.find((b) => b.nama_barang === 'Catridge Printer Canon')?.id ||
+        11,
+      jumlah_diminta: 2,
+      jumlah_disetujui: 0,
+    },
+  ];
+  await detailRepo.save(detailRepo.create(detailPermintaan3));
+
+  // Permintaan 4: Menunggu (Hari ini - Dewi)
+  const permintaan4 = permintaanRepo.create({
+    id_user_pemohon: dewiyulianaUser?.id || sariUser.id,
+    tanggal_permintaan: now,
+    status: 'Menunggu',
+    catatan: 'Permintaan ATK untuk kegiatan rapat koordinasi',
+  });
+  await permintaanRepo.save(permintaan4);
+
+  // Detail untuk permintaan 4
+  const detailPermintaan4 = [
+    {
+      id_permintaan: permintaan4.id,
+      id_barang:
+        barangs.find((b) => b.nama_barang === 'Spidol Whiteboard')?.id || 4,
+      jumlah_diminta: 6,
+      jumlah_disetujui: 0,
+    },
+    {
+      id_permintaan: permintaan4.id,
+      id_barang:
+        barangs.find((b) => b.nama_barang === 'Amplop Coklat A4')?.id || 9,
+      jumlah_diminta: 50,
+      jumlah_disetujui: 0,
+    },
+    {
+      id_permintaan: permintaan4.id,
+      id_barang: barangs.find((b) => b.nama_barang === 'Box File')?.id || 14,
+      jumlah_diminta: 5,
+      jumlah_disetujui: 0,
+    },
+  ];
+  await detailRepo.save(detailRepo.create(detailPermintaan4));
+
+  // Permintaan 5: Ditolak (2 hari lalu - Budi)
+  const twoDaysAgo = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000);
+  const permintaan5 = permintaanRepo.create({
+    id_user_pemohon: budiUser.id,
+    tanggal_permintaan: twoDaysAgo,
+    status: 'Ditolak',
+    catatan: 'Permintaan barang elektronik dalam jumlah besar',
+    id_user_verifikator: adminUser.id,
+    tanggal_verifikasi: new Date(twoDaysAgo.getTime() + 3 * 60 * 60 * 1000),
+  });
+  await permintaanRepo.save(permintaan5);
+
+  // Detail untuk permintaan 5 (ditolak)
+  const detailPermintaan5 = [
+    {
+      id_permintaan: permintaan5.id,
+      id_barang: barangs.find((b) => b.nama_barang === 'Mouse USB')?.id || 12,
+      jumlah_diminta: 20,
+      jumlah_disetujui: 0,
+    },
+    {
+      id_permintaan: permintaan5.id,
+      id_barang: barangs.find((b) => b.nama_barang === 'Baterai AA')?.id || 10,
+      jumlah_diminta: 50,
+      jumlah_disetujui: 0,
+    },
+  ];
+  await detailRepo.save(detailRepo.create(detailPermintaan5));
+
+  console.log('✅ Berhasil membuat data permintaan demo:');
+  console.log('   - 1 Permintaan Disetujui (Budi - 1 minggu lalu)');
+  console.log('   - 1 Permintaan Disetujui Sebagian (Sari - 3 hari lalu)');
+  console.log('   - 2 Permintaan Menunggu (Arifki & Dewi)');
+  console.log('   - 1 Permintaan Ditolak (Budi - 2 hari lalu)');
+  console.log('   - Total detail permintaan: 12 items');
 }
 
 /**
  * Fungsi utama untuk menjalankan proses seeding dan menangani error jika terjadi.
- *
- * Parameter: Tidak ada.
- *
- * Return:
- * - void: Proses akan keluar dengan kode 1 jika terjadi error.
  */
 seed().catch((err) => {
-  console.error('Seeding gagal:', err);
+  console.error('❌ Seeding gagal:', err);
   process.exit(1);
 });

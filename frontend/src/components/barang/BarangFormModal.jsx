@@ -19,65 +19,22 @@
  * - React Element: Modal form barang.
  */
 
-import React from "react";
-import { PlusIcon, PencilIcon } from "@heroicons/react/24/outline";
+import React, { useState, useEffect } from "react";
+import { XMarkIcon, CameraIcon } from "@heroicons/react/24/outline";
 
 /**
- * Fungsi renderKategoriOptions
+ * Modal untuk form tambah/edit barang.
  *
- * Fungsi ini digunakan untuk menghasilkan elemen <option> pada select kategori barang.
- *
- * Parameter:
- * - kategoriOptions (array): Daftar kategori barang yang tersedia.
- *
- * Return:
- * - array: Array elemen <option> untuk select kategori.
- */
-const renderKategoriOptions = (kategoriOptions) =>
-  kategoriOptions.map((kategori) => (
-    <option key={kategori} value={kategori}>
-      {kategori}
-    </option>
-  ));
-
-/**
- * Fungsi renderSatuanOptions
- *
- * Fungsi ini digunakan untuk menghasilkan elemen <option> pada select satuan barang.
- *
- * Parameter:
- * - satuanOptions (array): Daftar satuan barang yang tersedia.
- *
- * Return:
- * - array: Array elemen <option> untuk select satuan.
- */
-const renderSatuanOptions = (satuanOptions) =>
-  satuanOptions.map((satuan) => (
-    <option key={satuan} value={satuan}>
-      {satuan}
-    </option>
-  ));
-
-/**
- * Komponen BarangFormModal
- *
- * Komponen ini digunakan untuk menampilkan modal form input data barang pada aplikasi SIAP.
- * Modal ini mendukung proses tambah barang baru maupun edit data barang yang sudah ada.
- * Form terdiri dari input kode barang, nama barang, kategori, satuan, stok awal, stok minimum, dan deskripsi.
- *
- * Parameter:
- * - show (boolean): Status visibilitas modal.
- * - mode ('add' | 'edit'): Mode form, menentukan ikon dan judul.
- * - formData (object): Data barang yang diinput.
- * - kategoriOptions (array): Pilihan kategori barang.
- * - satuanOptions (array): Pilihan satuan barang.
- * - loading (boolean): Status loading tombol submit.
- * - onChange (function): Fungsi handler perubahan input.
- * - onClose (function): Fungsi handler tutup modal.
- * - onSubmit (function): Fungsi handler submit form.
- *
- * Return:
- * - React Element: Modal form barang.
+ * Props:
+ * - show: Boolean untuk menampilkan/menyembunyikan modal
+ * - mode: String ("add" atau "edit") untuk menentukan mode modal
+ * - formData: Object data form
+ * - kategoriOptions: Array pilihan kategori
+ * - satuanOptions: Array pilihan satuan
+ * - loading: Boolean status loading
+ * - onChange: Function handler perubahan input
+ * - onClose: Function handler tutup modal
+ * - onSubmit: Function handler submit form
  */
 const BarangFormModal = ({
   show,
@@ -90,162 +47,364 @@ const BarangFormModal = ({
   onClose,
   onSubmit,
 }) => {
-  // Jika modal tidak ditampilkan, return null
+  // State untuk custom kategori dan satuan - SELALU di atas, tidak kondisional
+  const [customKategori, setCustomKategori] = useState("");
+  const [customSatuan, setCustomSatuan] = useState("");
+  const [showCustomKategori, setShowCustomKategori] = useState(false);
+  const [showCustomSatuan, setShowCustomSatuan] = useState(false);
+  const [previewImage, setPreviewImage] = useState(null);
+  const [selectedFile, setSelectedFile] = useState(null);
+
+  // useEffect untuk reset state saat modal dibuka/ditutup
+  useEffect(() => {
+    if (show) {
+      setCustomKategori("");
+      setCustomSatuan("");
+      setShowCustomKategori(false);
+      setShowCustomSatuan(false);
+      setPreviewImage(null);
+      setSelectedFile(null);
+    }
+  }, [show, mode]);
+
+  // Early return SETELAH semua hooks dipanggil
   if (!show) return null;
 
-  // Penentuan ikon dan judul modal berdasarkan mode (add/edit)
-  const modalIcon =
-    mode === "add" ? (
-      <PlusIcon className="h-6 w-6" />
-    ) : (
-      <PencilIcon className="h-6 w-6" />
-    );
-  const modalTitle = mode === "add" ? "Tambah Barang Baru" : "Edit Barang";
+  /**
+   * Handler untuk perubahan kategori
+   */
+  const handleKategoriChange = (e) => {
+    const value = e.target.value;
+    if (value === "custom") {
+      setShowCustomKategori(true);
+      onChange({ target: { name: "kategori", value: "" } });
+    } else {
+      setShowCustomKategori(false);
+      setCustomKategori("");
+      onChange(e);
+    }
+  };
+
+  /**
+   * Handler untuk perubahan satuan
+   */
+  const handleSatuanChange = (e) => {
+    const value = e.target.value;
+    if (value === "custom") {
+      setShowCustomSatuan(true);
+      onChange({ target: { name: "satuan", value: "" } });
+    } else {
+      setShowCustomSatuan(false);
+      setCustomSatuan("");
+      onChange(e);
+    }
+  };
+
+  /**
+   * Handler untuk perubahan custom kategori
+   */
+  const handleCustomKategoriChange = (e) => {
+    const value = e.target.value;
+    setCustomKategori(value);
+    onChange({ target: { name: "kategori", value } });
+  };
+
+  /**
+   * Handler untuk perubahan custom satuan
+   */
+  const handleCustomSatuanChange = (e) => {
+    const value = e.target.value;
+    setCustomSatuan(value);
+    onChange({ target: { name: "satuan", value } });
+  };
+
+  /**
+   * Handler untuk perubahan file gambar
+   */
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSelectedFile(file);
+      const reader = new FileReader();
+      reader.onload = (e) => setPreviewImage(e.target.result);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  /**
+   * Handler untuk submit form
+   */
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    // Validasi form
+    if (
+      !formData.kode ||
+      !formData.nama ||
+      !formData.kategori ||
+      !formData.satuan
+    ) {
+      alert("Mohon lengkapi semua field yang wajib diisi!");
+      return;
+    }
+
+    // Validasi stok dan stok minimum harus berupa angka positif
+    if (isNaN(formData.stok) || formData.stok < 0) {
+      alert("Stok harus berupa angka positif!");
+      return;
+    }
+
+    if (isNaN(formData.stokMinimum) || formData.stokMinimum < 0) {
+      alert("Stok minimum harus berupa angka positif!");
+      return;
+    }
+
+    // Panggil onSubmit dengan data form dan file
+    onSubmit(formData, selectedFile);
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 animate-fadeIn">
-      <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-lg relative barang-form-modal">
-        {/* Tombol tutup modal */}
-        <button
-          className="absolute top-3 right-3 text-gray-400 hover:text-red-500 text-2xl font-bold transition"
-          onClick={onClose}
-          aria-label="Tutup"
-        >
-          &times;
-        </button>
-        {/* Header modal: ikon dan judul sesuai mode */}
-        <div className="flex items-center mb-4">
-          <div className="bg-blue-100 text-blue-600 rounded-full p-2 mr-3 shadow">
-            {modalIcon}
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto relative">
+        {/* Header Modal */}
+        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 rounded-t-2xl">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xl font-bold text-gray-800">
+              {mode === "add" ? "Tambah Barang Baru" : "Edit Barang"}
+            </h3>
+            <button
+              className="text-gray-400 hover:text-red-500 text-2xl font-bold transition"
+              onClick={onClose}
+              aria-label="Tutup"
+            >
+              <XMarkIcon className="h-6 w-6" />
+            </button>
           </div>
-          <h3 className="text-xl font-bold text-gray-800">{modalTitle}</h3>
         </div>
-        {/* Form input data barang */}
-        <form onSubmit={onSubmit} className="space-y-4">
-          {/* Input kode barang */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">
-              Kode Barang
-            </label>
-            <input
-              type="text"
-              name="kode"
-              value={formData.kode}
-              onChange={onChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              required
-              autoFocus
-            />
-          </div>
-          {/* Input nama barang */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">
-              Nama Barang
-            </label>
-            <input
-              type="text"
-              name="nama"
-              value={formData.nama}
-              onChange={onChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              required
-            />
-          </div>
-          {/* Grid responsive untuk kategori dan satuan */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Select kategori barang */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">
-                Kategori
-              </label>
-              <select
-                name="kategori"
-                value={formData.kategori}
-                onChange={onChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                required
-                data-testid="kategori-select"
-              >
-                <option value="">Pilih Kategori</option>
-                {renderKategoriOptions(kategoriOptions)}
-              </select>
+
+        {/* Body Modal */}
+        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          {/* Upload Foto */}
+          <div className="flex flex-col items-center space-y-4">
+            <div className="relative">
+              {previewImage ? (
+                <img
+                  src={previewImage}
+                  alt="Preview"
+                  className="w-32 h-32 object-cover rounded-xl border-4 border-gray-200"
+                />
+              ) : (
+                <div className="w-32 h-32 bg-gray-100 rounded-xl border-4 border-dashed border-gray-300 flex items-center justify-center">
+                  <CameraIcon className="h-8 w-8 text-gray-400" />
+                </div>
+              )}
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              />
             </div>
-            {/* Select satuan barang */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">
-                Satuan
-              </label>
-              <select
-                name="satuan"
-                value={formData.satuan}
-                onChange={onChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                required
-              >
-                <option value="">Pilih Satuan</option>
-                {renderSatuanOptions(satuanOptions)}
-              </select>
-            </div>
+            <p className="text-sm text-gray-500">
+              Klik untuk upload foto barang (opsional)
+            </p>
           </div>
-          {/* Input stok awal dan stok minimum - responsive grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+          {/* Grid untuk form fields */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Kode Barang */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">
-                Stok Awal
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Kode Barang <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="kode"
+                value={formData.kode}
+                onChange={onChange}
+                placeholder="Masukkan kode barang"
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition"
+              />
+            </div>
+
+            {/* Nama Barang */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Nama Barang <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="nama"
+                value={formData.nama}
+                onChange={onChange}
+                placeholder="Masukkan nama barang"
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition"
+              />
+            </div>
+
+            {/* Kategori */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Kategori <span className="text-red-500">*</span>
+              </label>
+              {!showCustomKategori ? (
+                <select
+                  name="kategori"
+                  value={formData.kategori}
+                  onChange={handleKategoriChange}
+                  required
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition"
+                >
+                  <option value="">Pilih kategori</option>
+                  {kategoriOptions.map((kategori) => (
+                    <option key={kategori} value={kategori}>
+                      {kategori}
+                    </option>
+                  ))}
+                  <option value="custom">+ Kategori Lain</option>
+                </select>
+              ) : (
+                <div className="flex space-x-2">
+                  <input
+                    type="text"
+                    value={customKategori}
+                    onChange={handleCustomKategoriChange}
+                    placeholder="Masukkan kategori baru"
+                    required
+                    className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowCustomKategori(false);
+                      setCustomKategori("");
+                      onChange({ target: { name: "kategori", value: "" } });
+                    }}
+                    className="px-3 py-3 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition"
+                  >
+                    Batal
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Satuan */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Satuan <span className="text-red-500">*</span>
+              </label>
+              {!showCustomSatuan ? (
+                <select
+                  name="satuan"
+                  value={formData.satuan}
+                  onChange={handleSatuanChange}
+                  required
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition"
+                >
+                  <option value="">Pilih satuan</option>
+                  {satuanOptions.map((satuan) => (
+                    <option key={satuan} value={satuan}>
+                      {satuan}
+                    </option>
+                  ))}
+                  <option value="custom">+ Satuan Lain</option>
+                </select>
+              ) : (
+                <div className="flex space-x-2">
+                  <input
+                    type="text"
+                    value={customSatuan}
+                    onChange={handleCustomSatuanChange}
+                    placeholder="Masukkan satuan baru"
+                    required
+                    className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowCustomSatuan(false);
+                      setCustomSatuan("");
+                      onChange({ target: { name: "satuan", value: "" } });
+                    }}
+                    className="px-3 py-3 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition"
+                  >
+                    Batal
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Stok */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Stok Awal <span className="text-red-500">*</span>
               </label>
               <input
                 type="number"
                 name="stok"
                 value={formData.stok}
                 onChange={onChange}
+                placeholder="0"
                 min="0"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                 required
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition"
               />
             </div>
+
+            {/* Stok Minimum */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">
-                Stok Minimum
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Stok Minimum <span className="text-red-500">*</span>
               </label>
               <input
                 type="number"
                 name="stokMinimum"
                 value={formData.stokMinimum}
                 onChange={onChange}
+                placeholder="0"
                 min="0"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                 required
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition"
               />
             </div>
           </div>
-          {/* Input deskripsi barang */}
+
+          {/* Deskripsi */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
               Deskripsi
             </label>
             <textarea
               name="deskripsi"
               value={formData.deskripsi}
               onChange={onChange}
-              rows="3"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              placeholder="Masukkan deskripsi barang (opsional)"
+              rows={3}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition resize-none"
             />
           </div>
-          {/* Tombol aksi: batal dan simpan */}
-          <div className="flex justify-end space-x-3 pt-4">
+
+          {/* Footer Modal */}
+          <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+              className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
             >
               Batal
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition"
+              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition"
             >
-              {loading ? "Menyimpan..." : "Simpan"}
+              {loading
+                ? "Menyimpan..."
+                : mode === "add"
+                ? "Tambah Barang"
+                : "Update Barang"}
             </button>
           </div>
         </form>

@@ -8,16 +8,29 @@
  * - Komponen React yang menampilkan UI manajemen barang beserta modals dan tabel.
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { MagnifyingGlassIcon, PlusIcon } from "@heroicons/react/24/outline";
 import BarangTable from "../../components/barang/BarangTable";
 import BarangFormModal from "../../components/barang/BarangFormModal";
 import BarangStokModal from "../../components/barang/BarangStokModal";
+import Pagination from "../../components/common/Pagination";
+import PageSizeSelector from "../../components/common/PageSizeSelector";
 import * as barangService from "../../services/barangService";
 import { toast } from "react-toastify";
 
-// Pilihan satuan barang
-const satuanOptions = ["pcs", "box", "rim", "pack", "unit", "set"];
+// Pilihan satuan barang - DIPERBAIKI
+const satuanOptions = [
+  "Pcs",
+  "Box",
+  "Botol",
+  "Roll",
+  "Buku",
+  "Rim",
+  "Lembar",
+  "Tube",
+  "Pack",
+  "Set",
+];
 
 // Pilihan kategori default barang
 const defaultKategoriOptions = [
@@ -38,11 +51,7 @@ const defaultKategoriOptions = [
 ];
 
 /**
- * Komponen utama halaman manajemen barang.
- * Mengelola state, pengambilan data, filter, dan aksi CRUD barang.
- *
- * Return:
- * - JSX: UI halaman manajemen barang
+ * Komponen utama halaman manajemen barang dengan pagination.
  */
 const ManajemenBarang = () => {
   // State utama untuk data barang dan filter
@@ -52,11 +61,19 @@ const ManajemenBarang = () => {
   const [filterKategori, setFilterKategori] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [filterAktif, setFilterAktif] = useState("aktif");
+  const [loading, setLoading] = useState(false);
+
+  // State untuk pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [totalData, setTotalData] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+
+  // State untuk modal dan form
   const [showModal, setShowModal] = useState(false);
   const [showStokModal, setShowStokModal] = useState(false);
   const [modalMode, setModalMode] = useState("add");
   const [selectedBarang, setSelectedBarang] = useState(null);
-  const [loading, setLoading] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteBarangId, setDeleteBarangId] = useState(null);
 
@@ -83,26 +100,36 @@ const ManajemenBarang = () => {
   );
 
   /**
-   * Efek untuk mengambil data barang dari API saat komponen pertama kali di-mount.
+   * Fungsi untuk mengambil data barang dari backend dengan pagination.
    */
-  useEffect(() => {
-    fetchBarang();
-  }, []);
-
-  /**
-   * Fungsi untuk mengambil data barang dari backend dan mengatur state barang.
-   *
-   * Tidak menerima parameter.
-   *
-   * Return:
-   * - void
-   */
-  const fetchBarang = async () => {
+  const fetchBarang = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await barangService.getAllBarang();
+      const params = {
+        page: currentPage,
+        limit: pageSize,
+        paginate: true,
+      };
+
+      // Tambahkan filter pencarian
+      if (searchTerm) {
+        params.q = searchTerm;
+      }
+
+      // Tambahkan filter status aktif
+      if (filterAktif !== "all") {
+        params.status_aktif = filterAktif === "aktif";
+      }
+
+      // Tambahkan filter stok kritis jika diperlukan
+      if (filterStatus === "kritis") {
+        params.stok_kritis = true;
+      }
+
+      const res = await barangService.getAllBarang(params);
+
       // Mapping data API ke struktur yang digunakan di frontend
-      const mapped = res.data.map((item) => ({
+      const mapped = res.data.data.map((item) => ({
         id: item.id,
         kode: item.kode_barang,
         nama: item.nama_barang,
@@ -116,7 +143,10 @@ const ManajemenBarang = () => {
         createdAt: item.created_at,
         updatedAt: item.updated_at,
       }));
+
       setBarang(mapped);
+      setTotalData(res.data.total);
+      setTotalPages(res.data.totalPages);
 
       // Ambil semua kategori unik untuk filter
       const kategoriSet = new Set([
@@ -126,37 +156,40 @@ const ManajemenBarang = () => {
       setKategoriOptions(Array.from(kategoriSet));
     } catch (err) {
       toast.error("Gagal memuat data barang.");
+      console.error("Error fetching barang:", err);
     }
     setLoading(false);
-  };
+  }, [
+    currentPage,
+    pageSize,
+    searchTerm,
+    filterAktif,
+    filterStatus,
+    // Hapus filterKategori karena tidak digunakan dalam fetchBarang
+    // filterKategori hanya digunakan untuk client-side filtering
+  ]);
 
   /**
-   * Efek untuk melakukan filter dan pencarian pada data barang.
-   * Filter berdasarkan pencarian, kategori, status stok, dan status aktif barang.
-   *
-   * Tidak menerima parameter.
-   *
-   * Return:
-   * - void
+   * Efek untuk mengambil data barang dari API saat komponen pertama kali di-mount
+   * atau ketika parameter pagination/filter berubah.
+   */
+  useEffect(() => {
+    fetchBarang();
+  }, [fetchBarang]);
+
+  /**
+   * Effect untuk memfilter data berdasarkan kategori dan status
+   * (filtering dilakukan di client-side untuk kategori, server-side untuk yang lain)
    */
   useEffect(() => {
     let filtered = barang;
 
-    // Filter berdasarkan pencarian nama/kode barang
-    if (searchTerm) {
-      filtered = filtered.filter(
-        (item) =>
-          item.nama.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          item.kode.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    // Filter berdasarkan kategori barang
+    // Filter berdasarkan kategori (client-side)
     if (filterKategori) {
       filtered = filtered.filter((item) => item.kategori === filterKategori);
     }
 
-    // Filter berdasarkan status stok barang
+    // Filter berdasarkan status stok (client-side)
     if (filterStatus) {
       if (filterStatus === "kritis") {
         filtered = filtered.filter((item) => item.stok <= item.stokMinimum);
@@ -165,43 +198,47 @@ const ManajemenBarang = () => {
       }
     }
 
-    // Filter berdasarkan status aktif barang
-    if (filterAktif === "aktif") {
-      filtered = filtered.filter((item) => item.statusAktif);
-    } else if (filterAktif === "nonaktif") {
-      filtered = filtered.filter((item) => !item.statusAktif);
-    }
-    // Jika "all", tampilkan semua barang tanpa filter status aktif
-
     setFilteredBarang(filtered);
-  }, [searchTerm, filterKategori, filterStatus, filterAktif, barang]);
+  }, [barang, filterKategori, filterStatus]);
 
   /**
-   * Handler untuk perubahan input pada form tambah/edit barang.
-   *
-   * Parameter:
-   * - e (Event): Event perubahan input
-   *
-   * Return:
-   * - void
+   * Handler untuk perubahan halaman
    */
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
   };
 
   /**
-   * Handler untuk perubahan input pada form penambahan stok barang.
-   *
-   * Parameter:
-   * - e (Event): Event perubahan input
-   *
-   * Return:
-   * - void
+   * Handler untuk perubahan page size
    */
-  const handleStokChange = (e) => {
-    const { name, value } = e.target;
-    setStokData((prev) => ({ ...prev, [name]: value }));
+  const handlePageSizeChange = (newPageSize) => {
+    setPageSize(newPageSize);
+    setCurrentPage(1); // Reset ke halaman pertama
+  };
+
+  /**
+   * Handler untuk perubahan pencarian dengan debounce
+   */
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+    setCurrentPage(1); // Reset ke halaman pertama saat pencarian
+  };
+
+  /**
+   * Handler untuk perubahan filter kategori
+   */
+  const handleFilterKategoriChange = (e) => {
+    setFilterKategori(e.target.value);
+    setCurrentPage(1); // Reset ke halaman pertama
+  };
+
+  /**
+   * Handler untuk perubahan filter status aktif
+   */
+  const handleFilterAktifChange = (e) => {
+    setFilterAktif(e.target.value);
+    setCurrentPage(1); // Reset ke halaman pertama
   };
 
   /**
@@ -305,7 +342,7 @@ const ManajemenBarang = () => {
       formData.stok === "" ||
       formData.stokMinimum === ""
     ) {
-      toast.error("Semua field wajib diisi!");
+      toast.error("Semua field wajib diisi, termasuk satuan!");
       return;
     }
     if (isNaN(formData.stok) || parseInt(formData.stok) < 0) {
@@ -463,6 +500,29 @@ const ManajemenBarang = () => {
     setLoading(false);
   };
 
+  /**
+   * Handler untuk refresh data
+   */
+  const handleRefresh = () => {
+    fetchBarang();
+  };
+
+  /**
+   * Handler untuk perubahan input form tambah/edit barang.
+   */
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  /**
+   * Handler untuk perubahan input form penambahan stok barang.
+   */
+  const handleStokChange = (e) => {
+    const { name, value } = e.target;
+    setStokData((prev) => ({ ...prev, [name]: value }));
+  };
+
   // UI utama halaman manajemen barang
   return (
     <div className="p-6">
@@ -488,7 +548,7 @@ const ManajemenBarang = () => {
             </p>
           </div>
           <span className="ml-auto px-3 py-1 rounded-full bg-blue-50 text-blue-700 font-semibold text-sm shadow">
-            {barang.length} Barang
+            {totalData} Barang
           </span>
         </div>
       </div>
@@ -503,15 +563,16 @@ const ManajemenBarang = () => {
               type="text"
               placeholder="Cari nama atau kode barang..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={handleSearchChange}
               className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition text-sm"
             />
           </div>
+
           {/* Filter kategori barang */}
           <select
             name="kategori"
             value={filterKategori}
-            onChange={(e) => setFilterKategori(e.target.value)}
+            onChange={handleFilterKategoriChange}
             className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition text-sm"
           >
             <option value="">Semua Kategori</option>
@@ -521,26 +582,36 @@ const ManajemenBarang = () => {
               </option>
             ))}
           </select>
-          {/* Filter status stok barang */}
+
+          {/* Filter status stok */}
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
             className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition text-sm"
           >
             <option value="">Semua Status</option>
-            <option value="normal">Normal</option>
             <option value="kritis">Stok Kritis</option>
+            <option value="normal">Stok Normal</option>
           </select>
-          {/* Filter status aktif barang */}
+
+          {/* Filter status aktif */}
           <select
             value={filterAktif}
-            onChange={(e) => setFilterAktif(e.target.value)}
+            onChange={handleFilterAktifChange}
             className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition text-sm"
           >
             <option value="aktif">Barang Aktif</option>
             <option value="nonaktif">Barang Nonaktif</option>
             <option value="all">Semua Barang</option>
           </select>
+
+          {/* Page Size Selector */}
+          <PageSizeSelector
+            pageSize={pageSize}
+            onPageSizeChange={handlePageSizeChange}
+            loading={loading}
+          />
+
           {/* Tombol tambah barang */}
           <button
             onClick={openAddModal}
@@ -548,19 +619,66 @@ const ManajemenBarang = () => {
           >
             <PlusIcon className="h-5 w-5 mr-2" /> Tambah Barang
           </button>
+
+          {/* Tombol refresh */}
+          <button
+            onClick={handleRefresh}
+            disabled={loading}
+            className="inline-flex items-center px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 focus:ring-2 focus:ring-gray-500 shadow transition text-sm disabled:opacity-50"
+          >
+            {loading ? (
+              <div className="animate-spin h-4 w-4 border-2 border-gray-600 border-t-transparent rounded-full"></div>
+            ) : (
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                />
+              </svg>
+            )}
+          </button>
         </div>
       </div>
-      <div className="mb-2 border-b border-gray-100"></div>
-      {/* Tabel barang */}
-      <BarangTable
-        data={filteredBarang}
-        onEdit={openEditModal}
-        onDelete={openDeleteModal}
-        onTambahStok={openStokModal}
-        getStatusColor={getStatusColor}
-        getStatusText={getStatusText}
-        onAktifkan={handleAktifkan}
-      />
+
+      {/* Tabel barang dengan loading state */}
+      <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+        {loading && (
+          <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10">
+            <div className="flex items-center space-x-2">
+              <div className="animate-spin h-6 w-6 border-2 border-blue-600 border-t-transparent rounded-full"></div>
+              <span className="text-gray-600">Memuat data...</span>
+            </div>
+          </div>
+        )}
+
+        <BarangTable
+          data={filteredBarang}
+          onEdit={openEditModal}
+          onDelete={openDeleteModal}
+          onTambahStok={openStokModal}
+          getStatusColor={getStatusColor}
+          getStatusText={getStatusText}
+          onAktifkan={handleAktifkan}
+        />
+
+        {/* Pagination Component */}
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+          total={totalData}
+          limit={pageSize}
+          loading={loading}
+        />
+      </div>
+
       {/* Modal tambah/edit barang */}
       <BarangFormModal
         show={showModal}
@@ -573,16 +691,18 @@ const ManajemenBarang = () => {
         onClose={() => setShowModal(false)}
         onSubmit={handleSubmit}
       />
+
       {/* Modal penambahan stok barang */}
       <BarangStokModal
         show={showStokModal}
         barang={selectedBarang}
         stokData={stokData}
         loading={loading}
-        onChange={handleStokChange}
+        onChange={handleStokChange} // ✅ Handler sudah ditambahkan
         onClose={() => setShowStokModal(false)}
         onSubmit={handleStokSubmit}
       />
+
       {/* Modal Konfirmasi Hapus */}
       {showDeleteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 animate-fadeIn">

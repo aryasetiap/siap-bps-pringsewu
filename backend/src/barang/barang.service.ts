@@ -1,6 +1,6 @@
 /**
  * File: barang.service.ts
- * Service untuk pengelolaan data barang persediaan pada aplikasi SIAP BPS Pringsewu.
+ * Service untuk pengelolaan data barang persediaan pada aplik asi SIAP BPS Pringsewu.
  * Meliputi pembuatan, pembaruan, penghapusan, penambahan stok, serta pembuatan laporan penggunaan barang.
  */
 
@@ -15,7 +15,7 @@ import { Repository, DataSource } from 'typeorm';
 import { CreateBarangDto } from './dto/create-barang.dto';
 import { UpdateBarangDto } from './dto/update-barang.dto';
 import { AddStokDto } from './dto/add-stok.dto';
-import * as PdfPrinter from 'pdfmake';
+import * as PdfPrinter from 'pdfmake'; // Pastikan import ini ada
 import * as path from 'path';
 
 /**
@@ -39,37 +39,97 @@ export class BarangService {
 
   /**
    * Membuat data barang baru.
-   *
-   * Parameter:
-   * - dto (CreateBarangDto): Data barang yang akan dibuat.
-   *
-   * Return:
-   * - Promise<Barang>: Barang yang berhasil dibuat.
-   *
-   * Exception:
-   * - BadRequestException: Jika kode barang sudah terdaftar.
+   * Validasi kombinasi kode_barang + nama_barang untuk mencegah duplikasi penuh.
    */
   async create(dto: CreateBarangDto): Promise<Barang> {
+    // Validasi kombinasi kode_barang + nama_barang
     const barangSudahAda = await this.barangRepo.findOne({
-      where: { kode_barang: dto.kode_barang },
+      where: {
+        kode_barang: dto.kode_barang,
+        nama_barang: dto.nama_barang,
+      },
     });
+
     if (barangSudahAda) {
-      throw new BadRequestException('Kode barang sudah terdaftar');
+      throw new BadRequestException(
+        'Kombinasi kode barang dan nama barang sudah terdaftar',
+      );
     }
+
     const barangBaru = this.barangRepo.create({ ...dto, status_aktif: true });
     return this.barangRepo.save(barangBaru);
   }
 
   /**
-   * Mengambil daftar barang berdasarkan filter pencarian, status aktif, dan stok kritis.
+   * Mengambil daftar barang berdasarkan filter pencarian, status aktif, dan stok kritis dengan pagination.
    *
    * Parameter:
-   * - query (object): Opsi pencarian (q, status_aktif, stok_kritis).
+   * - query (object): Opsi pencarian (q, status_aktif, stok_kritis, page, limit).
    *
    * Return:
-   * - Promise<Barang[]>: Daftar barang sesuai filter.
+   * - Promise<{data: Barang[], total: number, page: number, limit: number, totalPages: number}>: Data barang dengan info pagination.
    */
   async findAll(query?: {
+    q?: string;
+    status_aktif?: boolean;
+    stok_kritis?: boolean;
+    page?: number;
+    limit?: number;
+  }): Promise<{
+    data: Barang[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
+    const page = query?.page || 1;
+    const limit = query?.limit || 20;
+    const skip = (page - 1) * limit;
+
+    const qb = this.barangRepo.createQueryBuilder('barang');
+
+    if (query?.q) {
+      qb.andWhere(
+        '(barang.nama_barang ILIKE :q OR barang.kode_barang ILIKE :q)',
+        { q: `%${query.q}%` },
+      );
+    }
+
+    if (typeof query?.status_aktif === 'boolean') {
+      qb.andWhere('barang.status_aktif = :status', {
+        status: query.status_aktif,
+      });
+    }
+
+    if (query?.stok_kritis) {
+      qb.andWhere('barang.stok <= barang.ambang_batas_kritis');
+    }
+
+    // Tambahkan ordering untuk konsistensi pagination
+    qb.orderBy('barang.created_at', 'DESC');
+
+    // Get total count untuk pagination
+    const total = await qb.getCount();
+
+    // Apply pagination
+    qb.skip(skip).take(limit);
+
+    const data = await qb.getMany();
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+      totalPages,
+    };
+  }
+
+  /**
+   * Mengambil daftar barang tanpa pagination (untuk compatibility dengan existing code).
+   */
+  async findAllWithoutPagination(query?: {
     q?: string;
     status_aktif?: boolean;
     stok_kritis?: boolean;
@@ -286,25 +346,30 @@ export class BarangService {
       const startFormatted = formatDateFull(start);
       const endFormatted = formatDateFull(end);
 
+      // Path yang fleksibel untuk development dan production
+      const getAssetPath = (relativePath: string): string => {
+        const isDevelopment = process.env.NODE_ENV !== 'production';
+        const basePath = isDevelopment
+          ? path.join(__dirname, '..')
+          : path.join(__dirname);
+        return path.join(basePath, 'assets', relativePath);
+      };
+
       // Konfigurasi font untuk PDF
       const fonts = {
         Roboto: {
-          normal: path.join(__dirname, '../assets/fonts/Roboto-Regular.ttf'),
-          bold: path.join(__dirname, '../assets/fonts/Roboto-Bold.ttf'),
-          italics: path.join(__dirname, '../assets/fonts/Roboto-Italic.ttf'),
-          bolditalics: path.join(
-            __dirname,
-            '../assets/fonts/Roboto-BoldItalic.ttf',
-          ),
+          normal: getAssetPath('fonts/Roboto-Regular.ttf'),
+          bold: getAssetPath('fonts/Roboto-Bold.ttf'),
+          italics: getAssetPath('fonts/Roboto-Italic.ttf'),
+          bolditalics: getAssetPath('fonts/Roboto-BoldItalic.ttf'),
         },
       };
+
+      // Inisialisasi printer - INI YANG HILANG!
       const printer = new PdfPrinter(fonts);
 
-      // Path logo BPS
-      const logoPath = path.join(
-        __dirname,
-        '../assets/images/logo-bps-pringsewu.png',
-      );
+      // Path logo BPS yang fleksibel
+      const logoPath = getAssetPath('images/logo-bps-pringsewu.png');
 
       // Siapkan data untuk tabel laporan
       const bodyRows =
